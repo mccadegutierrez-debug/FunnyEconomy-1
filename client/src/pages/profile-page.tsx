@@ -174,7 +174,7 @@ export default function ProfilePage() {
                   <h1 className="font-impact text-3xl text-primary" data-testid="profile-username">
                     {profile.username}
                   </h1>
-                  {profile.username === 'savage' && (
+                  {profile.username === 'savage' && profile.username === 'deez' (
                     <Badge variant="default" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
                       <Crown className="w-3 h-3 mr-1" />
                       Owner
