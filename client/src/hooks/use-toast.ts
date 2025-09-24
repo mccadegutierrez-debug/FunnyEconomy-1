@@ -1,4 +1,5 @@
 import * as React from "react"
+import { makeMessageUserFriendly } from "@/lib/user-friendly-messages"
 
 import type {
   ToastActionElement,
@@ -137,10 +138,23 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+type Toast = Omit<ToasterToast, "id"> & {
+  // Option to bypass user-friendly transformation for technical messages
+  skipFriendlyTransform?: boolean;
+}
 
-function toast({ ...props }: Toast) {
+function toast({ title, description, skipFriendlyTransform = false, ...props }: Toast) {
   const id = genId()
+
+  // Apply user-friendly transformation unless explicitly skipped
+  let finalTitle = title;
+  let finalDescription = description;
+
+  if (!skipFriendlyTransform && typeof title === 'string') {
+    const friendly = makeMessageUserFriendly(title, typeof description === 'string' ? description : undefined);
+    finalTitle = friendly.title;
+    finalDescription = friendly.description;
+  }
 
   const update = (props: ToasterToast) =>
     dispatch({
@@ -153,6 +167,8 @@ function toast({ ...props }: Toast) {
     type: "ADD_TOAST",
     toast: {
       ...props,
+      title: finalTitle,
+      description: finalDescription,
       id,
       open: true,
       onOpenChange: (open) => {
