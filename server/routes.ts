@@ -712,6 +712,52 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Remove coins from specific user
+  app.post('/api/admin/users/:id/remove-coins', requireAdmin, async (req, res) => {
+    try {
+      const removeCoinsSchema = z.object({
+        amount: z.union([z.number(), z.string()]).transform(val => {
+          const num = typeof val === 'string' ? parseInt(val) : val;
+          if (isNaN(num) || num <= 0) {
+            throw new Error('Invalid amount');
+          }
+          return num;
+        })
+      });
+
+      const { amount } = removeCoinsSchema.parse(req.body);
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Calculate new coin amount, ensuring it doesn't go below 0
+      const newCoins = Math.max(0, user.coins - amount);
+      const actualRemoved = user.coins - newCoins;
+
+      await storage.updateUser(user.id, {
+        coins: newCoins
+      });
+
+      await storage.createTransaction({
+        user: user.username,
+        type: 'spend',
+        amount: actualRemoved,
+        description: `Admin removed ${actualRemoved} coins`,
+        targetUser: null,
+        timestamp: new Date()
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Removed ${actualRemoved} coins from ${user.username}`,
+        newBalance: newCoins
+      });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   // Kick user (force disconnect)
   app.post('/api/admin/users/:id/kick', requireAdmin, async (req, res) => {
     try {
