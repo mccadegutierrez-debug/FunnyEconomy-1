@@ -99,7 +99,8 @@ export function registerRoutes(app: Express): Server {
 
   app.post('/api/economy/search', requireAuth, async (req, res) => {
     try {
-      const result = await EconomyService.search(req.user!.username);
+      const { location } = req.body;
+      const result = await EconomyService.search(req.user!.username, location);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -109,7 +110,8 @@ export function registerRoutes(app: Express): Server {
   // New earning methods
   app.post('/api/economy/fish', requireAuth, async (req, res) => {
     try {
-      const result = await EconomyService.fish(req.user!.username);
+      const { location } = req.body;
+      const result = await EconomyService.fish(req.user!.username, location);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -146,7 +148,8 @@ export function registerRoutes(app: Express): Server {
   // New Dank Memer inspired earning methods
   app.post('/api/economy/crime', requireAuth, async (req, res) => {
     try {
-      const result = await EconomyService.crime(req.user!.username);
+      const { crimeType } = req.body;
+      const result = await EconomyService.crime(req.user!.username, crimeType);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -155,7 +158,8 @@ export function registerRoutes(app: Express): Server {
 
   app.post('/api/economy/hunt', requireAuth, async (req, res) => {
     try {
-      const result = await EconomyService.hunt(req.user!.username);
+      const { huntType } = req.body;
+      const result = await EconomyService.hunt(req.user!.username, huntType);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -164,7 +168,8 @@ export function registerRoutes(app: Express): Server {
 
   app.post('/api/economy/dig', requireAuth, async (req, res) => {
     try {
-      const result = await EconomyService.dig(req.user!.username);
+      const { location } = req.body;
+      const result = await EconomyService.dig(req.user!.username, location);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -173,7 +178,8 @@ export function registerRoutes(app: Express): Server {
 
   app.post('/api/economy/postmeme', requireAuth, async (req, res) => {
     try {
-      const result = await EconomyService.postmeme(req.user!.username);
+      const { memeType } = req.body;
+      const result = await EconomyService.postmeme(req.user!.username, memeType);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -197,7 +203,8 @@ export function registerRoutes(app: Express): Server {
 
   app.post('/api/economy/stream', requireAuth, async (req, res) => {
     try {
-      const result = await EconomyService.stream(req.user!.username);
+      const { gameChoice } = req.body;
+      const result = await EconomyService.stream(req.user!.username, gameChoice);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });

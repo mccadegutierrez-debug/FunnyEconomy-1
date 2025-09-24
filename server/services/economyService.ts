@@ -340,9 +340,11 @@ export class EconomyService {
     }
 
     const jobs = {
-      'meme-farmer': { min: 100, max: 300, name: 'Meme Farmer' },
-      'doge-miner': { min: 50, max: 500, name: 'Doge Miner' },
-      'pepe-trader': { min: 150, max: 400, name: 'Pepe Trader' }
+      'meme-farmer': { min: 100, max: 300, name: 'Meme Farmer', xp: 5 },
+      'doge-miner': { min: 50, max: 500, name: 'Doge Miner', xp: 8 },
+      'pepe-trader': { min: 150, max: 400, name: 'Pepe Trader', xp: 6 },
+      'nft-creator': { min: 200, max: 600, name: 'NFT Creator', xp: 10 },
+      'mod-botter': { min: 80, max: 350, name: 'Mod Botter', xp: 7 }
     };
 
     const job = jobs[jobType as keyof typeof jobs];
@@ -351,7 +353,7 @@ export class EconomyService {
     }
 
     const amount = job.min + Math.floor(Math.random() * (job.max - job.min + 1));
-    const xpGain = 5;
+    const xpGain = job.xp;
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
@@ -435,7 +437,7 @@ export class EconomyService {
     };
   }
 
-  static async search(username: string) {
+  static async search(username: string, location?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -447,21 +449,23 @@ export class EconomyService {
       throw new Error(`Search cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`);
     }
 
-    const locations = [
-      "under the couch",
-      "in the meme vault", 
-      "behind a dumpster",
-      "in Pepe's pond",
-      "under a rock",
-      "in your mom's purse"
-    ];
+    const searchLocations = {
+      'couch': { name: "under the couch", coins: { min: 10, max: 50 }, itemChance: 0.05 },
+      'vault': { name: "in the meme vault", coins: { min: 30, max: 100 }, itemChance: 0.15 },
+      'dumpster': { name: "behind a dumpster", coins: { min: 5, max: 30 }, itemChance: 0.08 },
+      'pond': { name: "in Pepe's pond", coins: { min: 20, max: 80 }, itemChance: 0.12 },
+      'rock': { name: "under a rock", coins: { min: 10, max: 40 }, itemChance: 0.06 },
+      'purse': { name: "in your mom's purse", coins: { min: 40, max: 120 }, itemChance: 0.2 }
+    };
 
-    const location = locations[Math.floor(Math.random() * locations.length)];
-    const amount = 10 + Math.floor(Math.random() * 91); // 10-100 coins
+    const selectedLocationKey = location || Object.keys(searchLocations)[Math.floor(Math.random() * Object.keys(searchLocations).length)];
+    const searchLocation = searchLocations[selectedLocationKey] || searchLocations['couch'];
+    const locationName = searchLocation.name;
+    const amount = searchLocation.coins.min + Math.floor(Math.random() * (searchLocation.coins.max - searchLocation.coins.min + 1));
     
-    // 10% chance for item
+    // Dynamic chance for item based on location
     let foundItem = null;
-    if (Math.random() < 0.1) {
+    if (Math.random() < searchLocation.itemChance) {
       const items = await storage.getAllItems();
       const commonItems = items.filter(item => item.rarity === 'common');
       if (commonItems.length > 0) {
@@ -496,16 +500,16 @@ export class EconomyService {
       type: 'earn',
       amount,
       targetUser: null,
-      description: `Searched ${location}: ${amount} coins${foundItem ? ` + ${foundItem.name}` : ''}`
+      description: `Searched ${locationName}: ${amount} coins${foundItem ? ` + ${foundItem.name}` : ''}`
     });
 
     return {
       success: true,
-      location,
+      location: locationName,
       coins: amount,
       foundItem,
       newBalance: user.coins + amount,
-      message: `You searched ${location} and found ${amount} coins!${foundItem ? ` You also found a ${foundItem.name}!` : ''}`
+      message: `You searched ${locationName} and found ${amount} coins!${foundItem ? ` You also found a ${foundItem.name}!` : ''}`
     };
   }
 
@@ -539,7 +543,7 @@ export class EconomyService {
   }
 
   // Fishing system
-  static async fish(username: string) {
+  static async fish(username: string, location?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -551,13 +555,28 @@ export class EconomyService {
       throw new Error(`Fishing cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`);
     }
 
-    const fishTypes = [
-      { name: 'Pepe Fish', coins: 50, chance: 0.4, xp: 8 },
-      { name: 'Doge Fish', coins: 100, chance: 0.3, xp: 12 },
-      { name: 'Diamond Fish', coins: 200, chance: 0.15, xp: 20 },
-      { name: 'Golden Fish', coins: 500, chance: 0.1, xp: 30 },
-      { name: 'Legendary Fish', coins: 1000, chance: 0.05, xp: 50 }
-    ];
+    const fishingLocations = {
+      'pond': [
+        { name: 'Pepe Fish', coins: 50, chance: 0.5, xp: 8 },
+        { name: 'Doge Fish', coins: 100, chance: 0.35, xp: 12 },
+        { name: 'Diamond Fish', coins: 200, chance: 0.15, xp: 20 }
+      ],
+      'lake': [
+        { name: 'Doge Fish', coins: 100, chance: 0.4, xp: 12 },
+        { name: 'Diamond Fish', coins: 200, chance: 0.3, xp: 20 },
+        { name: 'Golden Fish', coins: 500, chance: 0.25, xp: 30 },
+        { name: 'Legendary Fish', coins: 800, chance: 0.05, xp: 50 }
+      ],
+      'ocean': [
+        { name: 'Diamond Fish', coins: 200, chance: 0.35, xp: 20 },
+        { name: 'Golden Fish', coins: 500, chance: 0.3, xp: 30 },
+        { name: 'Legendary Fish', coins: 1000, chance: 0.2, xp: 50 },
+        { name: 'Mythical Kraken Fish', coins: 2000, chance: 0.15, xp: 100 }
+      ]
+    };
+
+    const selectedLocation = location || 'pond';
+    const fishTypes = fishingLocations[selectedLocation] || fishingLocations['pond'];
 
     // Random fish selection based on chance
     const rand = Math.random();
@@ -801,7 +820,7 @@ export class EconomyService {
   }
 
   // Crime system
-  static async crime(username: string) {
+  static async crime(username: string, crimeType?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -813,14 +832,15 @@ export class EconomyService {
       throw new Error(`Crime cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
     }
 
-    const crimes = [
-      { name: 'Steal a meme', success: 0.8, coins: 200, fine: 100, xp: 10 },
-      { name: 'Rob a Discord server', success: 0.6, coins: 500, fine: 300, xp: 15 },
-      { name: 'Hack a computer', success: 0.4, coins: 1000, fine: 600, xp: 25 },
-      { name: 'Bank heist', success: 0.2, coins: 2000, fine: 1200, xp: 50 }
-    ];
+    const crimes = {
+      'steal-meme': { name: 'Steal a meme', success: 0.8, coins: 200, fine: 100, xp: 10 },
+      'rob-server': { name: 'Rob a Discord server', success: 0.6, coins: 500, fine: 300, xp: 15 },
+      'hack-computer': { name: 'Hack a computer', success: 0.4, coins: 1000, fine: 600, xp: 25 },
+      'bank-heist': { name: 'Bank heist', success: 0.2, coins: 2000, fine: 1200, xp: 50 }
+    };
 
-    const selectedCrime = crimes[Math.floor(Math.random() * crimes.length)];
+    const selectedCrimeKey = crimeType || Object.keys(crimes)[Math.floor(Math.random() * Object.keys(crimes).length)];
+    const selectedCrime = crimes[selectedCrimeKey] || crimes['steal-meme'];
     const success = Math.random() < selectedCrime.success;
 
     if (success) {
@@ -873,7 +893,7 @@ export class EconomyService {
   }
 
   // Hunt system
-  static async hunt(username: string) {
+  static async hunt(username: string, huntType?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -885,14 +905,26 @@ export class EconomyService {
       throw new Error(`Hunt cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
     }
 
-    const animals = [
-      { name: 'Rabbit', coins: 50, chance: 0.4, xp: 5 },
-      { name: 'Duck', coins: 100, chance: 0.25, xp: 8 },
-      { name: 'Boar', coins: 200, chance: 0.15, xp: 12 },
-      { name: 'Bear', coins: 400, chance: 0.1, xp: 20 },
-      { name: 'Dragon', coins: 1000, chance: 0.05, xp: 40 },
-      { name: 'Kraken', coins: 2000, chance: 0.05, xp: 60 }
-    ];
+    const huntingAreas = {
+      'forest': [
+        { name: 'Rabbit', coins: 50, chance: 0.5, xp: 5 },
+        { name: 'Duck', coins: 100, chance: 0.3, xp: 8 },
+        { name: 'Boar', coins: 200, chance: 0.2, xp: 12 }
+      ],
+      'mountains': [
+        { name: 'Duck', coins: 100, chance: 0.4, xp: 8 },
+        { name: 'Boar', coins: 200, chance: 0.35, xp: 12 },
+        { name: 'Bear', coins: 400, chance: 0.25, xp: 20 }
+      ],
+      'dragons-lair': [
+        { name: 'Bear', coins: 400, chance: 0.4, xp: 20 },
+        { name: 'Dragon', coins: 1000, chance: 0.35, xp: 40 },
+        { name: 'Kraken', coins: 2000, chance: 0.25, xp: 60 }
+      ]
+    };
+
+    const selectedArea = huntType || 'forest';
+    const animals = huntingAreas[selectedArea] || huntingAreas['forest'];
 
     const rand = Math.random();
     let cumulativeChance = 0;
@@ -930,7 +962,7 @@ export class EconomyService {
   }
 
   // Dig system
-  static async dig(username: string) {
+  static async dig(username: string, location?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -942,13 +974,28 @@ export class EconomyService {
       throw new Error(`Dig cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
     }
 
-    const treasures = [
-      { name: 'Bottle Cap', coins: 20, chance: 0.3, xp: 2 },
-      { name: 'Old Coin', coins: 75, chance: 0.25, xp: 5 },
-      { name: 'Treasure Chest', coins: 200, chance: 0.2, xp: 10 },
-      { name: 'Ancient Artifact', coins: 500, chance: 0.15, xp: 20 },
-      { name: 'Legendary Gem', coins: 1500, chance: 0.1, xp: 40 }
-    ];
+    const diggingLocations = {
+      'backyard': [
+        { name: 'Bottle Cap', coins: 20, chance: 0.4, xp: 2 },
+        { name: 'Old Coin', coins: 75, chance: 0.35, xp: 5 },
+        { name: 'Treasure Chest', coins: 200, chance: 0.25, xp: 10 }
+      ],
+      'beach': [
+        { name: 'Old Coin', coins: 75, chance: 0.35, xp: 5 },
+        { name: 'Treasure Chest', coins: 200, chance: 0.3, xp: 10 },
+        { name: 'Ancient Artifact', coins: 500, chance: 0.25, xp: 20 },
+        { name: 'Pirate Treasure', coins: 800, chance: 0.1, xp: 30 }
+      ],
+      'cave': [
+        { name: 'Treasure Chest', coins: 200, chance: 0.3, xp: 10 },
+        { name: 'Ancient Artifact', coins: 500, chance: 0.35, xp: 20 },
+        { name: 'Legendary Gem', coins: 1500, chance: 0.25, xp: 40 },
+        { name: 'Dragon Hoard', coins: 3000, chance: 0.1, xp: 80 }
+      ]
+    };
+
+    const selectedLocation = location || 'backyard';
+    const treasures = diggingLocations[selectedLocation] || diggingLocations['backyard'];
 
     const rand = Math.random();
     let cumulativeChance = 0;
@@ -986,7 +1033,7 @@ export class EconomyService {
   }
 
   // Post meme system
-  static async postmeme(username: string) {
+  static async postmeme(username: string, memeType?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -998,15 +1045,16 @@ export class EconomyService {
       throw new Error(`Postmeme cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
     }
 
-    const memeTypes = [
-      { name: 'Normie Meme', coins: 50, likes: 100, xp: 3 },
-      { name: 'Dank Meme', coins: 150, likes: 500, xp: 8 },
-      { name: 'Fresh Meme', coins: 300, likes: 1000, xp: 15 },
-      { name: 'Spicy Meme', coins: 500, likes: 2000, xp: 25 },
-      { name: 'God-Tier Meme', coins: 1000, likes: 5000, xp: 50 }
-    ];
+    const memeTypes = {
+      'normie': { name: 'Normie Meme', coins: 50, likes: 100, xp: 3 },
+      'dank': { name: 'Dank Meme', coins: 150, likes: 500, xp: 8 },
+      'fresh': { name: 'Fresh Meme', coins: 300, likes: 1000, xp: 15 },
+      'spicy': { name: 'Spicy Meme', coins: 500, likes: 2000, xp: 25 },
+      'god-tier': { name: 'God-Tier Meme', coins: 1000, likes: 5000, xp: 50 }
+    };
 
-    const meme = memeTypes[Math.floor(Math.random() * memeTypes.length)];
+    const selectedMemeKey = memeType || Object.keys(memeTypes)[Math.floor(Math.random() * Object.keys(memeTypes).length)];
+    const meme = memeTypes[selectedMemeKey] || memeTypes['normie'];
     const actualLikes = Math.floor(meme.likes * (0.5 + Math.random() * 0.5)); // 50-100% of expected likes
     const bonusCoins = Math.floor(actualLikes / 10); // Bonus based on likes
 
@@ -1109,7 +1157,7 @@ export class EconomyService {
   }
 
   // Stream system
-  static async stream(username: string) {
+  static async stream(username: string, gameChoice?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -1121,16 +1169,17 @@ export class EconomyService {
       throw new Error(`Stream cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
     }
 
-    const games = [
-      { name: 'Among Us', viewers: 500, coins: 200, trending: false },
-      { name: 'Fortnite', viewers: 1000, coins: 300, trending: true },
-      { name: 'Minecraft', viewers: 800, coins: 250, trending: false },
-      { name: 'Fall Guys', viewers: 600, coins: 220, trending: false },
-      { name: 'Valorant', viewers: 1200, coins: 350, trending: true },
-      { name: 'Apex Legends', viewers: 900, coins: 280, trending: false }
-    ];
+    const games = {
+      'among-us': { name: 'Among Us', viewers: 500, coins: 200, trending: false },
+      'fortnite': { name: 'Fortnite', viewers: 1000, coins: 300, trending: true },
+      'minecraft': { name: 'Minecraft', viewers: 800, coins: 250, trending: false },
+      'fall-guys': { name: 'Fall Guys', viewers: 600, coins: 220, trending: false },
+      'valorant': { name: 'Valorant', viewers: 1200, coins: 350, trending: true },
+      'apex-legends': { name: 'Apex Legends', viewers: 900, coins: 280, trending: false }
+    };
 
-    const game = games[Math.floor(Math.random() * games.length)];
+    const selectedGameKey = gameChoice || Object.keys(games)[Math.floor(Math.random() * Object.keys(games).length)];
+    const game = games[selectedGameKey] || games['among-us'];
     const multiplier = game.trending ? 3 : 1; // 3x for trending games
     const totalCoins = game.coins * multiplier;
     const actualViewers = Math.floor(game.viewers * (0.7 + Math.random() * 0.6)); // Random viewer variance
