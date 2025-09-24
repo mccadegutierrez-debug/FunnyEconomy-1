@@ -411,6 +411,353 @@ export class DatabaseStorage implements IStorage {
         },
         stock: 40,
         currentPrice: 7500
+      },
+
+      // Additional Items from dankmemer.lol/items
+      
+      // Adventure & Exploration Items
+      {
+        name: "Adventure Ticket",
+        description: "Grants access to special adventure areas",
+        price: 15000,
+        type: 'consumable' as const,
+        rarity: 'rare' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 7200000, duration: 0, effect: "adventure_access" }
+        },
+        stock: 50,
+        currentPrice: 15000
+      },
+      {
+        name: "A Plus",
+        description: "Epic sellable item with great value",
+        price: 200000,
+        type: 'collectible' as const,
+        rarity: 'epic' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 10,
+        currentPrice: 200000
+      },
+      {
+        name: "Australia Ticket",
+        description: "Travel to Australia for unique adventures",
+        price: 25000,
+        type: 'consumable' as const,
+        rarity: 'epic' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 86400000, duration: 0, effect: "australia_access" }
+        },
+        stock: 25,
+        currentPrice: 25000
+      },
+
+      // Food & Consumables
+      {
+        name: "Apple",
+        description: "A fresh, healthy apple",
+        price: 150,
+        type: 'consumable' as const,
+        rarity: 'common' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 300000, duration: 600000, effect: "health_boost" }
+        },
+        stock: 1000,
+        currentPrice: 150
+      },
+      {
+        name: "Bean",
+        description: "Just a simple bean... or is it?",
+        price: 50,
+        type: 'collectible' as const,
+        rarity: 'common' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 2000,
+        currentPrice: 50
+      },
+      {
+        name: "Alcohol",
+        description: "Makes you feel dizzy but boosts gambling luck",
+        price: 2000,
+        type: 'consumable' as const,
+        rarity: 'uncommon' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 3600000, duration: 1800000, effect: "gambling_boost" }
+        },
+        stock: 200,
+        currentPrice: 2000
+      },
+      {
+        name: "Berries and Cream",
+        description: "Delicious treat that provides temporary protection",
+        price: 1500,
+        type: 'consumable' as const,
+        rarity: 'uncommon' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 1800000, duration: 3600000, effect: "protection" }
+        },
+        stock: 100,
+        currentPrice: 1500
+      },
+
+      // Tools & Equipment
+      {
+        name: "Ammo",
+        description: "Essential ammunition for hunting adventures",
+        price: 500,
+        type: 'consumable' as const,
+        rarity: 'common' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "hunting_ammo" }
+        },
+        stock: 500,
+        currentPrice: 500
+      },
+      {
+        name: "Ban Hammer",
+        description: "Legendary moderation tool",
+        price: 500000,
+        type: 'tool' as const,
+        rarity: 'legendary' as const,
+        effects: {
+          passive: { winRateBoost: 25, coinsPerHour: 500 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 1,
+        currentPrice: 500000
+      },
+      {
+        name: "Laptop",
+        description: "Allows remote work for passive income",
+        price: 15000,
+        type: 'tool' as const,
+        rarity: 'rare' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 100 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 100,
+        currentPrice: 15000
+      },
+
+      // Collectibles & Rare Items
+      {
+        name: "Alien Sample",
+        description: "Mysterious extraterrestrial material",
+        price: 75000,
+        type: 'collectible' as const,
+        rarity: 'epic' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 25,
+        currentPrice: 75000
+      },
+      {
+        name: "Ant",
+        description: "Tiny but mighty insect",
+        price: 100,
+        type: 'collectible' as const,
+        rarity: 'common' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 1000,
+        currentPrice: 100
+      },
+      {
+        name: "Big Brain",
+        description: "Intelligence enhancement device",
+        price: 50000,
+        type: 'tool' as const,
+        rarity: 'epic' as const,
+        effects: {
+          passive: { winRateBoost: 15, coinsPerHour: 150 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 50,
+        currentPrice: 50000
+      },
+      {
+        name: "Director's Card",
+        description: "VIP access card for exclusive areas",
+        price: 100000,
+        type: 'collectible' as const,
+        rarity: 'legendary' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 5,
+        currentPrice: 100000
+      },
+
+      // Protection & Security Items
+      {
+        name: "Anti-Rob Pack",
+        description: "Protects your coins from theft",
+        price: 10000,
+        type: 'consumable' as const,
+        rarity: 'rare' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 86400000, duration: 86400000, effect: "rob_protection" }
+        },
+        stock: 75,
+        currentPrice: 10000
+      },
+
+      // Special Items & Utilities
+      {
+        name: "Bank Note",
+        description: "Increases bank storage capacity",
+        price: 25000,
+        type: 'tool' as const,
+        rarity: 'rare' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "bank_expansion" }
+        },
+        stock: 100,
+        currentPrice: 25000
+      },
+      {
+        name: "Beaker of the Raid",
+        description: "Mysterious liquid with unknown properties",
+        price: 150000,
+        type: 'collectible' as const,
+        rarity: 'legendary' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 3,
+        currentPrice: 150000
+      },
+      {
+        name: "Bean Mp3 Player",
+        description: "Plays your favorite bean sounds",
+        price: 5000,
+        type: 'collectible' as const,
+        rarity: 'rare' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 150,
+        currentPrice: 5000
+      },
+      {
+        name: "Beggar's Bowl",
+        description: "Increases earnings from begging",
+        price: 1000,
+        type: 'tool' as const,
+        rarity: 'common' as const,
+        effects: {
+          passive: { winRateBoost: 5, coinsPerHour: 25 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 300,
+        currentPrice: 1000
+      },
+
+      // Clothing & Accessories
+      {
+        name: "Apron",
+        description: "Cooking apron that improves work efficiency",
+        price: 3000,
+        type: 'tool' as const,
+        rarity: 'uncommon' as const,
+        effects: {
+          passive: { winRateBoost: 3, coinsPerHour: 40 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 200,
+        currentPrice: 3000
+      },
+
+      // Mystery & Chaos Items
+      {
+        name: "Barrel of Sludge",
+        description: "Contains mysterious toxic waste",
+        price: 20000,
+        type: 'collectible' as const,
+        rarity: 'epic' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 30,
+        currentPrice: 20000
+      },
+      {
+        name: "Bat Box",
+        description: "Home for friendly neighborhood bats",
+        price: 8000,
+        type: 'collectible' as const,
+        rarity: 'uncommon' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 100,
+        currentPrice: 8000
+      },
+
+      // Special Event Items
+      {
+        name: "Ahexy's Power",
+        description: "Mysterious power artifact from Ahexy",
+        price: 125000,
+        type: 'collectible' as const,
+        rarity: 'legendary' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 5,
+        currentPrice: 125000
+      },
+      {
+        name: "Aid's Pickle Paint",
+        description: "Special paint made from pickles",
+        price: 15000,
+        type: 'collectible' as const,
+        rarity: 'rare' as const,
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 75,
+        currentPrice: 15000
+      },
+
+      // More Tools
+      {
+        name: "Trinket",
+        description: "Small lucky charm that brings fortune",
+        price: 2500,
+        type: 'tool' as const,
+        rarity: 'uncommon' as const,
+        effects: {
+          passive: { winRateBoost: 7, coinsPerHour: 30 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        stock: 250,
+        currentPrice: 2500
       }
     ];
 

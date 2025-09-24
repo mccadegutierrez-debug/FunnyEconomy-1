@@ -13,6 +13,7 @@ import InventoryPage from "@/pages/inventory-page";
 import LeaderboardPage from "@/pages/leaderboard-page";
 import AdminPage from "@/pages/admin-page";
 import ProfilePage from "@/pages/profile-page";
+import PublicProfilePage from "@/pages/public-profile-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <ProtectedRoute path="/shop" component={ShopPage} />
       <ProtectedRoute path="/inventory" component={InventoryPage} />
       <ProtectedRoute path="/leaderboard" component={LeaderboardPage} />
+      <Route path="/profile/:username" component={PublicProfilePage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/admin" component={AdminPage} />
       <Route path="/auth" component={AuthPage} />

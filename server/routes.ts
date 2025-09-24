@@ -505,6 +505,43 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Public profile route - accessible without authentication
+  app.get('/api/user/profile/:username', async (req, res) => {
+    try {
+      const { username } = req.params;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Filter out private information for public viewing
+      const publicProfile = {
+        id: user.id,
+        username: user.username,
+        level: user.level,
+        xp: user.xp,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt || new Date(),
+        lastActive: user.lastActive || new Date(),
+        achievements: user.achievements,
+        gameStats: user.gameStats,
+        onlineStatus: user.onlineStatus,
+        // Show total net worth but not exact coin/bank breakdown for privacy
+        netWorth: user.coins + user.bank,
+        // Only show public inventory items (no quantities for privacy)
+        publicInventory: Array.isArray(user.inventory) 
+          ? user.inventory.map((item: any) => ({ itemId: item.itemId }))
+          : []
+      };
+
+      res.json(publicProfile);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Leaderboard route
   app.get('/api/leaderboard', requireAuth, async (req, res) => {
     try {
