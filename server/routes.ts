@@ -421,6 +421,90 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get('/api/user/profile', requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Whitelist only needed profile fields
+      const userProfile = {
+        id: user.id,
+        username: user.username,
+        coins: user.coins,
+        bank: user.bank,
+        bankCapacity: user.bankCapacity,
+        level: user.level,
+        xp: user.xp,
+        inventory: user.inventory,
+        friends: user.friends,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        onlineStatus: user.onlineStatus,
+        createdAt: user.createdAt || new Date(),
+        lastActive: user.lastActive || new Date(),
+        achievements: user.achievements,
+        gameStats: user.gameStats,
+        dailyEarn: user.dailyEarn
+      };
+      
+      res.json(userProfile);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/user/profile', requireAuth, async (req, res) => {
+    try {
+      const profileUpdateSchema = z.object({
+        bio: z.string().max(200).optional(),
+        avatarUrl: z.string().url().optional().or(z.literal(""))
+      });
+      
+      const updates = profileUpdateSchema.parse(req.body);
+      const user = await storage.getUserByUsername(req.user!.username);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Only allow bio and avatarUrl updates for security
+      const allowedUpdates: { bio?: string; avatarUrl?: string } = {};
+      if (updates.bio !== undefined) allowedUpdates.bio = updates.bio;
+      if (updates.avatarUrl !== undefined) allowedUpdates.avatarUrl = updates.avatarUrl;
+      
+      await storage.updateUser(user.id, allowedUpdates);
+      
+      const updatedUser = await storage.getUserByUsername(req.user!.username);
+      
+      // Return whitelisted profile fields
+      const userProfile = {
+        id: updatedUser!.id,
+        username: updatedUser!.username,
+        coins: updatedUser!.coins,
+        bank: updatedUser!.bank,
+        bankCapacity: updatedUser!.bankCapacity,
+        level: updatedUser!.level,
+        xp: updatedUser!.xp,
+        inventory: updatedUser!.inventory,
+        friends: updatedUser!.friends,
+        bio: updatedUser!.bio,
+        avatarUrl: updatedUser!.avatarUrl,
+        onlineStatus: updatedUser!.onlineStatus,
+        createdAt: updatedUser!.createdAt || new Date(),
+        lastActive: updatedUser!.lastActive || new Date(),
+        achievements: updatedUser!.achievements,
+        gameStats: updatedUser!.gameStats,
+        dailyEarn: updatedUser!.dailyEarn
+      };
+      
+      res.json(userProfile);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   // Leaderboard route
   app.get('/api/leaderboard', requireAuth, async (req, res) => {
     try {
