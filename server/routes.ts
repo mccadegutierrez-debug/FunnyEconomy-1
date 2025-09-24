@@ -309,6 +309,24 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Public items endpoint for displaying item metadata without auth
+  app.get('/api/public/items', async (req, res) => {
+    try {
+      const items = await storage.getAllItems();
+      // Return only public metadata needed for display
+      const publicItems = items.map(item => ({
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        rarity: item.rarity,
+        description: item.description
+      }));
+      res.json(publicItems);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   app.post('/api/shop/buy', requireAuth, async (req, res) => {
     try {
       const { itemId, quantity = 1 } = req.body;
@@ -509,7 +527,12 @@ export function registerRoutes(app: Express): Server {
   app.get('/api/user/profile/:username', async (req, res) => {
     try {
       const { username } = req.params;
-      const user = await storage.getUserByUsername(username);
+      
+      // Validate username format
+      const usernameSchema = z.string().regex(/^[a-zA-Z0-9_]{3,20}$/, "Invalid username format");
+      const validatedUsername = usernameSchema.parse(username);
+      
+      const user = await storage.getUserByUsername(validatedUsername);
       
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -521,15 +544,15 @@ export function registerRoutes(app: Express): Server {
         username: user.username,
         level: user.level,
         xp: user.xp,
-        bio: user.bio,
-        avatarUrl: user.avatarUrl,
-        createdAt: user.createdAt || new Date(),
-        lastActive: user.lastActive || new Date(),
-        achievements: user.achievements,
-        gameStats: user.gameStats,
-        onlineStatus: user.onlineStatus,
+        bio: user.bio || "",
+        avatarUrl: user.avatarUrl || "",
+        createdAt: (user.createdAt || new Date()).toISOString(),
+        lastActive: (user.lastActive || new Date()).toISOString(),
+        achievements: user.achievements || [],
+        gameStats: user.gameStats || {},
+        onlineStatus: user.onlineStatus || false,
         // Show total net worth but not exact coin/bank breakdown for privacy
-        netWorth: user.coins + user.bank,
+        netWorth: (user.coins || 0) + (user.bank || 0),
         // Only show public inventory items (no quantities for privacy)
         publicInventory: Array.isArray(user.inventory) 
           ? user.inventory.map((item: any) => ({ itemId: item.itemId }))
@@ -538,6 +561,9 @@ export function registerRoutes(app: Express): Server {
 
       res.json(publicProfile);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid username format" });
+      }
       res.status(500).json({ error: 'Internal server error' });
     }
   });

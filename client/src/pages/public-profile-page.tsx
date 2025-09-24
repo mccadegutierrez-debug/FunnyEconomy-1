@@ -110,11 +110,11 @@ export default function PublicProfilePage() {
     enabled: !!username,
   });
 
-  // Get all items for inventory display
+  // Get public item metadata for inventory display (no auth required)
   const { data: allItems = [] } = useQuery({
-    queryKey: ["/api/shop/items"],
+    queryKey: ["/api/public/items"],
     queryFn: async () => {
-      const res = await fetch("/api/shop/items");
+      const res = await fetch("/api/public/items");
       if (!res.ok) return [];
       return res.json();
     },
