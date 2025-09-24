@@ -216,6 +216,34 @@ export default function AdminPage() {
     },
   });
 
+  const removeCoinsUserMutation = useMutation({
+    mutationFn: async ({ userId, amount }: { userId: string; amount: string }) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/remove-coins`, {
+        body: { amount: parseInt(amount) || 0 },
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Coins Removed! 💸",
+        description: data.message || "Coins have been removed from the user successfully.",
+      });
+      setSelectedUser(null);
+      setCoinAmount("");
+      setShowUserActionDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Remove Coins Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const createItemMutation = useMutation({
     mutationFn: async (itemData: any) => {
       const keyToUse = storedKey || adminKey;
@@ -680,6 +708,18 @@ export default function AdminPage() {
                                 data-testid={`button-give-coins-${user.id}`}
                               >
                                 💰 Give Coins
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setUserAction("remove-coins");
+                                  setShowUserActionDialog(true);
+                                }}
+                                data-testid={`button-remove-coins-${user.id}`}
+                              >
+                                💸 Remove Coins
                               </Button>
                               <Button
                                 size="sm"
@@ -1201,6 +1241,7 @@ export default function AdminPage() {
                 {userAction === "ban" && "🔨 Ban User"}
                 {userAction === "temp-ban" && "⏱️ Temporary Ban User"}
                 {userAction === "give-coins" && "💰 Give Coins"}
+                {userAction === "remove-coins" && "💸 Remove Coins"}
               </DialogTitle>
               <DialogDescription>
                 {selectedUser && (
@@ -1208,6 +1249,7 @@ export default function AdminPage() {
                     {userAction === "ban" && `Permanently ban ${selectedUser.username} from the platform.`}
                     {userAction === "temp-ban" && `Temporarily ban ${selectedUser.username} for a specified duration.`}
                     {userAction === "give-coins" && `Give coins to ${selectedUser.username}.`}
+                    {userAction === "remove-coins" && `Remove coins from ${selectedUser.username}.`}
                   </>
                 )}
               </DialogDescription>
@@ -1269,6 +1311,26 @@ export default function AdminPage() {
                 </div>
               )}
               
+              {userAction === "remove-coins" && (
+                <div>
+                  <Label htmlFor="remove-coin-amount">Amount</Label>
+                  <Input
+                    id="remove-coin-amount"
+                    type="number"
+                    value={coinAmount}
+                    onChange={(e) => setCoinAmount(e.target.value)}
+                    placeholder="Enter amount of coins to remove"
+                    min="1"
+                    data-testid="input-remove-coin-amount"
+                  />
+                  {selectedUser && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Current balance: {selectedUser.coins.toLocaleString()} coins
+                    </p>
+                  )}
+                </div>
+              )}
+              
               <div className="flex space-x-2">
                 <Button
                   onClick={() => {
@@ -1285,18 +1347,25 @@ export default function AdminPage() {
                         userId: selectedUser.id, 
                         amount: coinAmount 
                       });
+                    } else if (userAction === "remove-coins" && selectedUser) {
+                      removeCoinsUserMutation.mutate({ 
+                        userId: selectedUser.id, 
+                        amount: coinAmount 
+                      });
                     }
                   }}
                   disabled={
                     (userAction === "ban" && !banReason.trim()) ||
                     (userAction === "temp-ban" && (!banReason.trim() || !tempBanDuration)) ||
-                    (userAction === "give-coins" && (!coinAmount || parseInt(coinAmount) <= 0))
+                    (userAction === "give-coins" && (!coinAmount || parseInt(coinAmount) <= 0)) ||
+                    (userAction === "remove-coins" && (!coinAmount || parseInt(coinAmount) <= 0))
                   }
                   data-testid="button-confirm-action"
                 >
                   {userAction === "ban" && "Confirm Ban"}
                   {userAction === "temp-ban" && "Confirm Temporary Ban"}
                   {userAction === "give-coins" && "Give Coins"}
+                  {userAction === "remove-coins" && "Remove Coins"}
                 </Button>
                 <Button
                   variant="outline"
