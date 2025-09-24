@@ -321,11 +321,12 @@ export function registerRoutes(app: Express): Server {
       }
 
       // Update user inventory and coins
-      const existingItem = user.inventory.find(invItem => invItem.itemId === itemId);
+      const inventory = user.inventory as any[] || [];
+      const existingItem = inventory.find((invItem: any) => invItem.itemId === itemId);
       if (existingItem) {
         existingItem.quantity += quantity;
       } else {
-        user.inventory.push({
+        inventory.push({
           itemId,
           quantity,
           equipped: false
@@ -334,14 +335,16 @@ export function registerRoutes(app: Express): Server {
 
       await storage.updateUser(user.id, {
         coins: user.coins - totalCost,
-        inventory: user.inventory
+        inventory: inventory
       });
 
       await storage.createTransaction({
         user: req.user!.username,
         type: 'spend',
         amount: totalCost,
-        description: `Bought ${quantity}x ${item.name} for ${totalCost} coins`
+        description: `Bought ${quantity}x ${item.name} for ${totalCost} coins`,
+        targetUser: null,
+        timestamp: new Date()
       });
 
       res.json({ 
@@ -365,7 +368,8 @@ export function registerRoutes(app: Express): Server {
 
       // Get full item details for inventory
       const inventory = [];
-      for (const invItem of user.inventory) {
+      const userInventory = user.inventory as any[] || [];
+      for (const invItem of userInventory) {
         const item = await storage.getItem(invItem.itemId);
         if (item) {
           inventory.push({
@@ -484,22 +488,29 @@ export function registerRoutes(app: Express): Server {
   // Temporary ban user
   app.post('/api/admin/users/:id/tempban', requireAdmin, async (req, res) => {
     try {
-      const { reason, duration } = req.body; // duration in hours
+      const tempBanSchema = z.object({
+        reason: z.string().min(1, "Reason is required"),
+        duration: z.union([z.number(), z.string()]).transform(val => {
+          const num = typeof val === 'string' ? parseInt(val) : val;
+          if (isNaN(num) || num <= 0 || num > 8760) { // Max 1 year
+            throw new Error('Invalid duration (must be 1-8760 hours)');
+          }
+          return num;
+        })
+      });
+
+      const { reason, duration } = tempBanSchema.parse(req.body);
       const user = await storage.getUser(req.params.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      if (!duration || isNaN(parseInt(duration))) {
-        return res.status(400).json({ error: "Invalid duration" });
-      }
-
       const tempBanUntil = new Date();
-      tempBanUntil.setHours(tempBanUntil.getHours() + parseInt(duration));
+      tempBanUntil.setHours(tempBanUntil.getHours() + duration);
 
       await storage.updateUser(user.id, {
         banned: false, // Keep permanent ban false for temp bans
-        banReason: reason || "Temporary ban",
+        banReason: reason,
         tempBanUntil
       });
 
@@ -512,31 +523,36 @@ export function registerRoutes(app: Express): Server {
   // Give coins to specific user
   app.post('/api/admin/users/:id/give-coins', requireAdmin, async (req, res) => {
     try {
-      const { amount } = req.body;
+      const giveCoinsSchema = z.object({
+        amount: z.union([z.number(), z.string()]).transform(val => {
+          const num = typeof val === 'string' ? parseInt(val) : val;
+          if (isNaN(num) || num <= 0) {
+            throw new Error('Invalid amount');
+          }
+          return num;
+        })
+      });
+
+      const { amount } = giveCoinsSchema.parse(req.body);
       const user = await storage.getUser(req.params.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      if (!amount || isNaN(parseInt(amount))) {
-        return res.status(400).json({ error: "Invalid amount" });
-      }
-
-      const coinAmount = parseInt(amount);
       await storage.updateUser(user.id, {
-        coins: user.coins + coinAmount
+        coins: user.coins + amount
       });
 
       await storage.createTransaction({
         user: user.username,
         type: 'earn',
-        amount: coinAmount,
-        description: `Admin gave ${coinAmount} coins`,
+        amount: amount,
+        description: `Admin gave ${amount} coins`,
         targetUser: null,
         timestamp: new Date()
       });
 
-      res.json({ success: true, message: `Gave ${coinAmount} coins to ${user.username}` });
+      res.json({ success: true, message: `Gave ${amount} coins to ${user.username}` });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }
@@ -695,6 +711,142 @@ export function registerRoutes(app: Express): Server {
         default:
           res.status(400).json({ error: "Unknown command" });
       }
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Additional admin routes for enhanced functionality
+  app.get('/api/admin/items', requireAdmin, async (req, res) => {
+    try {
+      const items = await storage.getAllItems();
+      res.json(items);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/admin/items', requireAdmin, async (req, res) => {
+    try {
+      const itemSchema = z.object({
+        name: z.string().min(1),
+        description: z.string().min(1),
+        price: z.number().min(0),
+        type: z.enum(['tool', 'collectible', 'powerup', 'consumable', 'lootbox']),
+        rarity: z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+        stock: z.number().min(0),
+        effects: z.object({
+          passive: z.object({
+            winRateBoost: z.number().default(0),
+            coinsPerHour: z.number().default(0)
+          }),
+          active: z.object({
+            useCooldown: z.number().default(0),
+            duration: z.number().default(0),
+            effect: z.string().default("")
+          })
+        }).optional(),
+        currentPrice: z.number().optional()
+      });
+
+      const itemData = itemSchema.parse(req.body);
+      const item = await storage.createItem({
+        ...itemData,
+        currentPrice: itemData.currentPrice || itemData.price,
+        effects: itemData.effects || {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        }
+      });
+      res.json(item);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.put('/api/admin/items/:id', requireAdmin, async (req, res) => {
+    try {
+      const itemSchema = z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().min(1).optional(),
+        price: z.number().min(0).optional(),
+        type: z.enum(['tool', 'collectible', 'powerup', 'consumable', 'lootbox']).optional(),
+        rarity: z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']).optional(),
+        stock: z.number().min(0).optional(),
+        currentPrice: z.number().optional()
+      });
+
+      const updates = itemSchema.parse(req.body);
+      const item = await storage.updateItem(req.params.id, updates);
+      res.json(item);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.delete('/api/admin/items/:id', requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteItem(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/admin/transactions', requireAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const allUsers = await storage.getAllUsers();
+      let allTransactions = [];
+      
+      for (const user of allUsers) {
+        const userTransactions = await storage.getUserTransactions(user.username, limit);
+        allTransactions.push(...userTransactions);
+      }
+      
+      // Sort by timestamp and limit
+      allTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      res.json(allTransactions.slice(0, limit));
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      const allItems = await storage.getAllItems();
+      
+      // Calculate analytics
+      const totalUsers = allUsers.length;
+      const activeUsers = allUsers.filter(u => !u.banned).length;
+      const bannedUsers = allUsers.filter(u => u.banned).length;
+      const totalCoins = allUsers.reduce((sum, u) => sum + u.coins + u.bank, 0);
+      const avgLevel = Math.round(allUsers.reduce((sum, u) => sum + u.level, 0) / totalUsers || 0);
+      
+      // Recent activity (users created in last 7 days)
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const recentUsers = allUsers.filter(u => new Date(u.createdAt) > weekAgo).length;
+      
+      res.json({
+        users: {
+          total: totalUsers,
+          active: activeUsers,
+          banned: bannedUsers,
+          recent: recentUsers
+        },
+        economy: {
+          totalCoins,
+          avgLevel,
+          totalItems: allItems.length
+        },
+        system: {
+          uptime: process.uptime(),
+          memoryUsage: process.memoryUsage(),
+          timestamp: new Date()
+        }
+      });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }

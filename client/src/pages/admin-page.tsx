@@ -10,15 +10,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Users, DollarSign, Settings, Command } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertTriangle, Users, DollarSign, Settings, Command, Package, Activity, BarChart3, Search, Plus, Edit2, Trash2, Eye, RefreshCw, Clock, TrendingUp, Database, Server } from "lucide-react";
 
 export default function AdminPage() {
   const [command, setCommand] = useState("");
   const [adminKey, setAdminKey] = useState("");
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [banReason, setBanReason] = useState("");
+  const [tempBanDuration, setTempBanDuration] = useState("");
+  const [coinAmount, setCoinAmount] = useState("");
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [newItem, setNewItem] = useState({
+    name: "",
+    description: "",
+    price: "",
+    type: "tool",
+    rarity: "common",
+    stock: ""
+  });
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showItemDialog, setShowItemDialog] = useState(false);
+  const [showUserActionDialog, setShowUserActionDialog] = useState(false);
+  const [userAction, setUserAction] = useState<string>("");
   const { toast } = useToast();
 
   // Initialize with stored admin key on component mount
@@ -43,6 +61,45 @@ export default function AdminPage() {
     },
     enabled: isAuthenticated || (!!storedKey && !isAuthenticating),
     retry: false,
+  });
+
+  // Fetch items for item management
+  const { data: items = [] } = useQuery({
+    queryKey: ["/api/admin/items"],
+    queryFn: async () => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("GET", "/api/admin/items", {
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    enabled: isAuthenticated || !!storedKey,
+  });
+
+  // Fetch transactions for monitoring
+  const { data: transactions = [] } = useQuery({
+    queryKey: ["/api/admin/transactions"],
+    queryFn: async () => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("GET", "/api/admin/transactions", {
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    enabled: isAuthenticated || !!storedKey,
+  });
+
+  // Fetch analytics data
+  const { data: analytics } = useQuery({
+    queryKey: ["/api/admin/analytics"],
+    queryFn: async () => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("GET", "/api/admin/analytics", {
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    enabled: isAuthenticated || !!storedKey,
   });
 
   const executeCommandMutation = useMutation({
@@ -87,6 +144,7 @@ export default function AdminPage() {
       });
       setSelectedUser(null);
       setBanReason("");
+      setShowUserActionDialog(false);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
     onError: (error: Error) => {
@@ -95,6 +153,150 @@ export default function AdminPage() {
         description: error.message,
         variant: "destructive",
       });
+    },
+  });
+
+  const unbanUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/unban`, {
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Unbanned! ✅",
+        description: "User has been unbanned successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+  });
+
+  const tempBanUserMutation = useMutation({
+    mutationFn: async ({ userId, reason, duration }: { userId: string; reason: string; duration: string }) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/tempban`, {
+        body: { reason, duration: parseInt(duration) || 1 },
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Temporarily Banned! ⏱️",
+        description: "User has been temporarily banned successfully.",
+      });
+      setSelectedUser(null);
+      setBanReason("");
+      setTempBanDuration("");
+      setShowUserActionDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+  });
+
+  const giveCoinsUserMutation = useMutation({
+    mutationFn: async ({ userId, amount }: { userId: string; amount: string }) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/give-coins`, {
+        body: { amount: parseInt(amount) || 0 },
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Coins Given! 💰",
+        description: "Coins have been given to the user successfully.",
+      });
+      setSelectedUser(null);
+      setCoinAmount("");
+      setShowUserActionDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+  });
+
+  const createItemMutation = useMutation({
+    mutationFn: async (itemData: any) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("POST", "/api/admin/items", {
+        body: {
+          name: itemData.name,
+          description: itemData.description,
+          price: parseFloat(itemData.price) || 0,
+          stock: itemData.stock === "999999" ? 2147483647 : parseInt(itemData.stock) || 0,
+          type: itemData.type,
+          rarity: itemData.rarity,
+          currentPrice: parseFloat(itemData.price) || 0,
+          effects: {
+            passive: { winRateBoost: 0, coinsPerHour: 0 },
+            active: { useCooldown: 0, duration: 0, effect: "" }
+          }
+        },
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Item Created! 📦",
+        description: "New item has been created successfully.",
+      });
+      setNewItem({
+        name: "",
+        description: "",
+        price: "",
+        type: "tool",
+        rarity: "common",
+        stock: ""
+      });
+      setShowItemDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] });
+    },
+  });
+
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ id, itemData }: { id: string; itemData: any }) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("PUT", `/api/admin/items/${id}`, {
+        body: {
+          name: itemData.name,
+          description: itemData.description,
+          price: parseFloat(itemData.price) || undefined,
+          stock: itemData.stock === "999999" ? 2147483647 : parseInt(itemData.stock) || undefined,
+          type: itemData.type,
+          rarity: itemData.rarity,
+          currentPrice: parseFloat(itemData.price) || undefined
+        },
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Item Updated! ✏️",
+        description: "Item has been updated successfully.",
+      });
+      setSelectedItem(null);
+      setShowItemDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] });
+    },
+  });
+
+  const deleteItemMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("DELETE", `/api/admin/items/${id}`, {
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Item Deleted! 🗑️",
+        description: "Item has been deleted successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] });
     },
   });
 
@@ -239,15 +441,27 @@ export default function AdminPage() {
             <p className="text-muted-foreground">Loading admin dashboard...</p>
           </div>
         ) : (
-          <Tabs defaultValue="users" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="overview" data-testid="tab-overview">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Overview
+              </TabsTrigger>
               <TabsTrigger value="users" data-testid="tab-users">
                 <Users className="w-4 h-4 mr-2" />
                 Users
               </TabsTrigger>
-              <TabsTrigger value="economy" data-testid="tab-economy">
-                <DollarSign className="w-4 h-4 mr-2" />
-                Economy
+              <TabsTrigger value="items" data-testid="tab-items">
+                <Package className="w-4 h-4 mr-2" />
+                Items
+              </TabsTrigger>
+              <TabsTrigger value="transactions" data-testid="tab-transactions">
+                <Activity className="w-4 h-4 mr-2" />
+                Transactions
+              </TabsTrigger>
+              <TabsTrigger value="analytics" data-testid="tab-analytics">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Analytics
               </TabsTrigger>
               <TabsTrigger value="system" data-testid="tab-system">
                 <Settings className="w-4 h-4 mr-2" />
@@ -255,16 +469,134 @@ export default function AdminPage() {
               </TabsTrigger>
             </TabsList>
 
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <Users className="w-5 h-5 text-primary" />
+                      <div className="text-2xl font-bold text-primary" data-testid="overview-total-users">
+                        {analytics?.users?.total || 0}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total Users</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <DollarSign className="w-5 h-5 text-accent" />
+                      <div className="text-2xl font-bold text-accent" data-testid="overview-total-coins">
+                        {analytics?.economy?.totalCoins?.toLocaleString() || 0}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total Coins</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <Package className="w-5 h-5 text-secondary" />
+                      <div className="text-2xl font-bold text-secondary" data-testid="overview-total-items">
+                        {analytics?.economy?.totalItems || 0}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total Items</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <Server className="w-5 h-5 text-green-500" />
+                      <div className="text-2xl font-bold text-green-500" data-testid="overview-uptime">
+                        {analytics?.system?.uptime ? Math.floor(analytics.system.uptime / 3600) : 0}h
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Server Uptime</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-impact text-xl">📊 Quick Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Active Users:</span>
+                        <Badge variant="secondary">{analytics?.users?.active || 0}</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Banned Users:</span>
+                        <Badge variant="destructive">{analytics?.users?.banned || 0}</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>New Users (7d):</span>
+                        <Badge variant="outline">{analytics?.users?.recent || 0}</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Average Level:</span>
+                        <Badge>{analytics?.economy?.avgLevel || 0}</Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-impact text-xl">⚡ Recent Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {transactions.slice(0, 5).map((transaction: any) => (
+                        <div key={transaction.id} className="flex items-center justify-between text-sm p-2 bg-muted rounded">
+                          <div>
+                            <span className="font-medium">{transaction.user}</span>
+                            <span className="text-muted-foreground"> • {transaction.type}</span>
+                          </div>
+                          <div className={`font-bold ${transaction.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
             <TabsContent value="users" className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="font-impact text-2xl text-primary">👥 USER MANAGEMENT</CardTitle>
                   <CardDescription>
-                    Manage user accounts, bans, and permissions
+                    Manage user accounts, bans, permissions, and coins
                   </CardDescription>
+                  <div className="flex items-center space-x-4 mt-4">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        placeholder="Search users by username..."
+                        className="pl-10"
+                        data-testid="input-user-search"
+                      />
+                    </div>
+                    <Button
+                      onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] })}
+                      variant="outline"
+                      size="sm"
+                      data-testid="button-refresh-users"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <Card>
                       <CardContent className="p-4 text-center">
                         <div className="text-2xl font-bold text-primary" data-testid="total-users">
@@ -289,10 +621,23 @@ export default function AdminPage() {
                         <div className="text-sm text-muted-foreground">Banned Users</div>
                       </CardContent>
                     </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-blue-500" data-testid="temp-banned-users">
+                          {users.filter((u: any) => u.tempBanUntil && new Date(u.tempBanUntil) > new Date()).length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Temp Banned</div>
+                      </CardContent>
+                    </Card>
                   </div>
 
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {users.map((user: any) => (
+                    {users
+                      .filter((user: any) => 
+                        userSearchTerm === "" || 
+                        user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
+                      )
+                      .map((user: any) => (
                       <div 
                         key={user.id}
                         className="flex items-center justify-between p-3 bg-muted rounded-lg"
@@ -306,29 +651,70 @@ export default function AdminPage() {
                             <div className="font-bold text-foreground flex items-center space-x-2">
                               <span>{user.username}</span>
                               {user.banned && <Badge variant="destructive">BANNED</Badge>}
+                              {user.tempBanUntil && new Date(user.tempBanUntil) > new Date() && (
+                                <Badge variant="secondary">TEMP BANNED</Badge>
+                              )}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Level {user.level} • {user.coins.toLocaleString()} coins
+                              Level {user.level} • {user.coins?.toLocaleString() || 0} coins
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {user.email} • Joined {new Date(user.createdAt).toLocaleDateString()}
+                              Joined {new Date(user.createdAt).toLocaleDateString()}
+                              {user.tempBanUntil && new Date(user.tempBanUntil) > new Date() && (
+                                <span> • Temp ban until {new Date(user.tempBanUntil).toLocaleString()}</span>
+                              )}
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
                           {!user.banned ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setUserAction("give-coins");
+                                  setShowUserActionDialog(true);
+                                }}
+                                data-testid={`button-give-coins-${user.id}`}
+                              >
+                                💰 Give Coins
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setUserAction("temp-ban");
+                                  setShowUserActionDialog(true);
+                                }}
+                                data-testid={`button-temp-ban-${user.id}`}
+                              >
+                                ⏱️ Temp Ban
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setUserAction("ban");
+                                  setShowUserActionDialog(true);
+                                }}
+                                data-testid={`button-ban-${user.id}`}
+                              >
+                                🔨 Ban
+                              </Button>
+                            </>
+                          ) : (
                             <Button
                               size="sm"
-                              variant="destructive"
-                              onClick={() => setSelectedUser(user)}
-                              data-testid={`button-ban-${user.id}`}
+                              variant="outline"
+                              onClick={() => unbanUserMutation.mutate(user.id)}
+                              data-testid={`button-unban-${user.id}`}
                             >
-                              Ban User
+                              ✅ Unban
                             </Button>
-                          ) : (
-                            <div className="text-xs text-destructive">
-                              Banned: {user.banReason}
-                            </div>
                           )}
                         </div>
                       </div>
@@ -382,6 +768,334 @@ export default function AdminPage() {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            <TabsContent value="items" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-impact text-2xl text-secondary">📦 ITEM MANAGEMENT</CardTitle>
+                  <CardDescription>
+                    Create, edit, and manage shop items and inventory
+                  </CardDescription>
+                  <div className="flex items-center space-x-4 mt-4">
+                    <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
+                      <DialogTrigger asChild>
+                        <Button onClick={() => {
+                          setSelectedItem(null);
+                          setNewItem({
+                            name: "",
+                            description: "",
+                            price: "",
+                            type: "tool",
+                            rarity: "common",
+                            stock: ""
+                          });
+                        }} data-testid="button-create-item">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Item
+                        </Button>
+                      </DialogTrigger>
+                    </Dialog>
+                    <Button
+                      onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] })}
+                      variant="outline"
+                      size="sm"
+                      data-testid="button-refresh-items"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-primary" data-testid="total-items">
+                          {items.length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total Items</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-accent" data-testid="total-item-value">
+                          {items.reduce((sum: number, item: any) => sum + (item.price * item.stock), 0).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total Value</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-green-500" data-testid="available-items">
+                          {items.filter((item: any) => item.stock > 0).length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">In Stock</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-red-500" data-testid="out-of-stock-items">
+                          {items.filter((item: any) => item.stock === 0).length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Out of Stock</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {items.map((item: any) => (
+                      <Card key={item.id} className="relative" data-testid={`item-${item.id}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className="font-bold text-foreground">{item.name}</h3>
+                              <Badge variant={
+                                item.rarity === 'legendary' ? 'default' :
+                                item.rarity === 'epic' ? 'secondary' :
+                                item.rarity === 'rare' ? 'outline' : 'secondary'
+                              }>
+                                {item.rarity.toUpperCase()}
+                              </Badge>
+                            </div>
+                            <Badge variant={item.stock > 0 ? 'secondary' : 'destructive'}>
+                              {item.stock === 2147483647 ? "∞" : item.stock}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {item.description}
+                          </p>
+                          <div className="flex items-center justify-between text-sm mb-3">
+                            <span className="font-medium">💰 {item.currentPrice?.toLocaleString() || item.price?.toLocaleString()}</span>
+                            <span className="text-muted-foreground">{item.type}</span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setNewItem({
+                                  name: item.name,
+                                  description: item.description,
+                                  price: item.currentPrice?.toString() || item.price?.toString(),
+                                  type: item.type,
+                                  rarity: item.rarity,
+                                  stock: item.stock === 2147483647 ? "999999" : item.stock?.toString()
+                                });
+                                setShowItemDialog(true);
+                              }}
+                              data-testid={`button-edit-item-${item.id}`}
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+                                  deleteItemMutation.mutate(item.id);
+                                }
+                              }}
+                              data-testid={`button-delete-item-${item.id}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="transactions" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-impact text-2xl text-accent">💸 TRANSACTION MONITORING</CardTitle>
+                  <CardDescription>
+                    Monitor all user transactions and economic activity
+                  </CardDescription>
+                  <div className="flex items-center space-x-4 mt-4">
+                    <Button
+                      onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] })}
+                      variant="outline"
+                      size="sm"
+                      data-testid="button-refresh-transactions"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-primary" data-testid="total-transactions">
+                          {transactions.length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total Transactions</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-green-500" data-testid="earn-transactions">
+                          {transactions.filter((t: any) => t.amount > 0).length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Earning Transactions</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-red-500" data-testid="spend-transactions">
+                          {transactions.filter((t: any) => t.amount < 0).length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Spending Transactions</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-accent" data-testid="total-volume">
+                          {Math.abs(transactions.reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0)).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total Volume</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {transactions.map((transaction: any) => (
+                      <div 
+                        key={transaction.id}
+                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                        data-testid={`transaction-${transaction.id}`}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-3 h-3 rounded-full ${
+                            transaction.amount > 0 ? 'bg-green-500' : 'bg-red-500'
+                          }`}></div>
+                          <div>
+                            <div className="font-bold text-foreground">
+                              {transaction.user}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {transaction.description}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(transaction.timestamp).toLocaleString()} • {transaction.type}
+                            </div>
+                          </div>
+                        </div>
+                        <div className={`font-bold text-lg ${
+                          transaction.amount > 0 ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                          {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-impact text-2xl text-primary">📊 SYSTEM ANALYTICS</CardTitle>
+                  <CardDescription>
+                    Advanced analytics and system monitoring
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">💾 System Resources</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span>Memory Used:</span>
+                            <Badge variant="outline">
+                              {analytics?.system?.memoryUsage ? 
+                                `${Math.round(analytics.system.memoryUsage.heapUsed / 1024 / 1024)}MB` : 
+                                'N/A'
+                              }
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Memory Total:</span>
+                            <Badge variant="outline">
+                              {analytics?.system?.memoryUsage ? 
+                                `${Math.round(analytics.system.memoryUsage.heapTotal / 1024 / 1024)}MB` : 
+                                'N/A'
+                              }
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Uptime:</span>
+                            <Badge variant="secondary">
+                              {analytics?.system?.uptime ? 
+                                `${Math.floor(analytics.system.uptime / 3600)}h ${Math.floor((analytics.system.uptime % 3600) / 60)}m` : 
+                                'N/A'
+                              }
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Last Updated:</span>
+                            <Badge variant="outline">
+                              {analytics?.system?.timestamp ? 
+                                new Date(analytics.system.timestamp).toLocaleTimeString() : 
+                                'N/A'
+                              }
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">📈 Economic Trends</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span>Total Economy Value:</span>
+                            <Badge variant="secondary">
+                              {analytics?.economy?.totalCoins?.toLocaleString() || 0}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Average User Wealth:</span>
+                            <Badge variant="outline">
+                              {analytics?.users?.total ? 
+                                Math.round((analytics.economy?.totalCoins || 0) / analytics.users.total).toLocaleString() : 
+                                0
+                              }
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Items in Circulation:</span>
+                            <Badge variant="secondary">
+                              {analytics?.economy?.totalItems || 0}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Active vs Banned Ratio:</span>
+                            <Badge variant={
+                              (analytics?.users?.banned || 0) > (analytics?.users?.active || 0) * 0.1 ? 
+                              'destructive' : 'secondary'
+                            }>
+                              {analytics?.users?.active || 0}:{analytics?.users?.banned || 0}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="economy" className="space-y-4">
@@ -478,6 +1192,264 @@ export default function AdminPage() {
             </TabsContent>
           </Tabs>
         )}
+
+        {/* User Action Dialog */}
+        <Dialog open={showUserActionDialog} onOpenChange={setShowUserActionDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {userAction === "ban" && "🔨 Ban User"}
+                {userAction === "temp-ban" && "⏱️ Temporary Ban User"}
+                {userAction === "give-coins" && "💰 Give Coins"}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedUser && (
+                  <>
+                    {userAction === "ban" && `Permanently ban ${selectedUser.username} from the platform.`}
+                    {userAction === "temp-ban" && `Temporarily ban ${selectedUser.username} for a specified duration.`}
+                    {userAction === "give-coins" && `Give coins to ${selectedUser.username}.`}
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {userAction === "ban" && (
+                <div>
+                  <Label htmlFor="ban-reason">Ban Reason</Label>
+                  <Textarea
+                    id="ban-reason"
+                    value={banReason}
+                    onChange={(e) => setBanReason(e.target.value)}
+                    placeholder="Enter reason for ban"
+                    data-testid="textarea-ban-reason"
+                  />
+                </div>
+              )}
+              
+              {userAction === "temp-ban" && (
+                <>
+                  <div>
+                    <Label htmlFor="temp-ban-reason">Ban Reason</Label>
+                    <Textarea
+                      id="temp-ban-reason"
+                      value={banReason}
+                      onChange={(e) => setBanReason(e.target.value)}
+                      placeholder="Enter reason for temporary ban"
+                      data-testid="textarea-temp-ban-reason"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="temp-ban-duration">Duration (hours)</Label>
+                    <Input
+                      id="temp-ban-duration"
+                      type="number"
+                      value={tempBanDuration}
+                      onChange={(e) => setTempBanDuration(e.target.value)}
+                      placeholder="Enter duration in hours"
+                      min="1"
+                      max="8760"
+                      data-testid="input-temp-ban-duration"
+                    />
+                  </div>
+                </>
+              )}
+              
+              {userAction === "give-coins" && (
+                <div>
+                  <Label htmlFor="coin-amount">Amount</Label>
+                  <Input
+                    id="coin-amount"
+                    type="number"
+                    value={coinAmount}
+                    onChange={(e) => setCoinAmount(e.target.value)}
+                    placeholder="Enter amount of coins to give"
+                    min="1"
+                    data-testid="input-coin-amount"
+                  />
+                </div>
+              )}
+              
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => {
+                    if (userAction === "ban" && selectedUser) {
+                      banUserMutation.mutate({ userId: selectedUser.id, reason: banReason });
+                    } else if (userAction === "temp-ban" && selectedUser) {
+                      tempBanUserMutation.mutate({ 
+                        userId: selectedUser.id, 
+                        reason: banReason, 
+                        duration: tempBanDuration 
+                      });
+                    } else if (userAction === "give-coins" && selectedUser) {
+                      giveCoinsUserMutation.mutate({ 
+                        userId: selectedUser.id, 
+                        amount: coinAmount 
+                      });
+                    }
+                  }}
+                  disabled={
+                    (userAction === "ban" && !banReason.trim()) ||
+                    (userAction === "temp-ban" && (!banReason.trim() || !tempBanDuration)) ||
+                    (userAction === "give-coins" && (!coinAmount || parseInt(coinAmount) <= 0))
+                  }
+                  data-testid="button-confirm-action"
+                >
+                  {userAction === "ban" && "Confirm Ban"}
+                  {userAction === "temp-ban" && "Confirm Temporary Ban"}
+                  {userAction === "give-coins" && "Give Coins"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowUserActionDialog(false);
+                    setSelectedUser(null);
+                    setBanReason("");
+                    setTempBanDuration("");
+                    setCoinAmount("");
+                    setUserAction("");
+                  }}
+                  data-testid="button-cancel-action"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Item Creation/Edit Dialog */}
+        <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedItem ? "✏️ Edit Item" : "📦 Create New Item"}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedItem ? "Update the item details below." : "Fill in the details to create a new item."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="item-name">Name</Label>
+                <Input
+                  id="item-name"
+                  value={newItem.name}
+                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  placeholder="Item name"
+                  data-testid="input-item-name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="item-description">Description</Label>
+                <Textarea
+                  id="item-description"
+                  value={newItem.description}
+                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                  placeholder="Item description"
+                  data-testid="textarea-item-description"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="item-price">Price</Label>
+                  <Input
+                    id="item-price"
+                    type="number"
+                    value={newItem.price}
+                    onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    data-testid="input-item-price"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="item-stock">Stock</Label>
+                  <Input
+                    id="item-stock"
+                    type="number"
+                    value={newItem.stock}
+                    onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    data-testid="input-item-stock"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="item-type">Type</Label>
+                  <Select value={newItem.type} onValueChange={(value) => setNewItem({ ...newItem, type: value })}>
+                    <SelectTrigger data-testid="select-item-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tool">Tool</SelectItem>
+                      <SelectItem value="collectible">Collectible</SelectItem>
+                      <SelectItem value="powerup">Powerup</SelectItem>
+                      <SelectItem value="consumable">Consumable</SelectItem>
+                      <SelectItem value="lootbox">Lootbox</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="item-rarity">Rarity</Label>
+                  <Select value={newItem.rarity} onValueChange={(value) => setNewItem({ ...newItem, rarity: value })}>
+                    <SelectTrigger data-testid="select-item-rarity">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="common">Common</SelectItem>
+                      <SelectItem value="uncommon">Uncommon</SelectItem>
+                      <SelectItem value="rare">Rare</SelectItem>
+                      <SelectItem value="epic">Epic</SelectItem>
+                      <SelectItem value="legendary">Legendary</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => {
+                    if (selectedItem) {
+                      updateItemMutation.mutate({ id: selectedItem.id, itemData: newItem });
+                    } else {
+                      createItemMutation.mutate(newItem);
+                    }
+                  }}
+                  disabled={
+                    !newItem.name.trim() || 
+                    !newItem.description.trim() || 
+                    !newItem.price || 
+                    !newItem.stock ||
+                    parseInt(newItem.price) <= 0 ||
+                    parseInt(newItem.stock) < 0
+                  }
+                  data-testid="button-save-item"
+                >
+                  {selectedItem ? "Update Item" : "Create Item"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowItemDialog(false);
+                    setSelectedItem(null);
+                    setNewItem({
+                      name: "",
+                      description: "",
+                      price: "",
+                      type: "tool",
+                      rarity: "common",
+                      stock: ""
+                    });
+                  }}
+                  data-testid="button-cancel-item"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
 
       <Footer />
