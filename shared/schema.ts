@@ -110,10 +110,36 @@ export const auditLogs = pgTable("audit_logs", {
   timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
 });
 
+export const userPets = pgTable("user_pets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  petId: varchar("pet_id").notNull(),
+  petName: varchar("pet_name").notNull(),
+  hunger: integer("hunger").default(100).notNull(), // 0-100
+  hygiene: integer("hygiene").default(100).notNull(), // 0-100
+  energy: integer("energy").default(100).notNull(), // 0-100
+  fun: integer("fun").default(100).notNull(), // 0-100
+  level: integer("level").default(1).notNull(),
+  xp: integer("xp").default(0).notNull(),
+  lastFed: timestamp("last_fed").default(sql`now()`).notNull(),
+  lastCleaned: timestamp("last_cleaned").default(sql`now()`).notNull(),
+  lastPlayed: timestamp("last_played").default(sql`now()`).notNull(),
+  lastSlept: timestamp("last_slept").default(sql`now()`).notNull(),
+  adoptedAt: timestamp("adopted_at").default(sql`now()`).notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
   notifications: many(notifications),
+  pets: many(userPets),
+}));
+
+export const userPetsRelations = relations(userPets, ({ one }) => ({
+  user: one(users, {
+    fields: [userPets.userId],
+    references: [users.id],
+  }),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -141,6 +167,8 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 export const selectNotificationSchema = createSelectSchema(notifications);
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, timestamp: true });
 export const selectAuditLogSchema = createSelectSchema(auditLogs);
+export const insertUserPetSchema = createInsertSchema(userPets).omit({ id: true, adoptedAt: true });
+export const selectUserPetSchema = createSelectSchema(userPets);
 
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -152,3 +180,5 @@ export type Event = typeof events.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertUserPet = z.infer<typeof insertUserPetSchema>;
+export type UserPet = typeof userPets.$inferSelect;

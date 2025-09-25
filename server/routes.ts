@@ -11,6 +11,7 @@ import { EconomyService } from "./services/economyService";
 import { FreemiumService } from "./services/freemiumService";
 import { filterMessage } from "./utils/profanityFilter";
 import rateLimit from "express-rate-limit";
+import { AVAILABLE_PETS, getPetById, calculateStatDecay } from "@shared/pets-data";
 
 // Rate limiter for API endpoints
 const apiLimiter = rateLimit({
@@ -599,6 +600,192 @@ export function registerRoutes(app: Express): Server {
       const limit = parseInt(req.query.limit as string) || 20;
       const leaderboard = await storage.getLeaderboard(limit);
       res.json(leaderboard);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pets routes
+  app.get('/api/pets/user', requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const pets = await storage.getUserPets(user.id);
+      res.json(pets);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/adopt', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.body;
+      
+      const petType = getPetById(petId);
+      if (!petType) {
+        return res.status(404).json({ error: "Pet type not found" });
+      }
+
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (user.coins < petType.adoptionCost) {
+        return res.status(400).json({ error: "Insufficient coins" });
+      }
+
+      // Check if user already owns this pet
+      const existingPets = await storage.getUserPets(user.id);
+      const alreadyOwned = existingPets.some(pet => pet.petId === petId);
+      
+      if (alreadyOwned) {
+        return res.status(400).json({ error: "You already own this pet" });
+      }
+
+      // Deduct adoption cost
+      await storage.updateUser(user.id, {
+        coins: user.coins - petType.adoptionCost
+      });
+
+      // Create adoption transaction
+      await storage.createTransaction({
+        user: user.username,
+        type: 'spend',
+        amount: petType.adoptionCost,
+        description: `Adopted ${petType.name}`,
+        targetUser: null
+      });
+
+      // Create the pet
+      const pet = await storage.createUserPet({
+        userId: user.id,
+        petId: petId,
+        petName: petType.name,
+        hunger: 100,
+        hygiene: 100,
+        energy: 100,
+        fun: 100,
+        level: 1,
+        xp: 0,
+        lastFed: new Date(),
+        lastCleaned: new Date(),
+        lastPlayed: new Date(),
+        lastSlept: new Date()
+      });
+
+      res.json(pet);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:petId/feed', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const updatedPet = await storage.updateUserPet(petId, {
+        hunger: 100,
+        lastFed: new Date()
+      });
+
+      res.json(updatedPet);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:petId/clean', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const updatedPet = await storage.updateUserPet(petId, {
+        hygiene: 100,
+        lastCleaned: new Date()
+      });
+
+      res.json(updatedPet);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:petId/play', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const updatedPet = await storage.updateUserPet(petId, {
+        fun: 100,
+        lastPlayed: new Date()
+      });
+
+      res.json(updatedPet);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:petId/sleep', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const updatedPet = await storage.updateUserPet(petId, {
+        energy: 100,
+        lastSlept: new Date()
+      });
+
+      res.json(updatedPet);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }

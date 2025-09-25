@@ -11,6 +11,7 @@ import GamesPage from "@/pages/games-page";
 import ShopPage from "@/pages/shop-page";
 import InventoryPage from "@/pages/inventory-page";
 import LeaderboardPage from "@/pages/leaderboard-page";
+import PetsPage from "@/pages/pets-page";
 import AdminPage from "@/pages/admin-page";
 import ProfilePage from "@/pages/profile-page";
 import PublicProfilePage from "@/pages/public-profile-page";
@@ -37,6 +38,7 @@ function Router() {
       <ProtectedRoute path="/games" component={GamesPage} />
       <ProtectedRoute path="/shop" component={ShopPage} />
       <ProtectedRoute path="/inventory" component={InventoryPage} />
+      <ProtectedRoute path="/pets" component={PetsPage} />
       <ProtectedRoute path="/leaderboard" component={LeaderboardPage} />
       <Route path="/profile/:username" component={PublicProfilePage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />

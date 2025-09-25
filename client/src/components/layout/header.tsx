@@ -86,6 +86,7 @@ export default function Header() {
     { href: "/games", label: "Games", active: location === "/games" },
     { href: "/shop", label: "Shop", active: location === "/shop" },
     { href: "/inventory", label: "Inventory", active: location === "/inventory" },
+    { href: "/pets", label: "Pets", active: location === "/pets" },
     { href: "/leaderboard", label: "Leaderboard", active: location === "/leaderboard" },
   ];
 

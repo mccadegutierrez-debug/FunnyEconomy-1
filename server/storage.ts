@@ -1,4 +1,4 @@
-import { users, items, transactions, notifications, chatMessages, auditLogs, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog } from "@shared/schema";
+import { users, items, transactions, notifications, chatMessages, auditLogs, userPets, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog, type UserPet, type InsertUserPet } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import session from "express-session";
@@ -45,6 +45,12 @@ export interface IStorage {
   getAuditLogs(limit?: number): Promise<AuditLog[]>;
   getAuditLogsByAdmin(adminUsername: string, limit?: number): Promise<AuditLog[]>;
   getAuditLogsByAction(action: string, limit?: number): Promise<AuditLog[]>;
+  
+  // User Pets
+  getUserPets(userId: string): Promise<UserPet[]>;
+  createUserPet(pet: Omit<UserPet, 'id' | 'adoptedAt'>): Promise<UserPet>;
+  updateUserPet(petId: string, updates: Partial<UserPet>): Promise<UserPet>;
+  deleteUserPet(petId: string): Promise<void>;
   
   // System
   initializeData(): Promise<void>;
@@ -919,6 +925,42 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit);
     return logs;
+  }
+
+  // User Pets Methods
+  async getUserPets(userId: string): Promise<UserPet[]> {
+    const pets = await db
+      .select()
+      .from(userPets)
+      .where(eq(userPets.userId, userId))
+      .orderBy(desc(userPets.adoptedAt));
+    return pets;
+  }
+
+  async createUserPet(petData: Omit<UserPet, 'id' | 'adoptedAt'>): Promise<UserPet> {
+    const [pet] = await db
+      .insert(userPets)
+      .values({
+        ...petData,
+        adoptedAt: new Date(),
+      })
+      .returning();
+    return pet;
+  }
+
+  async updateUserPet(petId: string, updates: Partial<UserPet>): Promise<UserPet> {
+    const [pet] = await db
+      .update(userPets)
+      .set(updates)
+      .where(eq(userPets.id, petId))
+      .returning();
+    return pet;
+  }
+
+  async deleteUserPet(petId: string): Promise<void> {
+    await db
+      .delete(userPets)
+      .where(eq(userPets.id, petId));
   }
 }
 
