@@ -14,6 +14,14 @@ declare global {
   }
 }
 
+// Extend session data interface
+declare module 'express-session' {
+  interface SessionData {
+    isAdmin?: boolean;
+    adminAuthTime?: string | null;
+  }
+}
+
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
@@ -51,6 +59,15 @@ export function setupAuth(app: Express) {
     legacyHeaders: false,
   });
 
+  // Admin key rate limiter - more restrictive
+  const adminAuthLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 3, // Only 3 admin authentication attempts per window
+    message: { error: "Too many admin authentication attempts, try again later" },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -84,6 +101,49 @@ export function setupAuth(app: Express) {
     } catch (error) {
       done(error);
     }
+  });
+
+  // Admin authentication endpoint
+  app.post("/api/admin/authenticate", adminAuthLimiter, async (req, res) => {
+    try {
+      const { adminKey } = req.body;
+      
+      if (!adminKey) {
+        return res.status(400).json({ error: "Admin key is required" });
+      }
+      
+      const serverAdminKey = process.env.ADMIN_KEY;
+      if (!serverAdminKey) {
+        return res.status(500).json({ error: "Admin system not configured" });
+      }
+      
+      if (adminKey !== serverAdminKey) {
+        return res.status(403).json({ error: "Invalid admin key" });
+      }
+      
+      // Store admin authentication in session
+      if (req.session) {
+        req.session.isAdmin = true;
+        req.session.adminAuthTime = new Date().toISOString();
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Admin authentication successful",
+        adminAuthTime: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Authentication failed" });
+    }
+  });
+
+  // Admin logout endpoint
+  app.post("/api/admin/logout", (req, res) => {
+    if (req.session) {
+      req.session.isAdmin = false;
+      req.session.adminAuthTime = null;
+    }
+    res.json({ success: true, message: "Admin session terminated" });
   });
 
   app.post("/api/register", authLimiter, async (req, res, next) => {
@@ -236,8 +296,31 @@ export function requireAuth(req: any, res: any, next: any) {
   return next();
 }
 
-// Middleware to check if user is admin
+// Middleware to check if user is admin (session-based)
 export function requireAdmin(req: any, res: any, next: any) {
+  // Check if admin session exists and is valid
+  if (!req.session || !req.session.isAdmin) {
+    return res.status(403).json({ error: "Admin authentication required" });
+  }
+  
+  // Check session timeout (24 hours)
+  if (req.session.adminAuthTime) {
+    const authTime = new Date(req.session.adminAuthTime);
+    const now = new Date();
+    const hoursSinceAuth = (now.getTime() - authTime.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursSinceAuth > 24) {
+      req.session.isAdmin = false;
+      req.session.adminAuthTime = null;
+      return res.status(403).json({ error: "Admin session expired. Please re-authenticate." });
+    }
+  }
+  
+  return next();
+}
+
+// Legacy admin key check (fallback for backward compatibility)
+export function requireAdminKey(req: any, res: any, next: any) {
   const adminKey = process.env.ADMIN_KEY;
   
   if (!adminKey) {
@@ -292,21 +375,26 @@ export const AdminPermissions = {
   ]
 };
 
-// Middleware to check role-based permissions
+// Middleware to check role-based permissions (session-based)
 export function requirePermission(permission: string) {
   return async (req: any, res: any, next: any) => {
     try {
-      // First check if they have basic admin access (admin key)
-      const adminKey = process.env.ADMIN_KEY;
-      
-      if (!adminKey) {
-        return res.status(500).json({ error: "Admin system not configured" });
+      // First check if they have basic admin access (session-based)
+      if (!req.session || !req.session.isAdmin) {
+        return res.status(403).json({ error: "Admin authentication required" });
       }
       
-      const providedKey = req.headers['admin-key'] || req.body.adminKey;
-      
-      if (providedKey !== adminKey) {
-        return res.status(403).json({ error: "Admin access required" });
+      // Check session timeout (24 hours)
+      if (req.session.adminAuthTime) {
+        const authTime = new Date(req.session.adminAuthTime);
+        const now = new Date();
+        const hoursSinceAuth = (now.getTime() - authTime.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceAuth > 24) {
+          req.session.isAdmin = false;
+          req.session.adminAuthTime = null;
+          return res.status(403).json({ error: "Admin session expired. Please re-authenticate." });
+        }
       }
 
       // For role-based permissions, we need the user to be authenticated

@@ -42,35 +42,40 @@ export default function AdminPage() {
   const [showUserActionDialog, setShowUserActionDialog] = useState(false);
   const [userAction, setUserAction] = useState<string>("");
   const [selectedAdminRole, setSelectedAdminRole] = useState("");
-  const storedKey = localStorage.getItem('adminKey');
   const { toast } = useToast();
 
-  // Check admin access through session-based authentication only
+  // Check admin access through session-based authentication
   useEffect(() => {
     const checkAdminAccess = async () => {
       try {
         setIsAuthenticating(true);
-        const res = await apiRequest("GET", "/api/user");
         
-        if (!res.ok) {
-          throw new Error("Not authenticated");
+        // First check if user is logged in
+        const userRes = await apiRequest("GET", "/api/user");
+        
+        if (!userRes.ok) {
+          setAuthError("Please log in first to access admin panel.");
+          setIsAuthenticated(false);
+          return;
         }
         
-        const userData = await res.json();
+        const userData = await userRes.json();
         setCurrentUser(userData);
         
-        // Check if user has any admin role
-        if (userData.adminRole && userData.adminRole !== 'none') {
+        // Check admin access by trying to access admin endpoint
+        const adminRes = await apiRequest("GET", "/api/admin/users");
+        
+        if (adminRes.ok) {
           setIsAuthenticated(true);
           setAuthError("");
         } else {
           setIsAuthenticated(false);
-          setAuthError("Admin role required. Please contact an administrator.");
+          setAuthError("Admin authentication required. Please enter the admin key.");
         }
       } catch (error) {
         setIsAuthenticated(false);
         setCurrentUser(null);
-        setAuthError("Authentication required. Please log in first.");
+        setAuthError("Please log in first to access admin panel.");
       } finally {
         setIsAuthenticating(false);
       }
@@ -186,10 +191,8 @@ export default function AdminPage() {
 
   const tempBanUserMutation = useMutation({
     mutationFn: async ({ userId, reason, duration }: { userId: string; reason: string; duration: string }) => {
-      const keyToUse = storedKey || adminKey;
       const res = await apiRequest("POST", `/api/admin/users/${userId}/tempban`, {
-        body: { reason, duration: parseInt(duration) || 1 },
-        headers: { 'admin-key': keyToUse }
+        body: { reason, duration: parseInt(duration) || 1 }
       });
       return res.json();
     },
@@ -208,10 +211,8 @@ export default function AdminPage() {
 
   const giveCoinsUserMutation = useMutation({
     mutationFn: async ({ userId, amount }: { userId: string; amount: string }) => {
-      const keyToUse = storedKey || adminKey;
       const res = await apiRequest("POST", `/api/admin/users/${userId}/give-coins`, {
-        body: { amount: parseInt(amount) || 0 },
-        headers: { 'admin-key': keyToUse }
+        body: { amount: parseInt(amount) || 0 }
       });
       return res.json();
     },
@@ -229,10 +230,8 @@ export default function AdminPage() {
 
   const removeCoinsUserMutation = useMutation({
     mutationFn: async ({ userId, amount }: { userId: string; amount: string }) => {
-      const keyToUse = storedKey || adminKey;
       const res = await apiRequest("POST", `/api/admin/users/${userId}/remove-coins`, {
-        body: { amount: parseInt(amount) || 0 },
-        headers: { 'admin-key': keyToUse }
+        body: { amount: parseInt(amount) || 0 }
       });
       return res.json();
     },
@@ -257,7 +256,6 @@ export default function AdminPage() {
 
   const createItemMutation = useMutation({
     mutationFn: async (itemData: any) => {
-      const keyToUse = storedKey || adminKey;
       const res = await apiRequest("POST", "/api/admin/items", {
         body: {
           name: itemData.name,
@@ -271,8 +269,7 @@ export default function AdminPage() {
             passive: { winRateBoost: 0, coinsPerHour: 0 },
             active: { useCooldown: 0, duration: 0, effect: "" }
           }
-        },
-        headers: { 'admin-key': keyToUse }
+        }
       });
       return res.json();
     },
@@ -296,7 +293,6 @@ export default function AdminPage() {
 
   const updateItemMutation = useMutation({
     mutationFn: async ({ id, itemData }: { id: string; itemData: any }) => {
-      const keyToUse = storedKey || adminKey;
       const res = await apiRequest("PUT", `/api/admin/items/${id}`, {
         body: {
           name: itemData.name,
@@ -306,8 +302,7 @@ export default function AdminPage() {
           type: itemData.type,
           rarity: itemData.rarity,
           currentPrice: parseFloat(itemData.price) || undefined
-        },
-        headers: { 'admin-key': keyToUse }
+        }
       });
       return res.json();
     },
@@ -324,10 +319,7 @@ export default function AdminPage() {
 
   const deleteItemMutation = useMutation({
     mutationFn: async (id: string) => {
-      const keyToUse = storedKey || adminKey;
-      const res = await apiRequest("DELETE", `/api/admin/items/${id}`, {
-        headers: { 'admin-key': keyToUse }
-      });
+      const res = await apiRequest("DELETE", `/api/admin/items/${id}`);
       return res.json();
     },
     onSuccess: () => {
@@ -341,10 +333,8 @@ export default function AdminPage() {
 
   const giveAdminRoleMutation = useMutation({
     mutationFn: async ({ userId, adminRole }: { userId: string; adminRole: string }) => {
-      const keyToUse = storedKey || adminKey;
       const res = await apiRequest("POST", `/api/admin/users/${userId}/give-admin`, {
-        body: { adminRole },
-        headers: { 'admin-key': keyToUse }
+        body: { adminRole }
       });
       return res.json();
     },
@@ -369,10 +359,7 @@ export default function AdminPage() {
 
   const removeAdminRoleMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const keyToUse = storedKey || adminKey;
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/remove-admin`, {
-        headers: { 'admin-key': keyToUse }
-      });
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/remove-admin`);
       return res.json();
     },
     onSuccess: (data) => {
@@ -396,29 +383,34 @@ export default function AdminPage() {
     if (adminKey) {
       setIsAuthenticating(true);
       try {
-        // Test the admin key by trying to fetch users
-        const res = await apiRequest("GET", "/api/admin/users", {
-          headers: { 'admin-key': adminKey }
+        // Use new admin authentication endpoint
+        const res = await apiRequest("POST", "/api/admin/authenticate", {
+          body: JSON.stringify({ adminKey })
         });
         
         if (res.ok) {
-          localStorage.setItem('adminKey', adminKey);
           setIsAuthenticated(true);
+          setAdminKey(""); // Clear the key from memory
           toast({
             title: "Access Granted! 🔓",
             description: "Welcome to the admin panel",
           });
+          // Refresh the queries to load admin data
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
         } else {
+          const errorData = await res.json();
           toast({
             title: "Access Denied ❌",
-            description: "Invalid admin key",
+            description: errorData.error || "Invalid admin key",
             variant: "destructive",
           });
         }
       } catch (error) {
         toast({
           title: "Access Denied ❌",
-          description: "Invalid admin key",
+          description: "Authentication failed",
           variant: "destructive",
         });
       } finally {
@@ -434,8 +426,8 @@ export default function AdminPage() {
     }
   };
 
-  // Show admin key input if not authenticated and no stored key
-  if (!isAuthenticated && !storedKey) {
+  // Show admin key input if not authenticated
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
