@@ -380,19 +380,19 @@ export default function HomePage() {
     },
   });
 
-  const levelProgress = (user.xp % (user.level * 1000)) / (user.level * 1000) * 100;
-  const nextLevelXP = user.level * 1000;
+  const levelProgress = user ? (user.xp % (user.level * 1000)) / (user.level * 1000) * 100 : 0;
+  const nextLevelXP = user ? user.level * 1000 : 1000;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-6 space-y-8">
+      <main className="container mx-auto px-6 py-8 space-y-12">
         {/* Welcome Section */}
         <Card className="glow-primary border-primary/20" data-testid="welcome-card">
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-8 text-center">
             <h2 className="font-impact text-4xl text-primary mb-2" data-testid="welcome-title">
-              Welcome back, <span className="text-accent">{user.username}</span>! 🚀
+              Welcome back, <span className="text-accent">{user?.username}</span>! 🚀
             </h2>
             <p className="text-muted-foreground text-lg mb-6">Ready to meme your way to riches? 💰</p>
             
@@ -401,14 +401,14 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-2">
                 <span className="text-foreground font-semibold">Level Progress</span>
                 <span className="text-muted-foreground text-sm">
-                  {user.xp} / {nextLevelXP} XP
+                  {user?.xp || 0} / {nextLevelXP} XP
                 </span>
               </div>
               <Progress value={levelProgress} className="h-3" />
             </div>
             
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-8">
               <DailyRewards />
               
               {/* Work Dialog */}
@@ -1024,10 +1024,10 @@ export default function HomePage() {
         </Card>
 
         {/* Economy and Social Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
             {/* Economy Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Bank />
               <Transfer />
             </div>
@@ -1061,7 +1061,7 @@ export default function HomePage() {
             </Card>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Leaderboard Preview */}
             <Card data-testid="leaderboard-preview">
               <CardHeader>

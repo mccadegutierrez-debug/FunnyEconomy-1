@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -8,10 +8,18 @@ import { User as SelectUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+type BanInfo = {
+  type: "permanent" | "temporary";
+  reason: string;
+  banUntil?: string;
+};
+
 type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
+  isBanned: boolean;
+  banInfo: BanInfo | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, RegisterData>;
@@ -29,8 +37,51 @@ type RegisterData = {
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
+// Helper function to parse ban error from API response
+function parseBanError(error: Error): BanInfo | null {
+  const message = error.message;
+  
+  // Check if it's a 403 ban error
+  if (message.includes("403:")) {
+    try {
+      const responseText = message.substring(4); // Remove "403: " prefix
+      const response = JSON.parse(responseText);
+      
+      if (response.error === "Account banned") {
+        return {
+          type: "permanent",
+          reason: response.reason || "No reason provided"
+        };
+      } else if (response.error === "Account temporarily banned") {
+        return {
+          type: "temporary",
+          reason: response.reason || "Temporary ban",
+          banUntil: response.banUntil
+        };
+      }
+    } catch (e) {
+      // If JSON parsing fails, check for simple ban messages
+      if (message.includes("Account banned") || message.includes("banned")) {
+        return {
+          type: "permanent",
+          reason: "Account banned"
+        };
+      } else if (message.includes("temporarily banned") || message.includes("temp")) {
+        return {
+          type: "temporary",
+          reason: "Account temporarily banned"
+        };
+      }
+    }
+  }
+  
+  return null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [banInfo, setBanInfo] = useState<BanInfo | null>(null);
+  const [isBanned, setIsBanned] = useState(false);
   
   const {
     data: user,
@@ -40,6 +91,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+
+  // Check for ban errors when the error changes
+  useEffect(() => {
+    if (error) {
+      const banInfoFromError = parseBanError(error);
+      if (banInfoFromError) {
+        setBanInfo(banInfoFromError);
+        setIsBanned(true);
+      } else {
+        setBanInfo(null);
+        setIsBanned(false);
+      }
+    } else {
+      setBanInfo(null);
+      setIsBanned(false);
+    }
+  }, [error]);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
@@ -109,6 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: user ?? null,
         isLoading,
         error,
+        isBanned,
+        banInfo,
         loginMutation,
         logoutMutation,
         registerMutation,

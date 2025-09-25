@@ -695,7 +695,16 @@ export default function AdminPage() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          {!user.banned ? (
+                          {user.banned || (user.tempBanUntil && new Date(user.tempBanUntil) > new Date()) ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => unbanUserMutation.mutate(user.id)}
+                              data-testid={`button-unban-${user.id}`}
+                            >
+                              ✅ Unban {user.banned ? "(Permanent)" : "(Temp)"}
+                            </Button>
+                          ) : (
                             <>
                               <Button
                                 size="sm"
@@ -746,15 +755,6 @@ export default function AdminPage() {
                                 🔨 Ban
                               </Button>
                             </>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => unbanUserMutation.mutate(user.id)}
-                              data-testid={`button-unban-${user.id}`}
-                            >
-                              ✅ Unban
-                            </Button>
                           )}
                         </div>
                       </div>
