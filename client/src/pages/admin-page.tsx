@@ -17,12 +17,13 @@ import { AlertTriangle, Users, DollarSign, Settings, Command, Package, Activity,
 
 export default function AdminPage() {
   const [command, setCommand] = useState("");
-  const [adminKey, setAdminKey] = useState("");
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [banReason, setBanReason] = useState("");
   const [tempBanDuration, setTempBanDuration] = useState("");
   const [coinAmount, setCoinAmount] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [showAllUsers, setShowAllUsers] = useState(false);
+  const [usersPerPage] = useState(10);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [newItem, setNewItem] = useState({
     name: "",
@@ -32,35 +33,58 @@ export default function AdminPage() {
     rarity: "common",
     stock: ""
   });
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [showUserActionDialog, setShowUserActionDialog] = useState(false);
   const [userAction, setUserAction] = useState<string>("");
   const [selectedAdminRole, setSelectedAdminRole] = useState("");
   const { toast } = useToast();
 
-  // Initialize with stored admin key on component mount
-  const storedKey = localStorage.getItem('adminKey');
-  
-  // Initialize authentication state if there's a stored key
+  // Check admin access through session-based authentication only
   useEffect(() => {
-    if (storedKey && !isAuthenticated) {
-      setIsAuthenticated(true);
-    }
-  }, [storedKey, isAuthenticated]);
+    const checkAdminAccess = async () => {
+      try {
+        setIsAuthenticating(true);
+        const res = await apiRequest("GET", "/api/user");
+        
+        if (!res.ok) {
+          throw new Error("Not authenticated");
+        }
+        
+        const userData = await res.json();
+        setCurrentUser(userData);
+        
+        // Check if user has any admin role
+        if (userData.adminRole && userData.adminRole !== 'none') {
+          setIsAuthenticated(true);
+          setAuthError("");
+        } else {
+          setIsAuthenticated(false);
+          setAuthError("Admin role required. Please contact an administrator.");
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        setAuthError("Authentication required. Please log in first.");
+      } finally {
+        setIsAuthenticating(false);
+      }
+    };
+    
+    checkAdminAccess();
+  }, []);
   
-  // Check if user has admin access by trying to fetch users
+  // Fetch admin data using session-based authentication only
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
-      const keyToUse = storedKey || adminKey;
-      const res = await apiRequest("GET", "/api/admin/users", {
-        headers: { 'admin-key': keyToUse }
-      });
+      const res = await apiRequest("GET", "/api/admin/users");
       return res.json();
     },
-    enabled: isAuthenticated || (!!storedKey && !isAuthenticating),
+    enabled: isAuthenticated,
     retry: false,
   });
 
@@ -68,47 +92,36 @@ export default function AdminPage() {
   const { data: items = [] } = useQuery({
     queryKey: ["/api/admin/items"],
     queryFn: async () => {
-      const keyToUse = storedKey || adminKey;
-      const res = await apiRequest("GET", "/api/admin/items", {
-        headers: { 'admin-key': keyToUse }
-      });
+      const res = await apiRequest("GET", "/api/admin/items");
       return res.json();
     },
-    enabled: isAuthenticated || !!storedKey,
+    enabled: isAuthenticated,
   });
 
   // Fetch transactions for monitoring
   const { data: transactions = [] } = useQuery({
     queryKey: ["/api/admin/transactions"],
     queryFn: async () => {
-      const keyToUse = storedKey || adminKey;
-      const res = await apiRequest("GET", "/api/admin/transactions", {
-        headers: { 'admin-key': keyToUse }
-      });
+      const res = await apiRequest("GET", "/api/admin/transactions");
       return res.json();
     },
-    enabled: isAuthenticated || !!storedKey,
+    enabled: isAuthenticated,
   });
 
   // Fetch analytics data
   const { data: analytics } = useQuery({
     queryKey: ["/api/admin/analytics"],
     queryFn: async () => {
-      const keyToUse = storedKey || adminKey;
-      const res = await apiRequest("GET", "/api/admin/analytics", {
-        headers: { 'admin-key': keyToUse }
-      });
+      const res = await apiRequest("GET", "/api/admin/analytics");
       return res.json();
     },
-    enabled: isAuthenticated || !!storedKey,
+    enabled: isAuthenticated,
   });
 
   const executeCommandMutation = useMutation({
     mutationFn: async (cmd: string) => {
-      const keyToUse = storedKey || adminKey;
       const res = await apiRequest("POST", "/api/admin/command", {
-        body: { command: cmd, adminKey: keyToUse },
-        headers: { 'admin-key': keyToUse }
+        body: { command: cmd }
       });
       return res.json();
     },
@@ -131,10 +144,8 @@ export default function AdminPage() {
 
   const banUserMutation = useMutation({
     mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
-      const keyToUse = storedKey || adminKey;
       const res = await apiRequest("POST", `/api/admin/users/${userId}/ban`, {
-        body: { reason },
-        headers: { 'admin-key': keyToUse }
+        body: { reason }
       });
       return res.json();
     },
@@ -159,10 +170,7 @@ export default function AdminPage() {
 
   const unbanUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const keyToUse = storedKey || adminKey;
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/unban`, {
-        headers: { 'admin-key': keyToUse }
-      });
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/unban`);
       return res.json();
     },
     onSuccess: () => {
@@ -523,35 +531,35 @@ export default function AdminPage() {
           </div>
         ) : (
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="overview" data-testid="tab-overview">
+            <TabsList className="flex flex-wrap justify-center gap-2 h-auto p-2 bg-muted rounded-lg">
+              <TabsTrigger value="overview" data-testid="tab-overview" className="flex-shrink-0">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="users" data-testid="tab-users">
+              <TabsTrigger value="users" data-testid="tab-users" className="flex-shrink-0">
                 <Users className="w-4 h-4 mr-2" />
                 Users
               </TabsTrigger>
-              <TabsTrigger value="items" data-testid="tab-items">
+              <TabsTrigger value="items" data-testid="tab-items" className="flex-shrink-0">
                 <Package className="w-4 h-4 mr-2" />
                 Items
               </TabsTrigger>
-              <TabsTrigger value="transactions" data-testid="tab-transactions">
+              <TabsTrigger value="transactions" data-testid="tab-transactions" className="flex-shrink-0">
                 <Activity className="w-4 h-4 mr-2" />
                 Transactions
               </TabsTrigger>
-              <TabsTrigger value="analytics" data-testid="tab-analytics">
+              <TabsTrigger value="analytics" data-testid="tab-analytics" className="flex-shrink-0">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Analytics
               </TabsTrigger>
-              <TabsTrigger value="system" data-testid="tab-system">
+              <TabsTrigger value="system" data-testid="tab-system" className="flex-shrink-0">
                 <Settings className="w-4 h-4 mr-2" />
                 System
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <TabsContent value="overview" className="space-y-6 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="flex items-center justify-center space-x-2 mb-2">
@@ -598,7 +606,7 @@ export default function AdminPage() {
                 </Card>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="font-impact text-xl">📊 Quick Stats</CardTitle>
@@ -648,14 +656,17 @@ export default function AdminPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="users" className="space-y-4">
+            <TabsContent value="users" className="space-y-6 mt-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="font-impact text-2xl text-primary">👥 USER MANAGEMENT</CardTitle>
-                  <CardDescription>
-                    Manage user accounts, bans, permissions, and coins
-                  </CardDescription>
-                  <div className="flex items-center space-x-4 mt-4">
+                <CardHeader className="space-y-4">
+                  <div>
+                    <CardTitle className="font-impact text-2xl text-primary">👥 USER MANAGEMENT</CardTitle>
+                    <CardDescription className="text-base">
+                      Manage user accounts, bans, permissions, and coins
+                    </CardDescription>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -666,19 +677,32 @@ export default function AdminPage() {
                         data-testid="input-user-search"
                       />
                     </div>
-                    <Button
-                      onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] })}
-                      variant="outline"
-                      size="sm"
-                      data-testid="button-refresh-users"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </Button>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => setShowAllUsers(!showAllUsers)}
+                        variant={showAllUsers ? "default" : "outline"}
+                        size="sm"
+                        data-testid="button-show-all-users"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        {showAllUsers ? "Show Less" : "Show All Users"}
+                      </Button>
+                      
+                      <Button
+                        onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] })}
+                        variant="outline"
+                        size="sm"
+                        data-testid="button-refresh-users"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <Card>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="border-l-4 border-l-primary">
                       <CardContent className="p-4 text-center">
                         <div className="text-2xl font-bold text-primary" data-testid="total-users">
                           {users.length}
@@ -686,7 +710,7 @@ export default function AdminPage() {
                         <div className="text-sm text-muted-foreground">Total Users</div>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-l-4 border-l-green-500">
                       <CardContent className="p-4 text-center">
                         <div className="text-2xl font-bold text-green-500" data-testid="active-users">
                           {users.filter((u: any) => !u.banned).length}
@@ -694,7 +718,7 @@ export default function AdminPage() {
                         <div className="text-sm text-muted-foreground">Active Users</div>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-l-4 border-l-destructive">
                       <CardContent className="p-4 text-center">
                         <div className="text-2xl font-bold text-destructive" data-testid="banned-users">
                           {users.filter((u: any) => u.banned).length}
@@ -702,7 +726,7 @@ export default function AdminPage() {
                         <div className="text-sm text-muted-foreground">Banned Users</div>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-l-4 border-l-blue-500">
                       <CardContent className="p-4 text-center">
                         <div className="text-2xl font-bold text-blue-500" data-testid="temp-banned-users">
                           {users.filter((u: any) => u.tempBanUntil && new Date(u.tempBanUntil) > new Date()).length}
@@ -712,19 +736,29 @@ export default function AdminPage() {
                     </Card>
                   </div>
 
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {users
-                      .filter((user: any) => 
-                        userSearchTerm === "" || 
-                        user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
-                      )
-                      .map((user: any) => (
-                      <div 
-                        key={user.id}
-                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                        data-testid={`user-${user.id}`}
-                      >
-                        <div className="flex items-center space-x-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">User List</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Showing {showAllUsers ? 'all' : `first ${usersPerPage}`} users
+                        {userSearchTerm && ` matching "${userSearchTerm}"`}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3 max-h-[600px] overflow-y-auto border rounded-lg p-4">
+                      {users
+                        .filter((user: any) => 
+                          userSearchTerm === "" || 
+                          user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
+                        )
+                        .slice(0, showAllUsers ? undefined : usersPerPage)
+                        .map((user: any) => (
+                          <div 
+                            key={user.id}
+                            className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                            data-testid={`user-${user.id}`}
+                          >
+                            <div className="flex items-center space-x-4">
                           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold">
                             {user.username[0].toUpperCase()}
                           </div>
@@ -852,8 +886,9 @@ export default function AdminPage() {
                             </>
                           )}
                         </div>
-                      </div>
-                    ))}
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

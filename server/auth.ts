@@ -238,7 +238,12 @@ export function requireAuth(req: any, res: any, next: any) {
 
 // Middleware to check if user is admin
 export function requireAdmin(req: any, res: any, next: any) {
-  const adminKey = process.env.ADMIN_KEY || "savageonly";
+  const adminKey = process.env.ADMIN_KEY;
+  
+  if (!adminKey) {
+    return res.status(500).json({ error: "Admin system not configured" });
+  }
+  
   const providedKey = req.headers['admin-key'] || req.body.adminKey;
   
   if (providedKey === adminKey) {
@@ -246,4 +251,101 @@ export function requireAdmin(req: any, res: any, next: any) {
   }
   
   res.status(403).json({ error: "Admin access required" });
+}
+
+// Role-based permission definitions
+export const AdminPermissions = {
+  // Junior Admin can do basic actions
+  junior_admin: [
+    'view_users', 'view_items', 'view_transactions', 'view_analytics',
+    'tempban', 'give_coins_small', 'kick'
+  ],
+  
+  // Admin can do junior admin actions plus more
+  admin: [
+    'view_users', 'view_items', 'view_transactions', 'view_analytics',
+    'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium'
+  ],
+  
+  // Senior Admin can do admin actions plus dangerous ones
+  senior_admin: [
+    'view_users', 'view_items', 'view_transactions', 'view_analytics',
+    'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
+    'ban', 'remove_coins', 'manage_items'
+  ],
+  
+  // Lead Admin can do senior admin actions plus system commands
+  lead_admin: [
+    'view_users', 'view_items', 'view_transactions', 'view_analytics',
+    'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
+    'ban', 'remove_coins', 'manage_items', 'give_coins_large', 'reset_user',
+    'set_level', 'give_all_limited', 'give_admin_roles'
+  ],
+  
+  // Owner can do everything
+  owner: [
+    'view_users', 'view_items', 'view_transactions', 'view_analytics',
+    'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
+    'ban', 'remove_coins', 'manage_items', 'give_coins_large', 'reset_user',
+    'set_level', 'give_all_limited', 'give_admin_roles', 'reset_economy',
+    'clear_transactions', 'give_all_unlimited', 'remove_admin_roles'
+  ]
+};
+
+// Middleware to check role-based permissions
+export function requirePermission(permission: string) {
+  return async (req: any, res: any, next: any) => {
+    try {
+      // First check if they have basic admin access (admin key)
+      const adminKey = process.env.ADMIN_KEY;
+      
+      if (!adminKey) {
+        return res.status(500).json({ error: "Admin system not configured" });
+      }
+      
+      const providedKey = req.headers['admin-key'] || req.body.adminKey;
+      
+      if (providedKey !== adminKey) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      // For role-based permissions, we need the user to be authenticated
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "User authentication required for role-based permissions" });
+      }
+
+      const storage = require('./storage').storage;
+      const user = await storage.getUserByUsername(req.user.username);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if user has owners badge (special permissions)
+      const EconomyService = require('./services/economyService').EconomyService;
+      const hasOwnersBadge = await EconomyService.hasOwnersBadge(user.username);
+
+      // Get user's permissions based on their admin role
+      const userPermissions = AdminPermissions[user.adminRole as keyof typeof AdminPermissions] || [];
+      
+      // Check if user has the required permission
+      const hasPermission = userPermissions.includes(permission) || hasOwnersBadge;
+      
+      if (!hasPermission) {
+        return res.status(403).json({ 
+          error: `Insufficient permissions: ${permission} required`,
+          userRole: user.adminRole,
+          hasOwnersBadge 
+        });
+      }
+
+      // Attach user role info to request for use in endpoints
+      req.adminRole = user.adminRole;
+      req.hasOwnersBadge = hasOwnersBadge;
+      
+      return next();
+    } catch (error) {
+      return res.status(500).json({ error: "Permission check failed: " + (error as Error).message });
+    }
+  };
 }

@@ -5,7 +5,7 @@ import session from "express-session";
 import { parse } from "cookie";
 import { z } from "zod";
 import { storage } from "./storage";
-import { setupAuth, requireAuth, requireAdmin } from "./auth";
+import { setupAuth, requireAuth, requireAdmin, requirePermission } from "./auth";
 import { GameService } from "./services/gameService";
 import { EconomyService } from "./services/economyService";
 import { FreemiumService } from "./services/freemiumService";
@@ -583,7 +583,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Admin routes
-  app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  app.get('/api/admin/users', requirePermission('view_users'), async (req, res) => {
     try {
       const allUsers = await storage.getAllUsers();
       const users = allUsers.map(user => ({
@@ -603,7 +603,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post('/api/admin/users/:id/ban', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/ban', requirePermission('ban'), async (req, res) => {
     try {
       const { reason } = req.body;
       const user = await storage.getUser(req.params.id);
@@ -629,7 +629,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Unban user
-  app.post('/api/admin/users/:id/unban', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/unban', requirePermission('unban'), async (req, res) => {
     try {
       const user = await storage.getUser(req.params.id);
       if (!user) {
@@ -649,7 +649,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Temporary ban user
-  app.post('/api/admin/users/:id/tempban', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/tempban', requirePermission('tempban'), async (req, res) => {
     try {
       const tempBanSchema = z.object({
         reason: z.string().min(1, "Reason is required"),
@@ -703,6 +703,26 @@ export function registerRoutes(app: Express): Server {
       });
 
       const { amount } = giveCoinsSchema.parse(req.body);
+      
+      // Check permissions based on amount
+      let requiredPermission = '';
+      if (amount <= 1000) {
+        requiredPermission = 'give_coins_small';
+      } else if (amount <= 10000) {
+        requiredPermission = 'give_coins_medium';
+      } else {
+        requiredPermission = 'give_coins_large';
+      }
+
+      // Verify permission for the coin amount
+      const permissionCheck = requirePermission(requiredPermission);
+      await new Promise((resolve, reject) => {
+        permissionCheck(req, res, (err: any) => {
+          if (err) reject(err);
+          else resolve(undefined);
+        });
+      });
+
       const user = await storage.getUser(req.params.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -728,7 +748,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Remove coins from specific user
-  app.post('/api/admin/users/:id/remove-coins', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/remove-coins', requirePermission('remove_coins'), async (req, res) => {
     try {
       const removeCoinsSchema = z.object({
         amount: z.union([z.number(), z.string()]).transform(val => {
@@ -780,7 +800,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Kick user (force disconnect)
-  app.post('/api/admin/users/:id/kick', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/kick', requirePermission('kick'), async (req, res) => {
     try {
       const { reason } = req.body;
       const user = await storage.getUser(req.params.id);
@@ -802,16 +822,58 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post('/api/admin/command', requireAdmin, async (req, res) => {
+  app.post('/api/admin/command', async (req, res) => {
     try {
       const { command } = req.body;
       const [action, ...params] = command.split(' ');
+
+      // Check permissions based on command danger level
+      let requiredPermission = '';
+      switch (action) {
+        case 'resetEconomy':
+        case 'clearTransactions':
+          requiredPermission = 'reset_economy';
+          break;
+        case 'giveAll':
+          const amount = parseInt(params[0]);
+          if (amount > 10000) {
+            requiredPermission = 'give_all_unlimited'; // Owner only
+          } else {
+            requiredPermission = 'give_all_limited'; // Lead Admin+
+          }
+          break;
+        case 'resetUser':
+        case 'setLevel':
+          requiredPermission = 'reset_user';
+          break;
+        default:
+          return res.status(400).json({ error: "Unknown command" });
+      }
+
+      // Verify permission for the specific command
+      const permissionCheck = requirePermission(requiredPermission);
+      await new Promise((resolve, reject) => {
+        permissionCheck(req, res, (err: any) => {
+          if (err) reject(err);
+          else resolve(undefined);
+        });
+      });
 
       switch (action) {
         case 'giveAll':
           const amount = parseInt(params[0]);
           if (isNaN(amount)) {
             return res.status(400).json({ error: "Invalid amount" });
+          }
+
+          // Limit amounts based on admin level  
+          const maxAmount = req.adminRole === 'owner' ? Infinity : 
+                           req.adminRole === 'lead_admin' ? 10000 : 1000;
+          
+          if (amount > maxAmount) {
+            return res.status(403).json({ 
+              error: `Amount ${amount} exceeds limit ${maxAmount} for ${req.adminRole}` 
+            });
           }
 
           const allUsers = await storage.getAllUsers();
@@ -938,7 +1000,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Additional admin routes for enhanced functionality
-  app.get('/api/admin/items', requireAdmin, async (req, res) => {
+  app.get('/api/admin/items', requirePermission('view_items'), async (req, res) => {
     try {
       const items = await storage.getAllItems();
       res.json(items);
@@ -947,7 +1009,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post('/api/admin/items', requireAdmin, async (req, res) => {
+  app.post('/api/admin/items', requirePermission('manage_items'), async (req, res) => {
     try {
       const itemSchema = z.object({
         name: z.string().min(1),
@@ -985,7 +1047,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put('/api/admin/items/:id', requireAdmin, async (req, res) => {
+  app.put('/api/admin/items/:id', requirePermission('manage_items'), async (req, res) => {
     try {
       const itemSchema = z.object({
         name: z.string().min(1).optional(),
@@ -1005,7 +1067,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete('/api/admin/items/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/admin/items/:id', requirePermission('manage_items'), async (req, res) => {
     try {
       await storage.deleteItem(req.params.id);
       res.json({ success: true });
@@ -1015,7 +1077,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Give admin role endpoint
-  app.post('/api/admin/users/:id/give-admin', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/give-admin', requirePermission('give_admin_roles'), async (req, res) => {
     try {
       const { adminRole } = req.body;
       const validRoles = ['none', 'junior_admin', 'admin', 'senior_admin', 'lead_admin'];
@@ -1082,7 +1144,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Remove admin role endpoint
-  app.post('/api/admin/users/:id/remove-admin', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/remove-admin', requirePermission('remove_admin_roles'), async (req, res) => {
     try {
       const targetUser = await storage.getUser(req.params.id);
       if (!targetUser) {
@@ -1120,7 +1182,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get('/api/admin/transactions', requireAdmin, async (req, res) => {
+  app.get('/api/admin/transactions', requirePermission('view_transactions'), async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
       const allUsers = await storage.getAllUsers();
@@ -1139,7 +1201,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
+  app.get('/api/admin/analytics', requirePermission('view_analytics'), async (req, res) => {
     try {
       const allUsers = await storage.getAllUsers();
       const allItems = await storage.getAllItems();
@@ -1180,7 +1242,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Grant owners badge to specific user
-  app.post('/api/admin/users/:username/grant-owners-badge', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:username/grant-owners-badge', requirePermission('give_admin_roles'), async (req, res) => {
     try {
       const username = req.params.username;
       await EconomyService.grantOwnersBadge(username);
