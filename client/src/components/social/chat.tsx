@@ -20,7 +20,7 @@ export default function Chat() {
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  const { messages, connected, sendMessage } = useWebSocket();
+  const { messages, connected, authenticated, sendMessage } = useWebSocket();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,7 +33,7 @@ export default function Chat() {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!message.trim() || !user || !connected) return;
+    if (!message.trim() || !user || !connected || !authenticated) return;
     
     sendMessage(message.trim(), user.username);
     setMessage("");
@@ -60,8 +60,8 @@ export default function Chat() {
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant={connected ? "default" : "destructive"} className="text-xs">
-              {connected ? "🟢 Connected" : "🔴 Disconnected"}
+            <Badge variant={connected && authenticated ? "default" : connected ? "secondary" : "destructive"} className="text-xs">
+              {connected && authenticated ? "🟢 Ready" : connected ? "🟡 Authenticating" : "🔴 Disconnected"}
             </Badge>
             <Button
               size="sm"
@@ -169,8 +169,8 @@ export default function Chat() {
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder={connected ? "Type your message..." : "Connecting..."}
-            disabled={!connected || !user}
+            placeholder={connected && authenticated ? "Type your message..." : connected ? "Authenticating..." : "Connecting..."}
+            disabled={!connected || !authenticated || !user}
             maxLength={200}
             className="flex-1"
             data-testid="input-chat-message"
@@ -178,7 +178,7 @@ export default function Chat() {
           <Button
             type="submit"
             size="sm"
-            disabled={!message.trim() || !connected || !user}
+            disabled={!message.trim() || !connected || !authenticated || !user}
             className="px-3"
             data-testid="button-send-message"
           >

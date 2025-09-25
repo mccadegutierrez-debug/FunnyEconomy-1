@@ -559,7 +559,9 @@ export function registerRoutes(app: Express): Server {
         // Only show public inventory items (no quantities for privacy)
         publicInventory: Array.isArray(user.inventory) 
           ? user.inventory.map((item: any) => ({ itemId: item.itemId }))
-          : []
+          : [],
+        // Include admin role for badge display
+        adminRole: user.adminRole || 'none'
       };
 
       res.json(publicProfile);

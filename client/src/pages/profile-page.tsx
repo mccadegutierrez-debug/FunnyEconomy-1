@@ -170,14 +170,26 @@ export default function ProfilePage() {
               </div>
               
               <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="font-impact text-3xl text-primary" data-testid="profile-username">
                     {profile.username}
                   </h1>
-                  {(profile.username === 'savage' || profile.username === 'deez') && (
+                  {/* Owner Badge - Check for 'owners' achievement */}
+                  {achievements.includes('owners') && (
                     <Badge variant="default" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
                       <Crown className="w-3 h-3 mr-1" />
                       Owner
+                    </Badge>
+                  )}
+                  {/* Admin Role Badges */}
+                  {profile.adminRole && profile.adminRole !== 'none' && (
+                    <Badge variant="outline" className="bg-red-500/20 text-red-600 border-red-500/50">
+                      <Shield className="w-3 h-3 mr-1" />
+                      {profile.adminRole === 'junior_admin' && 'Junior Admin'}
+                      {profile.adminRole === 'admin' && 'Admin'}
+                      {profile.adminRole === 'senior_admin' && 'Senior Admin'}
+                      {profile.adminRole === 'lead_admin' && 'Lead Admin'}
+                      {profile.adminRole === 'owner' && 'Owner Admin'}
                     </Badge>
                   )}
                   <Badge variant="secondary" data-testid="profile-level">

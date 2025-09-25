@@ -23,7 +23,8 @@ import {
   Medal,
   Crown,
   Gamepad2,
-  ExternalLink
+  ExternalLink,
+  Shield
 } from "lucide-react";
 import { useRoute } from "wouter";
 
@@ -41,6 +42,7 @@ interface PublicProfile {
   onlineStatus: boolean;
   netWorth: number;
   publicInventory: Array<{ itemId: string }>;
+  adminRole: string;
 }
 
 interface Achievement {
@@ -212,14 +214,26 @@ export default function PublicProfilePage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
                       <h1 className="text-2xl font-bold" data-testid="text-username">
                         {userProfile.username}
                       </h1>
-                      {userProfile.username === 'savage' && (
-                        <Badge variant="outline" className="bg-yellow-500/20 text-yellow-600 border-yellow-500/50" data-testid="badge-owner">
+                      {/* Owner Badge - Check for 'owners' achievement */}
+                      {userProfile.achievements?.includes('owners') && (
+                        <Badge variant="default" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" data-testid="badge-owner">
                           <Crown className="h-3 w-3 mr-1" />
                           Owner
+                        </Badge>
+                      )}
+                      {/* Admin Role Badges */}
+                      {userProfile.adminRole && userProfile.adminRole !== 'none' && (
+                        <Badge variant="outline" className="bg-red-500/20 text-red-600 border-red-500/50" data-testid="badge-admin">
+                          <Shield className="w-3 h-3 mr-1" />
+                          {userProfile.adminRole === 'junior_admin' && 'Junior Admin'}
+                          {userProfile.adminRole === 'admin' && 'Admin'}
+                          {userProfile.adminRole === 'senior_admin' && 'Senior Admin'}
+                          {userProfile.adminRole === 'lead_admin' && 'Lead Admin'}
+                          {userProfile.adminRole === 'owner' && 'Owner Admin'}
                         </Badge>
                       )}
                     </div>
