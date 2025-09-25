@@ -33,6 +33,7 @@ export default function AdminPage() {
     rarity: "common",
     stock: ""
   });
+  const [adminKey, setAdminKey] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -41,6 +42,7 @@ export default function AdminPage() {
   const [showUserActionDialog, setShowUserActionDialog] = useState(false);
   const [userAction, setUserAction] = useState<string>("");
   const [selectedAdminRole, setSelectedAdminRole] = useState("");
+  const storedKey = localStorage.getItem('adminKey');
   const { toast } = useToast();
 
   // Check admin access through session-based authentication only
