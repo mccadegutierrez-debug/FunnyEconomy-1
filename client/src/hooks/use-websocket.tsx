@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useAuth } from './use-auth';
 
 interface ChatMessage {
   type: string;
@@ -8,12 +9,20 @@ interface ChatMessage {
 }
 
 export function useWebSocket() {
+  const { user } = useAuth();
   const ws = useRef<WebSocket | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Only connect if user is authenticated
+    if (!user) {
+      setConnected(false);
+      setAuthenticated(false);
+      return;
+    }
+
     const connectWebSocket = () => {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -69,7 +78,7 @@ export function useWebSocket() {
     return () => {
       ws.current?.close();
     };
-  }, []);
+  }, [user]); // Depend on user to reconnect when authentication changes
 
   const sendMessage = (message: string, username: string) => {
     if (ws.current?.readyState === WebSocket.OPEN && authenticated) {
