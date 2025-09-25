@@ -385,7 +385,7 @@ export default function AdminPage() {
       try {
         // Use new admin authentication endpoint
         const res = await apiRequest("POST", "/api/admin/authenticate", {
-          body: JSON.stringify({ adminKey })
+          body: { adminKey }
         });
         
         if (res.ok) {
@@ -485,8 +485,9 @@ export default function AdminPage() {
               <p className="text-muted-foreground mb-4">Invalid admin key or insufficient permissions.</p>
               <Button 
                 onClick={() => {
-                  localStorage.removeItem('adminKey');
                   setAdminKey("");
+                  setAuthError("");
+                  setIsAuthenticated(false);
                 }}
                 variant="outline"
                 data-testid="button-try-again"

@@ -8,6 +8,35 @@ import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import rateLimit from "express-rate-limit";
 
+// Audit logging helper function
+export async function logAdminAction(options: {
+  adminUsername: string;
+  adminRole: string;
+  action: string;
+  targetType?: string;
+  targetId?: string;
+  targetName?: string;
+  details?: Record<string, any>;
+  req: any; // Express request object for IP and user agent
+}) {
+  try {
+    await storage.createAuditLog({
+      adminUsername: options.adminUsername,
+      adminRole: options.adminRole,
+      action: options.action,
+      targetType: options.targetType || null,
+      targetId: options.targetId || null,
+      targetName: options.targetName || null,
+      details: options.details || {},
+      ipAddress: options.req.ip || options.req.connection?.remoteAddress || null,
+      userAgent: options.req.get('User-Agent') || null,
+    });
+  } catch (error) {
+    console.error('Failed to log admin action:', error);
+    // Don't throw error to avoid breaking the main operation
+  }
+}
+
 declare global {
   namespace Express {
     interface User extends SelectUser {}
@@ -126,6 +155,18 @@ export function setupAuth(app: Express) {
         req.session.isAdmin = true;
         req.session.adminAuthTime = new Date().toISOString();
       }
+
+      // Log admin authentication
+      await logAdminAction({
+        adminUsername: 'system_admin',
+        adminRole: 'system',
+        action: 'admin_login',
+        details: { 
+          success: true,
+          timestamp: new Date().toISOString()
+        },
+        req
+      });
       
       res.json({ 
         success: true, 
@@ -138,8 +179,19 @@ export function setupAuth(app: Express) {
   });
 
   // Admin logout endpoint
-  app.post("/api/admin/logout", (req, res) => {
-    if (req.session) {
+  app.post("/api/admin/logout", async (req, res) => {
+    if (req.session && req.session.isAdmin) {
+      // Log admin logout
+      await logAdminAction({
+        adminUsername: 'system_admin',
+        adminRole: 'system',
+        action: 'admin_logout',
+        details: { 
+          timestamp: new Date().toISOString()
+        },
+        req
+      });
+
       req.session.isAdmin = false;
       req.session.adminAuthTime = null;
     }
@@ -397,12 +449,22 @@ export function requirePermission(permission: string) {
         }
       }
 
+      // Check if this is a basic view operation that can be done with admin session only
+      const basicViewPermissions = ['view_users', 'view_items', 'view_transactions', 'view_analytics'];
+      const isBasicViewOperation = basicViewPermissions.includes(permission);
+
+      // For basic view operations, admin session is sufficient
+      if (isBasicViewOperation && req.session && req.session.isAdmin) {
+        req.adminRole = 'system_admin';
+        req.hasOwnersBadge = true; // Grant full permissions for system admin
+        return next();
+      }
+
       // For role-based permissions, we need the user to be authenticated
       if (!req.isAuthenticated() || !req.user) {
         return res.status(401).json({ error: "User authentication required for role-based permissions" });
       }
 
-      const storage = require('./storage').storage;
       const user = await storage.getUserByUsername(req.user.username);
       
       if (!user) {
@@ -410,8 +472,8 @@ export function requirePermission(permission: string) {
       }
 
       // Check if user has owners badge (special permissions)
-      const EconomyService = require('./services/economyService').EconomyService;
-      const hasOwnersBadge = await EconomyService.hasOwnersBadge(user.username);
+      // TODO: Implement proper owners badge check once EconomyService is fixed
+      const hasOwnersBadge = false;
 
       // Get user's permissions based on their admin role
       const userPermissions = AdminPermissions[user.adminRole as keyof typeof AdminPermissions] || [];

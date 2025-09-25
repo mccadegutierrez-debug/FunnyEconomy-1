@@ -37,10 +37,12 @@ export const users = pgTable("users", {
   lastCrime: timestamp("last_crime"),
   lastHunt: timestamp("last_hunt"),
   lastDig: timestamp("last_dig"),
+  lastPostMeme: timestamp("last_post_meme"),
   lastPostmeme: timestamp("last_postmeme"),
   lastStream: timestamp("last_stream"),
   lastHighLow: timestamp("last_high_low"),
   lastScratch: timestamp("last_scratch"),
+  banExpiresAt: timestamp("ban_expires_at"),
   dailyEarn: integer("daily_earn").default(0).notNull(),
   lastIP: varchar("last_ip").default("").notNull(),
   achievements: jsonb("achievements").default([]).notNull(),
@@ -94,6 +96,20 @@ export const chatMessages = pgTable("chat_messages", {
   timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
 });
 
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminUsername: varchar("admin_username").notNull(),
+  adminRole: varchar("admin_role").notNull(),
+  action: varchar("action").notNull(), // e.g., "ban_user", "give_coins", "create_item"
+  targetType: varchar("target_type"), // e.g., "user", "item", "system"
+  targetId: varchar("target_id"), // ID of the affected entity
+  targetName: varchar("target_name"), // Name/username of affected entity
+  details: jsonb("details").default(sql`'{}'`).notNull(), // Additional action details
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
@@ -123,6 +139,8 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({ i
 export const selectTransactionSchema = createSelectSchema(transactions);
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, timestamp: true });
 export const selectNotificationSchema = createSelectSchema(notifications);
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, timestamp: true });
+export const selectAuditLogSchema = createSelectSchema(auditLogs);
 
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -132,3 +150,5 @@ export type Transaction = typeof transactions.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;

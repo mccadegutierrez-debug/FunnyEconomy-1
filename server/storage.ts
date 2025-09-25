@@ -1,4 +1,4 @@
-import { users, items, transactions, notifications, chatMessages, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage } from "@shared/schema";
+import { users, items, transactions, notifications, chatMessages, auditLogs, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import session from "express-session";
@@ -37,6 +37,12 @@ export interface IStorage {
   
   // Leaderboard
   getLeaderboard(limit?: number): Promise<Array<{username: string, coins: number, level: number}>>;
+  
+  // Audit Logs
+  createAuditLog(log: Omit<AuditLog, 'id' | 'timestamp'> & { timestamp?: Date }): Promise<AuditLog>;
+  getAuditLogs(limit?: number): Promise<AuditLog[]>;
+  getAuditLogsByAdmin(adminUsername: string, limit?: number): Promise<AuditLog[]>;
+  getAuditLogsByAction(action: string, limit?: number): Promise<AuditLog[]>;
   
   // System
   initializeData(): Promise<void>;
@@ -831,7 +837,7 @@ export class DatabaseStorage implements IStorage {
         const updateData: any = {};
         
         // Grant owners badge
-        const achievements = user.achievements || [];
+        const achievements = Array.isArray(user.achievements) ? user.achievements : [];
         if (!achievements.includes('owners')) {
           achievements.push('owners');
           updateData.achievements = achievements;
@@ -850,6 +856,55 @@ export class DatabaseStorage implements IStorage {
         }
       }
     }
+  }
+
+  // Audit Log Methods
+  async createAuditLog(logData: Omit<AuditLog, 'id' | 'timestamp'> & { timestamp?: Date }): Promise<AuditLog> {
+    const [auditLog] = await db
+      .insert(auditLogs)
+      .values({
+        adminUsername: logData.adminUsername,
+        adminRole: logData.adminRole,
+        action: logData.action,
+        targetType: logData.targetType,
+        targetId: logData.targetId,
+        targetName: logData.targetName,
+        details: logData.details,
+        ipAddress: logData.ipAddress,
+        userAgent: logData.userAgent,
+        timestamp: logData.timestamp || new Date(),
+      })
+      .returning();
+    return auditLog;
+  }
+
+  async getAuditLogs(limit = 100): Promise<AuditLog[]> {
+    const logs = await db
+      .select()
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.timestamp))
+      .limit(limit);
+    return logs;
+  }
+
+  async getAuditLogsByAdmin(adminUsername: string, limit = 100): Promise<AuditLog[]> {
+    const logs = await db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.adminUsername, adminUsername))
+      .orderBy(desc(auditLogs.timestamp))
+      .limit(limit);
+    return logs;
+  }
+
+  async getAuditLogsByAction(action: string, limit = 100): Promise<AuditLog[]> {
+    const logs = await db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.action, action))
+      .orderBy(desc(auditLogs.timestamp))
+      .limit(limit);
+    return logs;
   }
 }
 
