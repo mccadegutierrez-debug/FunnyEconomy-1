@@ -22,11 +22,11 @@ export interface IStorage {
   deleteItem(id: string): Promise<void>;
   
   // Transactions
-  createTransaction(transaction: Omit<Transaction, 'id'>): Promise<Transaction>;
+  createTransaction(transaction: Omit<Transaction, 'id' | 'timestamp'> & { timestamp?: Date }): Promise<Transaction>;
   getUserTransactions(username: string, limit?: number): Promise<Transaction[]>;
   
   // Notifications
-  createNotification(notification: Omit<Notification, 'id'>): Promise<Notification>;
+  createNotification(notification: Omit<Notification, 'id' | 'timestamp'> & { timestamp?: Date }): Promise<Notification>;
   getUserNotifications(username: string): Promise<Notification[]>;
   markNotificationRead(id: string): Promise<void>;
   
@@ -132,10 +132,13 @@ export class DatabaseStorage implements IStorage {
     await db.delete(items).where(eq(items.id, id));
   }
 
-  async createTransaction(transactionData: Omit<Transaction, 'id'>): Promise<Transaction> {
+  async createTransaction(transactionData: Omit<Transaction, 'id' | 'timestamp'> & { timestamp?: Date }): Promise<Transaction> {
     const [transaction] = await db
       .insert(transactions)
-      .values(transactionData)
+      .values({
+        ...transactionData,
+        timestamp: transactionData.timestamp || new Date()
+      })
       .returning();
     return transaction;
   }
@@ -149,10 +152,13 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async createNotification(notificationData: Omit<Notification, 'id'>): Promise<Notification> {
+  async createNotification(notificationData: Omit<Notification, 'id' | 'timestamp'> & { timestamp?: Date }): Promise<Notification> {
     const [notification] = await db
       .insert(notifications)
-      .values(notificationData)
+      .values({
+        ...notificationData,
+        timestamp: notificationData.timestamp || new Date()
+      })
       .returning();
     return notification;
   }

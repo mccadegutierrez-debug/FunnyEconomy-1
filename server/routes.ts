@@ -1040,6 +1040,9 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ error: "Admin user not found" });
       }
 
+      // Check if user has owners badge (special permission)
+      const hasOwnersBadge = await EconomyService.hasOwnersBadge(adminUser.username);
+
       // Permission levels: owner > lead_admin > senior_admin > admin > junior_admin > none
       const roleHierarchy = {
         'owner': 5,
@@ -1053,8 +1056,13 @@ export function registerRoutes(app: Express): Server {
       const adminLevel = roleHierarchy[adminUser.adminRole as keyof typeof roleHierarchy] || 0;
       const targetLevel = roleHierarchy[adminRole as keyof typeof roleHierarchy] || 0;
 
-      // Only owners can grant lead_admin, only lead_admin+ can grant senior_admin, etc.
-      if (adminLevel <= targetLevel && adminUser.adminRole !== 'owner') {
+      // Special case: Only actual owners can grant owner role (not owners badge holders)
+      if (adminRole === 'owner' && adminUser.adminRole !== 'owner') {
+        return res.status(403).json({ error: "Only existing owners can grant owner role" });
+      }
+
+      // For other admin roles: owners or users with owners badge can grant roles
+      if (adminLevel <= targetLevel && adminUser.adminRole !== 'owner' && !hasOwnersBadge) {
         return res.status(403).json({ error: "Insufficient permissions to grant this role" });
       }
 
@@ -1086,27 +1094,15 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ error: "Cannot remove owner permissions" });
       }
 
-      // Check admin permissions
+      // Check admin permissions - only user 'savage' can remove admin roles
       const adminUser = await storage.getUserByUsername(req.user!.username);
       if (!adminUser) {
         return res.status(404).json({ error: "Admin user not found" });
       }
 
-      const roleHierarchy = {
-        'owner': 5,
-        'lead_admin': 4,
-        'senior_admin': 3,
-        'admin': 2,
-        'junior_admin': 1,
-        'none': 0
-      };
-
-      const adminLevel = roleHierarchy[adminUser.adminRole as keyof typeof roleHierarchy] || 0;
-      const targetLevel = roleHierarchy[targetUser.adminRole as keyof typeof roleHierarchy] || 0;
-
-      // Can only remove roles at or below your level (except owners can remove anyone)
-      if (adminLevel <= targetLevel && adminUser.adminRole !== 'owner') {
-        return res.status(403).json({ error: "Insufficient permissions to remove this role" });
+      // Only user 'savage' can remove admin access
+      if (adminUser.username !== 'savage') {
+        return res.status(403).json({ error: "Only user 'savage' can remove admin access" });
       }
 
       await storage.updateUser(targetUser.id, { adminRole: 'none' });

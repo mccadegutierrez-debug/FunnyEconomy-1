@@ -844,6 +844,71 @@ export class EconomyService {
     return true;
   }
 
+  // Check if user has specific admin role badge
+  static async hasAdminRoleBadge(username: string, adminRole: string): Promise<boolean> {
+    const user = await storage.getUserByUsername(username);
+    if (!user) return false;
+    
+    const achievements = user.achievements || [];
+    return achievements.includes(`badge_${adminRole}`);
+  }
+
+  // Grant admin badge for specific role
+  static async grantAdminRoleBadge(username: string, adminRole: string) {
+    const user = await storage.getUserByUsername(username);
+    if (!user) throw new Error("User not found");
+
+    const badgeId = `badge_${adminRole}`;
+    const currentAchievements = user.achievements || [];
+    if (!currentAchievements.includes(badgeId)) {
+      currentAchievements.push(badgeId);
+      await storage.updateUser(user.id, {
+        achievements: currentAchievements
+      });
+    }
+    return true;
+  }
+
+  // Grant Junior Admin badge
+  static async grantJuniorAdminBadge(username: string) {
+    return this.grantAdminRoleBadge(username, 'junior_admin');
+  }
+
+  // Grant Admin badge
+  static async grantAdminBadge(username: string) {
+    return this.grantAdminRoleBadge(username, 'admin');
+  }
+
+  // Grant Senior Admin badge
+  static async grantSeniorAdminBadge(username: string) {
+    return this.grantAdminRoleBadge(username, 'senior_admin');
+  }
+
+  // Grant Lead Admin badge
+  static async grantLeadAdminBadge(username: string) {
+    return this.grantAdminRoleBadge(username, 'lead_admin');
+  }
+
+  // Check if user has Junior Admin badge
+  static async hasJuniorAdminBadge(username: string): Promise<boolean> {
+    return this.hasAdminRoleBadge(username, 'junior_admin');
+  }
+
+  // Check if user has Admin badge
+  static async hasSpecificAdminBadge(username: string): Promise<boolean> {
+    return this.hasAdminRoleBadge(username, 'admin');
+  }
+
+  // Check if user has Senior Admin badge
+  static async hasSeniorAdminBadge(username: string): Promise<boolean> {
+    return this.hasAdminRoleBadge(username, 'senior_admin');
+  }
+
+  // Check if user has Lead Admin badge
+  static async hasLeadAdminBadge(username: string): Promise<boolean> {
+    return this.hasAdminRoleBadge(username, 'lead_admin');
+  }
+
   // Crime system
   static async crime(username: string, crimeType?: string) {
     const user = await storage.getUserByUsername(username);
