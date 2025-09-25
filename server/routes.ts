@@ -442,6 +442,26 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Delete a single notification
+  app.delete('/api/user/notifications/:id', requireAuth, async (req, res) => {
+    try {
+      await storage.deleteNotification(req.params.id, req.user!.username);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Clear all notifications for the user
+  app.delete('/api/user/notifications', requireAuth, async (req, res) => {
+    try {
+      await storage.clearAllNotifications(req.user!.username);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   app.get('/api/user/profile', requireAuth, async (req, res) => {
     try {
       const user = await storage.getUserByUsername(req.user!.username);

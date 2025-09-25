@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -14,12 +14,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bell, Menu, X, LogOut } from "lucide-react";
+import { Bell, Menu, X, LogOut, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["/api/user/notifications"],
@@ -28,6 +30,50 @@ export default function Header() {
       return res.json();
     },
     enabled: !!user,
+  });
+
+  // Mutation for deleting a single notification
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const res = await apiRequest("DELETE", `/api/user/notifications/${notificationId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/notifications"] });
+      toast({
+        title: "Notification cleared",
+        description: "The notification has been removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to clear notification.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for clearing all notifications
+  const clearAllNotificationsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", "/api/user/notifications");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/notifications"] });
+      toast({
+        title: "All notifications cleared",
+        description: "All your notifications have been removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to clear all notifications.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (!user) return null;
@@ -49,10 +95,10 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-4" data-testid="logo-link">
-              <img src="/memer.png" alt="Memer Logo" className="h-12 w-auto" />
-              <span className="text-muted-foreground text-sm hidden md:block">
-                💰 Your Meme Economy Awaits!
+            <Link href="/" className="flex items-center space-x-3" data-testid="logo-link">
+              <img src="/memer.png" alt="Memer Logo" className="h-10 w-auto" />
+              <span className="text-2xl font-bold text-foreground">
+                Funny Economy
               </span>
             </Link>
           </div>
@@ -111,7 +157,22 @@ export default function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
                 <div className="p-2">
-                  <h3 className="font-bold text-sm text-foreground mb-2">Notifications</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-sm text-foreground">Notifications</h3>
+                    {notifications.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => clearAllNotificationsMutation.mutate()}
+                        className="text-xs px-2 py-1 h-auto"
+                        data-testid="button-clear-all-notifications"
+                        disabled={clearAllNotificationsMutation.isPending}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Clear All
+                      </Button>
+                    )}
+                  </div>
                   {notifications.length === 0 ? (
                     <p className="text-muted-foreground text-sm text-center py-4">
                       No notifications yet
@@ -121,15 +182,32 @@ export default function Header() {
                       {notifications.slice(0, 5).map((notification: any) => (
                         <div
                           key={notification.id}
-                          className={`p-2 rounded text-sm ${
+                          className={`p-2 rounded text-sm group relative ${
                             notification.read ? 'bg-muted/50' : 'bg-primary/10 border border-primary/20'
                           }`}
                           data-testid={`notification-${notification.id}`}
                         >
-                          <p className="text-foreground">{notification.message}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(notification.timestamp).toLocaleString()}
-                          </p>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="text-foreground">{notification.message}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(notification.timestamp).toLocaleString()}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotificationMutation.mutate(notification.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 flex-shrink-0"
+                              data-testid={`button-clear-notification-${notification.id}`}
+                              disabled={deleteNotificationMutation.isPending}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>

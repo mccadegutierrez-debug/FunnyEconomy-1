@@ -29,6 +29,8 @@ export interface IStorage {
   createNotification(notification: Omit<Notification, 'id' | 'timestamp'> & { timestamp?: Date }): Promise<Notification>;
   getUserNotifications(username: string): Promise<Notification[]>;
   markNotificationRead(id: string): Promise<void>;
+  deleteNotification(id: string, username: string): Promise<void>;
+  clearAllNotifications(username: string): Promise<void>;
   
   // Chat Messages
   createChatMessage(message: Omit<ChatMessage, 'id' | 'timestamp'>): Promise<ChatMessage>;
@@ -183,6 +185,18 @@ export class DatabaseStorage implements IStorage {
       .update(notifications)
       .set({ read: true })
       .where(eq(notifications.id, id));
+  }
+
+  async deleteNotification(id: string, username: string): Promise<void> {
+    await db
+      .delete(notifications)
+      .where(and(eq(notifications.id, id), eq(notifications.user, username)));
+  }
+
+  async clearAllNotifications(username: string): Promise<void> {
+    await db
+      .delete(notifications)
+      .where(eq(notifications.user, username));
   }
 
   async getLeaderboard(limit = 20): Promise<Array<{username: string, coins: number, level: number}>> {
