@@ -96,8 +96,8 @@ export default function Header() {
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-3" data-testid="logo-link">
-              <img src="/memer.png" alt="Memer Logo" className="h-10 w-auto" />
-              <span className="text-2xl font-bold text-foreground">
+              <img src="/memer.png" alt="Memer Logo" className="h-10 w-auto glow-accent" />
+              <span className="text-3xl font-impact dm-title">
                 Funny Economy
               </span>
             </Link>
