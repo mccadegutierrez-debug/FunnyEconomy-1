@@ -1,12 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import session from "express-session";
+import { parse } from "cookie";
 import { z } from "zod";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireAdmin } from "./auth";
 import { GameService } from "./services/gameService";
 import { EconomyService } from "./services/economyService";
 import { FreemiumService } from "./services/freemiumService";
+import { filterMessage } from "./utils/profanityFilter";
 import rateLimit from "express-rate-limit";
 
 // Rate limiter for API endpoints
@@ -608,6 +611,12 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ error: "User not found" });
       }
 
+      // Check if user has owners badge - they cannot be banned
+      const hasOwnersBadge = await EconomyService.hasOwnersBadge(user.username);
+      if (hasOwnersBadge) {
+        return res.status(403).json({ error: "Cannot ban users with owners badge" });
+      }
+
       await storage.updateUser(user.id, {
         banned: true,
         banReason: reason || "No reason provided"
@@ -657,6 +666,12 @@ export function registerRoutes(app: Express): Server {
       const user = await storage.getUser(req.params.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if user has owners badge - they cannot be banned
+      const hasOwnersBadge = await EconomyService.hasOwnersBadge(user.username);
+      if (hasOwnersBadge) {
+        return res.status(403).json({ error: "Cannot ban users with owners badge" });
       }
 
       const tempBanUntil = new Date();
@@ -729,6 +744,12 @@ export function registerRoutes(app: Express): Server {
       const user = await storage.getUser(req.params.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if user has owners badge - their coins cannot be removed
+      const hasOwnersBadge = await EconomyService.hasOwnersBadge(user.username);
+      if (hasOwnersBadge) {
+        return res.status(403).json({ error: "Cannot remove coins from users with owners badge" });
       }
 
       // Calculate new coin amount, ensuring it doesn't go below 0
@@ -993,6 +1014,116 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Give admin role endpoint
+  app.post('/api/admin/users/:id/give-admin', requireAdmin, async (req, res) => {
+    try {
+      const { adminRole } = req.body;
+      const validRoles = ['none', 'junior_admin', 'admin', 'senior_admin', 'lead_admin'];
+      
+      if (!validRoles.includes(adminRole)) {
+        return res.status(400).json({ error: "Invalid admin role" });
+      }
+
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if target user is an owner - owners cannot be demoted
+      if (targetUser.adminRole === 'owner') {
+        return res.status(403).json({ error: "Cannot modify owner permissions" });
+      }
+
+      // Check if the requesting admin has permission to grant this role
+      const adminUser = await storage.getUserByUsername(req.user!.username);
+      if (!adminUser) {
+        return res.status(404).json({ error: "Admin user not found" });
+      }
+
+      // Permission levels: owner > lead_admin > senior_admin > admin > junior_admin > none
+      const roleHierarchy = {
+        'owner': 5,
+        'lead_admin': 4,
+        'senior_admin': 3,
+        'admin': 2,
+        'junior_admin': 1,
+        'none': 0
+      };
+
+      const adminLevel = roleHierarchy[adminUser.adminRole as keyof typeof roleHierarchy] || 0;
+      const targetLevel = roleHierarchy[adminRole as keyof typeof roleHierarchy] || 0;
+
+      // Only owners can grant lead_admin, only lead_admin+ can grant senior_admin, etc.
+      if (adminLevel <= targetLevel && adminUser.adminRole !== 'owner') {
+        return res.status(403).json({ error: "Insufficient permissions to grant this role" });
+      }
+
+      await storage.updateUser(targetUser.id, { adminRole });
+
+      res.json({ 
+        success: true, 
+        message: `Granted ${adminRole} role to ${targetUser.username}`,
+        user: {
+          ...targetUser,
+          adminRole
+        }
+      });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Remove admin role endpoint
+  app.post('/api/admin/users/:id/remove-admin', requireAdmin, async (req, res) => {
+    try {
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if target user is an owner - owners cannot be demoted
+      if (targetUser.adminRole === 'owner') {
+        return res.status(403).json({ error: "Cannot remove owner permissions" });
+      }
+
+      // Check admin permissions
+      const adminUser = await storage.getUserByUsername(req.user!.username);
+      if (!adminUser) {
+        return res.status(404).json({ error: "Admin user not found" });
+      }
+
+      const roleHierarchy = {
+        'owner': 5,
+        'lead_admin': 4,
+        'senior_admin': 3,
+        'admin': 2,
+        'junior_admin': 1,
+        'none': 0
+      };
+
+      const adminLevel = roleHierarchy[adminUser.adminRole as keyof typeof roleHierarchy] || 0;
+      const targetLevel = roleHierarchy[targetUser.adminRole as keyof typeof roleHierarchy] || 0;
+
+      // Can only remove roles at or below your level (except owners can remove anyone)
+      if (adminLevel <= targetLevel && adminUser.adminRole !== 'owner') {
+        return res.status(403).json({ error: "Insufficient permissions to remove this role" });
+      }
+
+      await storage.updateUser(targetUser.id, { adminRole: 'none' });
+
+      res.json({ 
+        success: true, 
+        message: `Removed admin role from ${targetUser.username}`,
+        user: {
+          ...targetUser,
+          adminRole: 'none'
+        }
+      });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   app.get('/api/admin/transactions', requireAdmin, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
@@ -1052,30 +1183,150 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Grant owners badge to specific user
+  app.post('/api/admin/users/:username/grant-owners-badge', requireAdmin, async (req, res) => {
+    try {
+      const username = req.params.username;
+      await EconomyService.grantOwnersBadge(username);
+      res.json({ 
+        success: true, 
+        message: `Owners badge granted to ${username}` 
+      });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   const httpServer = createServer(app);
 
-  // WebSocket setup for real-time features
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  // WebSocket setup for real-time features with session authentication
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws'
+  });
   
-  wss.on('connection', (ws: WebSocket) => {
-    ws.on('message', (data: string) => {
+  wss.on('connection', (ws: WebSocket, req) => {
+    let authenticatedUsername: string | null = null;
+    
+    // Extract session from cookies to authenticate user
+    const extractUserFromSession = async (req: any): Promise<string | null> => {
+      try {
+        if (!req.headers.cookie) return null;
+        
+        const cookies = parse(req.headers.cookie);
+        const sessionId = cookies['connect.sid'];
+        
+        if (!sessionId) return null;
+        
+        // Extract session ID (remove signature if present)
+        const cleanSessionId = sessionId.startsWith('s:') ? sessionId.slice(2).split('.')[0] : sessionId;
+        
+        return new Promise((resolve) => {
+          storage.sessionStore.get(cleanSessionId, (err, session: any) => {
+            if (err || !session || !session.passport || !session.passport.user) {
+              resolve(null);
+            } else {
+              resolve(session.passport.user.username);
+            }
+          });
+        });
+      } catch (error) {
+        return null;
+      }
+    };
+    
+    ws.on('message', async (data: string) => {
       try {
         const message = JSON.parse(data);
         
         // Handle different message types
         switch (message.type) {
+          case 'auth':
+            // Authenticate user from session
+            authenticatedUsername = await extractUserFromSession(req);
+            if (authenticatedUsername) {
+              ws.send(JSON.stringify({
+                type: 'auth_success',
+                username: authenticatedUsername
+              }));
+            } else {
+              ws.send(JSON.stringify({
+                type: 'auth_error',
+                message: 'Not authenticated or session expired'
+              }));
+            }
+            break;
+            
           case 'chat':
-            // Broadcast to all connected clients
+            // Check if user is authenticated
+            if (!authenticatedUsername) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Must be authenticated to send messages'
+              }));
+              break;
+            }
+            
+            // Filter message for profanity first
+            const filterResult = filterMessage(message.message);
+            if (!filterResult.allowed) {
+              // Send error back to the sender only
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: filterResult.reason || "Message blocked due to inappropriate content"
+              }));
+              break;
+            }
+            
+            // Store message in database using authenticated username
+            const chatMessage = await storage.createChatMessage({
+              username: authenticatedUsername,
+              message: message.message
+            });
+            
+            // Broadcast to all connected clients with the stored message ID
             wss.clients.forEach(client => {
               if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({
                   type: 'chat',
-                  username: message.username,
+                  id: chatMessage.id,
+                  username: authenticatedUsername,
                   message: message.message,
                   timestamp: Date.now()
                 }));
               }
             });
+            break;
+            
+          case 'delete_message':
+            // Check if user is authenticated and is "savage"
+            if (!authenticatedUsername) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Must be authenticated to delete messages'
+              }));
+              break;
+            }
+            
+            if (authenticatedUsername === 'savage') {
+              await storage.deleteChatMessage(message.messageId);
+              
+              // Broadcast deletion to all clients
+              wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify({
+                    type: 'message_deleted',
+                    messageId: message.messageId,
+                    deletedBy: authenticatedUsername
+                  }));
+                }
+              });
+            } else {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Only savage can delete messages'
+              }));
+            }
             break;
             
           case 'join':

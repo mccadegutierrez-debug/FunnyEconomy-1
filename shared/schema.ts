@@ -45,6 +45,7 @@ export const users = pgTable("users", {
   lastIP: varchar("last_ip").default("").notNull(),
   achievements: jsonb("achievements").default([]).notNull(),
   gameStats: jsonb("game_stats").default(sql`'{}'`).notNull(),
+  adminRole: varchar("admin_role", { enum: ['none', 'junior_admin', 'admin', 'senior_admin', 'lead_admin', 'owner'] }).default('none').notNull(),
 });
 
 export const items = pgTable("items", {

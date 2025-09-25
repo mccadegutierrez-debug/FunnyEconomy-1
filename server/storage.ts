@@ -1,4 +1,4 @@
-import { users, items, transactions, notifications, type User, type InsertUser, type Item, type Transaction, type Notification } from "@shared/schema";
+import { users, items, transactions, notifications, chatMessages, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import session from "express-session";
@@ -29,6 +29,11 @@ export interface IStorage {
   createNotification(notification: Omit<Notification, 'id'>): Promise<Notification>;
   getUserNotifications(username: string): Promise<Notification[]>;
   markNotificationRead(id: string): Promise<void>;
+  
+  // Chat Messages
+  createChatMessage(message: Omit<ChatMessage, 'id' | 'timestamp'>): Promise<ChatMessage>;
+  deleteChatMessage(id: string): Promise<void>;
+  getRecentChatMessages(limit?: number): Promise<ChatMessage[]>;
   
   // Leaderboard
   getLeaderboard(limit?: number): Promise<Array<{username: string, coins: number, level: number}>>;
@@ -188,6 +193,31 @@ export class DatabaseStorage implements IStorage {
       }))
       .sort((a, b) => b.coins - a.coins)
       .slice(0, limit);
+  }
+
+  // Chat message methods
+  async createChatMessage(message: Omit<ChatMessage, 'id' | 'timestamp'>): Promise<ChatMessage> {
+    const [chatMessage] = await db
+      .insert(chatMessages)
+      .values({
+        username: message.username,
+        message: message.message
+      })
+      .returning();
+    return chatMessage;
+  }
+
+  async deleteChatMessage(id: string): Promise<void> {
+    await db.delete(chatMessages).where(eq(chatMessages.id, id));
+  }
+
+  async getRecentChatMessages(limit = 50): Promise<ChatMessage[]> {
+    const messages = await db
+      .select()
+      .from(chatMessages)
+      .orderBy(desc(chatMessages.timestamp))
+      .limit(limit);
+    return messages.reverse(); // Return in chronological order
   }
 
   async initializeData(): Promise<void> {
@@ -784,6 +814,35 @@ export class DatabaseStorage implements IStorage {
       console.log(`Database initialized: ${addedCount} new items added, ${updatedCount} items updated`);
     } else {
       console.log("All sample items are up to date in database");
+    }
+
+    // Ensure critical users have owners badge and owner admin role
+    const criticalUsers = ['deez', 'savage'];
+    for (const username of criticalUsers) {
+      const user = await this.getUserByUsername(username);
+      if (user) {
+        let needsUpdate = false;
+        const updateData: any = {};
+        
+        // Grant owners badge
+        const achievements = user.achievements || [];
+        if (!achievements.includes('owners')) {
+          achievements.push('owners');
+          updateData.achievements = achievements;
+          needsUpdate = true;
+        }
+        
+        // Grant owner admin role
+        if (user.adminRole !== 'owner') {
+          updateData.adminRole = 'owner';
+          needsUpdate = true;
+        }
+        
+        if (needsUpdate) {
+          await this.updateUser(user.id, updateData);
+          console.log(`Granted owners badge and owner role to ${username}`);
+        }
+      }
     }
   }
 }

@@ -37,6 +37,7 @@ export default function AdminPage() {
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [showUserActionDialog, setShowUserActionDialog] = useState(false);
   const [userAction, setUserAction] = useState<string>("");
+  const [selectedAdminRole, setSelectedAdminRole] = useState("");
   const { toast } = useToast();
 
   // Initialize with stored admin key on component mount
@@ -325,6 +326,58 @@ export default function AdminPage() {
         description: "Item has been deleted successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] });
+    },
+  });
+
+  const giveAdminRoleMutation = useMutation({
+    mutationFn: async ({ userId, adminRole }: { userId: string; adminRole: string }) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/give-admin`, {
+        body: { adminRole },
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Admin Role Granted! 🛡️",
+        description: data.message,
+      });
+      setSelectedUser(null);
+      setSelectedAdminRole("");
+      setShowUserActionDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Grant Admin Role Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const removeAdminRoleMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const keyToUse = storedKey || adminKey;
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/remove-admin`, {
+        headers: { 'admin-key': keyToUse }
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Admin Role Removed! 🚫",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Remove Admin Role Failed",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -682,6 +735,21 @@ export default function AdminPage() {
                               {user.tempBanUntil && new Date(user.tempBanUntil) > new Date() && (
                                 <Badge variant="secondary">TEMP BANNED</Badge>
                               )}
+                              {user.adminRole && user.adminRole !== 'none' && (
+                                <Badge variant={user.adminRole === 'owner' ? 'default' : 'outline'} className={
+                                  user.adminRole === 'owner' ? 'bg-purple-600 text-white' :
+                                  user.adminRole === 'lead_admin' ? 'bg-red-600 text-white' :
+                                  user.adminRole === 'senior_admin' ? 'bg-orange-600 text-white' :
+                                  user.adminRole === 'admin' ? 'bg-blue-600 text-white' :
+                                  user.adminRole === 'junior_admin' ? 'bg-green-600 text-white' : ''
+                                }>
+                                  {user.adminRole === 'owner' ? '👑 OWNER' :
+                                   user.adminRole === 'lead_admin' ? '🔴 LEAD ADMIN' :
+                                   user.adminRole === 'senior_admin' ? '🟠 SENIOR ADMIN' :
+                                   user.adminRole === 'admin' ? '🔵 ADMIN' :
+                                   user.adminRole === 'junior_admin' ? '🟢 JUNIOR ADMIN' : ''}
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               Level {user.level} • {user.coins?.toLocaleString() || 0} coins
@@ -730,6 +798,33 @@ export default function AdminPage() {
                               >
                                 💸 Remove Coins
                               </Button>
+                              {user.adminRole !== 'owner' && (
+                                <>
+                                  {user.adminRole && user.adminRole !== 'none' ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => removeAdminRoleMutation.mutate(user.id)}
+                                      data-testid={`button-remove-admin-${user.id}`}
+                                    >
+                                      🚫 Remove Admin
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setUserAction("give-admin");
+                                        setShowUserActionDialog(true);
+                                      }}
+                                      data-testid={`button-give-admin-${user.id}`}
+                                    >
+                                      🛡️ Give Admin
+                                    </Button>
+                                  )}
+                                </>
+                              )}
                               <Button
                                 size="sm"
                                 variant="secondary"
@@ -1331,6 +1426,30 @@ export default function AdminPage() {
                 </div>
               )}
               
+              {userAction === "give-admin" && (
+                <div>
+                  <Label htmlFor="admin-role">Admin Role</Label>
+                  <Select value={selectedAdminRole} onValueChange={setSelectedAdminRole}>
+                    <SelectTrigger data-testid="select-admin-role">
+                      <SelectValue placeholder="Select admin role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="junior_admin">🟢 Junior Admin</SelectItem>
+                      <SelectItem value="admin">🔵 Admin</SelectItem>
+                      <SelectItem value="senior_admin">🟠 Senior Admin</SelectItem>
+                      <SelectItem value="lead_admin">🔴 Lead Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    <strong>Permission Levels:</strong><br />
+                    🟢 <strong>Junior Admin:</strong> Basic user management, view analytics<br />
+                    🔵 <strong>Admin:</strong> Full user management, item management<br />
+                    🟠 <strong>Senior Admin:</strong> Advanced controls, system commands<br />
+                    🔴 <strong>Lead Admin:</strong> All permissions except owner functions
+                  </p>
+                </div>
+              )}
+              
               <div className="flex space-x-2">
                 <Button
                   onClick={() => {
@@ -1352,13 +1471,19 @@ export default function AdminPage() {
                         userId: selectedUser.id, 
                         amount: coinAmount 
                       });
+                    } else if (userAction === "give-admin" && selectedUser) {
+                      giveAdminRoleMutation.mutate({ 
+                        userId: selectedUser.id, 
+                        adminRole: selectedAdminRole 
+                      });
                     }
                   }}
                   disabled={
                     (userAction === "ban" && !banReason.trim()) ||
                     (userAction === "temp-ban" && (!banReason.trim() || !tempBanDuration)) ||
                     (userAction === "give-coins" && (!coinAmount || parseInt(coinAmount) <= 0)) ||
-                    (userAction === "remove-coins" && (!coinAmount || parseInt(coinAmount) <= 0))
+                    (userAction === "remove-coins" && (!coinAmount || parseInt(coinAmount) <= 0)) ||
+                    (userAction === "give-admin" && !selectedAdminRole)
                   }
                   data-testid="button-confirm-action"
                 >
@@ -1366,6 +1491,7 @@ export default function AdminPage() {
                   {userAction === "temp-ban" && "Confirm Temporary Ban"}
                   {userAction === "give-coins" && "Give Coins"}
                   {userAction === "remove-coins" && "Remove Coins"}
+                  {userAction === "give-admin" && "Grant Admin Role"}
                 </Button>
                 <Button
                   variant="outline"
@@ -1375,6 +1501,7 @@ export default function AdminPage() {
                     setBanReason("");
                     setTempBanDuration("");
                     setCoinAmount("");
+                    setSelectedAdminRole("");
                     setUserAction("");
                   }}
                   data-testid="button-cancel-action"

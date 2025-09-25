@@ -793,7 +793,8 @@ export class EconomyService {
       { id: 'level_10', name: 'Experienced', description: 'Reach level 10', coins: 1000, requirement: () => user.level >= 10 },
       { id: 'rich_1k', name: 'Rich!', description: 'Have 1,000 coins', coins: 250, requirement: () => user.coins >= 1000 },
       { id: 'rich_10k', name: 'Very Rich!', description: 'Have 10,000 coins', coins: 1000, requirement: () => user.coins >= 10000 },
-      { id: 'worker', name: 'Hard Worker', description: 'Work 10 times', coins: 300, requirement: () => user.gameStats?.workCount >= 10 }
+      { id: 'worker', name: 'Hard Worker', description: 'Work 10 times', coins: 300, requirement: () => user.gameStats?.workCount >= 10 },
+      { id: 'owners', name: 'Owner', description: 'Special protection badge for owners', coins: 0, requirement: () => false } // Manually granted only
     ];
 
     for (const achievement of achievementDefinitions) {
@@ -817,6 +818,30 @@ export class EconomyService {
     }
 
     return newAchievements;
+  }
+
+  // Check if user has owners badge (protection from bans/coin removal)
+  static async hasOwnersBadge(username: string): Promise<boolean> {
+    const user = await storage.getUserByUsername(username);
+    if (!user) return false;
+    
+    const achievements = user.achievements || [];
+    return achievements.includes('owners');
+  }
+
+  // Manually grant owners badge to a user (admin only function)
+  static async grantOwnersBadge(username: string) {
+    const user = await storage.getUserByUsername(username);
+    if (!user) throw new Error("User not found");
+
+    const currentAchievements = user.achievements || [];
+    if (!currentAchievements.includes('owners')) {
+      currentAchievements.push('owners');
+      await storage.updateUser(user.id, {
+        achievements: currentAchievements
+      });
+    }
+    return true;
   }
 
   // Crime system
