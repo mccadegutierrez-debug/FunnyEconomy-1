@@ -122,7 +122,7 @@ export default function Crash() {
               <Slider
                 id="cashout-multiplier"
                 min={11}
-                max={100}
+                max={1000}
                 step={1}
                 value={[cashoutAt * 10]}
                 onValueChange={(value) => setCashoutAt(value[0] / 10)}
