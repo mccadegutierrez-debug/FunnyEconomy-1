@@ -285,6 +285,12 @@ export default function PetsPage() {
     };
   };
 
+  const getHoursRemaining = (endTime: string | Date | null): number => {
+    if (!endTime) return 0;
+    const date = endTime instanceof Date ? endTime : new Date(endTime);
+    return Math.max(0, Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60)));
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -406,13 +412,13 @@ export default function PetsPage() {
                       {pet.thawingUntil && new Date() < new Date(pet.thawingUntil) && (
                         <Badge variant="outline" className="w-full mb-2">
                           <Clock className="w-3 h-3 mr-1" />
-                          Thawing... {Math.ceil((new Date(pet.thawingUntil).getTime() - Date.now()) / (1000 * 60 * 60)).toString()}h left
+                          Thawing... {getHoursRemaining(pet.thawingUntil)}h left
                         </Badge>
                       )}
-                      {pet.huntingUntil && new Date() < new Date(pet.huntingUntil) && (
+                      {(pet.huntingUntil && new Date() < new Date(pet.huntingUntil)) && (
                         <Badge variant="outline" className="w-full mb-2">
                           <Target className="w-3 h-3 mr-1" />
-                          Hunting... {Math.ceil((new Date(pet.huntingUntil).getTime() - Date.now()) / (1000 * 60 * 60))}h left
+                          Hunting... {getHoursRemaining(pet.huntingUntil)}h left
                         </Badge>
                       )}
 
@@ -1207,11 +1213,11 @@ export default function PetsPage() {
                         {activity.activityType} • {new Date(activity.timestamp).toLocaleDateString()}
                       </div>
                     </div>
-                    {activity.rewards && Array.isArray(activity.rewards) && activity.rewards.length > 0 && (
+                    {activity.rewards && Array.isArray(activity.rewards) && activity.rewards.length > 0 ? (
                       <Badge variant="secondary">
-                        +{activity.rewards.length.toString()} reward{activity.rewards.length > 1 ? 's' : ''}
+                        +{activity.rewards.length} reward{activity.rewards.length > 1 ? 's' : ''}
                       </Badge>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               ))

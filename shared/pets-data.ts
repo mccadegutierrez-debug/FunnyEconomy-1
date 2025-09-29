@@ -393,9 +393,16 @@ export function getPetsByRarity(rarity: PetType['rarity']): PetType[] {
   return AVAILABLE_PETS.filter(pet => pet.rarity === rarity);
 }
 
-export function calculateStatDecay(lastUpdate: Date | string, decayHours: number): number {
+export function calculateStatDecay(lastUpdate: Date | string | null | undefined, decayHours: number): number {
+  // Handle null/undefined inputs by defaulting to full stats
+  if (!lastUpdate) return 100;
+  
   // Handle both Date objects and date strings
   const date = lastUpdate instanceof Date ? lastUpdate : new Date(lastUpdate);
+  
+  // Guard against invalid dates
+  if (isNaN(date.getTime())) return 100;
+  
   const hoursElapsed = (Date.now() - date.getTime()) / (1000 * 60 * 60);
   const decayAmount = Math.floor(hoursElapsed / decayHours);
   return Math.max(0, 100 - decayAmount);
