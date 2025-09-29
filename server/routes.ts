@@ -12,6 +12,39 @@ import { FreemiumService } from "./services/freemiumService";
 import { filterMessage } from "./utils/profanityFilter";
 import rateLimit from "express-rate-limit";
 import { AVAILABLE_PETS, getPetById, calculateStatDecay } from "@shared/pets-data";
+import { seedPetsData } from "./seed-pets-data";
+
+// Pet 2.0 Validation Schemas
+const createRoomSchema = z.object({
+  name: z.string().min(1).max(50).optional()
+});
+
+const updateRoomSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  floorStyle: z.string().optional(),
+  wallStyle: z.string().optional(), 
+  doorStyle: z.string().optional(),
+  windowStyle: z.string().optional(),
+  floorDecorations: z.array(z.any()).optional(),
+  wallDecorations: z.array(z.any()).optional()
+}).strict(); // Prevent additional fields
+
+const hireSitterSchema = z.object({
+  sitterId: z.string().min(1),
+  hours: z.number().min(1).max(168) // Max 1 week
+});
+
+const trainSkillSchema = z.object({
+  skillId: z.string().min(1)
+});
+
+const removeFromStasisSchema = z.object({
+  roomId: z.string().min(1)
+});
+
+const startHuntSchema = z.object({
+  huntType: z.enum(['basic', 'rare', 'special']).optional()
+});
 
 // Rate limiter for API endpoints
 const apiLimiter = rateLimit({
@@ -31,6 +64,9 @@ export function registerRoutes(app: Express): Server {
 
   // Initialize data on startup
   storage.initializeData().catch(console.error);
+  
+  // Seed pet sitters and skills data
+  seedPetsData().catch(console.error);
 
   // Economy routes
   app.post('/api/economy/deposit', requireAuth, async (req, res) => {
@@ -674,7 +710,21 @@ export function registerRoutes(app: Express): Server {
         lastFed: new Date(),
         lastCleaned: new Date(),
         lastPlayed: new Date(),
-        lastSlept: new Date()
+        lastSlept: new Date(),
+        roomId: null, // Pet goes to stasis initially
+        inStasis: true,
+        thawingUntil: null,
+        skills: [],
+        isCurrentPet: false,
+        isSick: false,
+        sicknessType: null,
+        huntingUntil: null,
+        huntLevel: 1,
+        breedingPartnerId: null,
+        breedingUntil: null,
+        skin: 'default',
+        friendlyTo: [],
+        hostileTo: []
       });
 
       res.json(pet);
@@ -786,6 +836,384 @@ export function registerRoutes(app: Express): Server {
       });
 
       res.json(updatedPet);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pet Rooms API routes
+  app.get('/api/pets/rooms', requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const rooms = await storage.getUserPetRooms(user.id);
+      res.json(rooms);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/rooms', requireAuth, async (req, res) => {
+    try {
+      const validatedData = createRoomSchema.parse(req.body);
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userRooms = await storage.getUserPetRooms(user.id);
+      if (userRooms.length >= 10) {
+        return res.status(400).json({ error: "Maximum 10 rooms allowed" });
+      }
+
+      const room = await storage.createPetRoom({
+        userId: user.id,
+        name: validatedData.name || `Room ${userRooms.length + 1}`,
+        floorStyle: 'wooden',
+        wallStyle: 'plain',
+        doorStyle: 'wooden_door',
+        windowStyle: 'basic_window',
+        floorDecorations: [],
+        wallDecorations: [],
+        sitterId: null,
+        sitterUntil: null
+      });
+
+      res.json(room);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.patch('/api/pets/rooms/:roomId', requireAuth, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const validatedUpdates = updateRoomSchema.parse(req.body);
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const room = await storage.getPetRoom(roomId);
+      if (!room || room.userId !== user.id) {
+        return res.status(404).json({ error: "Room not found" });
+      }
+
+      // Only allow updates to safe fields - explicitly exclude protected fields
+      const safeUpdates = {
+        ...(validatedUpdates.name && { name: validatedUpdates.name }),
+        ...(validatedUpdates.floorStyle && { floorStyle: validatedUpdates.floorStyle }),
+        ...(validatedUpdates.wallStyle && { wallStyle: validatedUpdates.wallStyle }),
+        ...(validatedUpdates.doorStyle && { doorStyle: validatedUpdates.doorStyle }),
+        ...(validatedUpdates.windowStyle && { windowStyle: validatedUpdates.windowStyle }),
+        ...(validatedUpdates.floorDecorations && { floorDecorations: validatedUpdates.floorDecorations }),
+        ...(validatedUpdates.wallDecorations && { wallDecorations: validatedUpdates.wallDecorations })
+      };
+
+      const updatedRoom = await storage.updatePetRoom(roomId, safeUpdates);
+      res.json(updatedRoom);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pet Sitters API routes
+  app.get('/api/pets/sitters', requireAuth, async (req, res) => {
+    try {
+      const sitters = await storage.getAllPetSitters();
+      res.json(sitters);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/rooms/:roomId/sitter', requireAuth, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const validatedData = hireSitterSchema.parse(req.body);
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const room = await storage.getPetRoom(roomId);
+      if (!room || room.userId !== user.id) {
+        return res.status(404).json({ error: "Room not found" });
+      }
+
+      const sitter = await storage.getPetSitter(validatedData.sitterId);
+      if (!sitter) {
+        return res.status(404).json({ error: "Sitter not found" });
+      }
+
+      const totalCost = sitter.hourlyRate * validatedData.hours;
+      if (user.coins < totalCost) {
+        return res.status(400).json({ error: "Insufficient coins" });
+      }
+
+      const sitterUntil = new Date();
+      sitterUntil.setHours(sitterUntil.getHours() + validatedData.hours);
+
+      await storage.updateUser(user.id, {
+        coins: user.coins - totalCost
+      });
+
+      const updatedRoom = await storage.updatePetRoom(roomId, {
+        sitterId: validatedData.sitterId,
+        sitterUntil: sitterUntil
+      });
+
+      res.json(updatedRoom);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pet Skills API routes
+  app.get('/api/pets/skills', requireAuth, async (req, res) => {
+    try {
+      const skills = await storage.getAllPetSkills();
+      res.json(skills);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:petId/train-skill', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      const validatedData = trainSkillSchema.parse(req.body);
+
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const skill = await storage.getPetSkill(validatedData.skillId);
+      if (!skill) {
+        return res.status(404).json({ error: "Skill not found" });
+      }
+
+      if (user.coins < skill.trainingCost) {
+        return res.status(400).json({ error: "Insufficient coins" });
+      }
+
+      const currentSkills = pet.skills as string[];
+      if (currentSkills.includes(validatedData.skillId)) {
+        return res.status(400).json({ error: "Pet already has this skill" });
+      }
+
+      await storage.updateUser(user.id, {
+        coins: user.coins - skill.trainingCost
+      });
+
+      const updatedPet = await storage.updateUserPet(petId, {
+        skills: [...currentSkills, validatedData.skillId]
+      });
+
+      await storage.createPetActivity({
+        petId: petId,
+        activityType: 'trained',
+        description: `Learned the ${skill.name} skill`,
+        rewards: []
+      });
+
+      res.json(updatedPet);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pet Activities API routes
+  app.get('/api/pets/:petId/activities', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const activities = await storage.getPetActivities(petId, limit);
+      res.json(activities);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/activities', requireAuth, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const activities = await storage.getUserPetActivities(user.id, limit);
+      res.json(activities);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pet Stasis API routes
+  app.post('/api/pets/:petId/stasis', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const updatedPet = await storage.updateUserPet(petId, {
+        roomId: null,
+        inStasis: true
+      });
+
+      res.json(updatedPet);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:petId/remove-from-stasis', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      const validatedData = removeFromStasisSchema.parse(req.body);
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const room = await storage.getPetRoom(validatedData.roomId);
+      if (!room || room.userId !== user.id) {
+        return res.status(404).json({ error: "Room not found" });
+      }
+
+      // Check room capacity (max 5 pets per room)
+      const roomPets = await storage.getUserPets(user.id);
+      const petsInRoom = roomPets.filter(p => p.roomId === validatedData.roomId);
+      if (petsInRoom.length >= 5) {
+        return res.status(400).json({ error: "Room is full (max 5 pets)" });
+      }
+
+      // Set thawing time (6 hours)
+      const thawingUntil = new Date();
+      thawingUntil.setHours(thawingUntil.getHours() + 6);
+
+      const updatedPet = await storage.updateUserPet(petId, {
+        roomId: validatedData.roomId,
+        inStasis: false,
+        thawingUntil: thawingUntil
+      });
+
+      res.json(updatedPet);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pet Hunting API routes
+  app.post('/api/pets/:petId/hunt', requireAuth, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      const validatedData = startHuntSchema.parse(req.body);
+      
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userPets = await storage.getUserPets(user.id);
+      const pet = userPets.find(p => p.id === petId);
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      if (pet.huntingUntil && new Date() < pet.huntingUntil) {
+        return res.status(400).json({ error: "Pet is already hunting" });
+      }
+
+      const completesAt = new Date();
+      completesAt.setHours(completesAt.getHours() + 1); // 1 hour hunt
+
+      const hunt = await storage.createPetHunt({
+        petId: petId,
+        completesAt: completesAt,
+        huntType: validatedData.huntType || 'basic',
+        isCompleted: false,
+        rewards: []
+      });
+
+      await storage.updateUserPet(petId, {
+        huntingUntil: completesAt
+      });
+
+      res.json(hunt);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/hunts', requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const hunts = await storage.getActivePetHunts(user.id);
+      res.json(hunts);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }

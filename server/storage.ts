@@ -1,6 +1,6 @@
-import { users, items, transactions, notifications, chatMessages, auditLogs, userPets, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog, type UserPet, type InsertUserPet } from "@shared/schema";
+import { users, items, transactions, notifications, chatMessages, auditLogs, userPets, petRooms, petSitters, petActivities, petSkills, petHunts, petBreeding, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog, type UserPet, type InsertUserPet, type PetRoom, type InsertPetRoom, type PetSitter, type InsertPetSitter, type PetActivity, type InsertPetActivity, type PetSkill, type InsertPetSkill, type PetHunt, type InsertPetHunt, type PetBreeding, type InsertPetBreeding } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -51,6 +51,40 @@ export interface IStorage {
   createUserPet(pet: Omit<UserPet, 'id' | 'adoptedAt'>): Promise<UserPet>;
   updateUserPet(petId: string, updates: Partial<UserPet>): Promise<UserPet>;
   deleteUserPet(petId: string): Promise<void>;
+  
+  // Pet Rooms
+  getUserPetRooms(userId: string): Promise<PetRoom[]>;
+  createPetRoom(room: InsertPetRoom): Promise<PetRoom>;
+  updatePetRoom(roomId: string, updates: Partial<PetRoom>): Promise<PetRoom>;
+  deletePetRoom(roomId: string): Promise<void>;
+  getPetRoom(roomId: string): Promise<PetRoom | undefined>;
+  
+  // Pet Sitters
+  getAllPetSitters(): Promise<PetSitter[]>;
+  getPetSitter(sitterId: string): Promise<PetSitter | undefined>;
+  createPetSitter(sitter: InsertPetSitter): Promise<PetSitter>;
+  
+  // Pet Activities
+  getPetActivities(petId: string, limit?: number): Promise<PetActivity[]>;
+  createPetActivity(activity: InsertPetActivity): Promise<PetActivity>;
+  getUserPetActivities(userId: string, limit?: number): Promise<PetActivity[]>;
+  
+  // Pet Skills
+  getAllPetSkills(): Promise<PetSkill[]>;
+  getPetSkill(skillId: string): Promise<PetSkill | undefined>;
+  createPetSkill(skill: InsertPetSkill): Promise<PetSkill>;
+  
+  // Pet Hunts
+  createPetHunt(hunt: InsertPetHunt): Promise<PetHunt>;
+  getPetHunt(huntId: string): Promise<PetHunt | undefined>;
+  updatePetHunt(huntId: string, updates: Partial<PetHunt>): Promise<PetHunt>;
+  getActivePetHunts(userId: string): Promise<PetHunt[]>;
+  
+  // Pet Breeding
+  createPetBreeding(breeding: InsertPetBreeding): Promise<PetBreeding>;
+  getPetBreeding(breedingId: string): Promise<PetBreeding | undefined>;
+  updatePetBreeding(breedingId: string, updates: Partial<PetBreeding>): Promise<PetBreeding>;
+  getActivePetBreeding(userId: string): Promise<PetBreeding[]>;
   
   // System
   initializeData(): Promise<void>;
@@ -961,6 +995,218 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(userPets)
       .where(eq(userPets.id, petId));
+  }
+
+  // Pet Rooms Methods
+  async getUserPetRooms(userId: string): Promise<PetRoom[]> {
+    const rooms = await db
+      .select()
+      .from(petRooms)
+      .where(eq(petRooms.userId, userId))
+      .orderBy(desc(petRooms.createdAt));
+    return rooms;
+  }
+
+  async createPetRoom(roomData: InsertPetRoom): Promise<PetRoom> {
+    const [room] = await db
+      .insert(petRooms)
+      .values(roomData)
+      .returning();
+    return room;
+  }
+
+  async updatePetRoom(roomId: string, updates: Partial<PetRoom>): Promise<PetRoom> {
+    const [room] = await db
+      .update(petRooms)
+      .set(updates)
+      .where(eq(petRooms.id, roomId))
+      .returning();
+    return room;
+  }
+
+  async deletePetRoom(roomId: string): Promise<void> {
+    await db
+      .delete(petRooms)
+      .where(eq(petRooms.id, roomId));
+  }
+
+  async getPetRoom(roomId: string): Promise<PetRoom | undefined> {
+    const [room] = await db
+      .select()
+      .from(petRooms)
+      .where(eq(petRooms.id, roomId));
+    return room || undefined;
+  }
+
+  // Pet Sitters Methods
+  async getAllPetSitters(): Promise<PetSitter[]> {
+    const sitters = await db
+      .select()
+      .from(petSitters);
+    return sitters;
+  }
+
+  async getPetSitter(sitterId: string): Promise<PetSitter | undefined> {
+    const [sitter] = await db
+      .select()
+      .from(petSitters)
+      .where(eq(petSitters.id, sitterId));
+    return sitter || undefined;
+  }
+
+  async createPetSitter(sitterData: InsertPetSitter): Promise<PetSitter> {
+    const [sitter] = await db
+      .insert(petSitters)
+      .values(sitterData)
+      .returning();
+    return sitter;
+  }
+
+  // Pet Activities Methods
+  async getPetActivities(petId: string, limit = 50): Promise<PetActivity[]> {
+    const activities = await db
+      .select()
+      .from(petActivities)
+      .where(eq(petActivities.petId, petId))
+      .orderBy(desc(petActivities.timestamp))
+      .limit(limit);
+    return activities;
+  }
+
+  async createPetActivity(activityData: InsertPetActivity): Promise<PetActivity> {
+    const [activity] = await db
+      .insert(petActivities)
+      .values(activityData)
+      .returning();
+    return activity;
+  }
+
+  async getUserPetActivities(userId: string, limit = 100): Promise<PetActivity[]> {
+    const activities = await db
+      .select({
+        id: petActivities.id,
+        petId: petActivities.petId,
+        activityType: petActivities.activityType,
+        description: petActivities.description,
+        rewards: petActivities.rewards,
+        timestamp: petActivities.timestamp,
+      })
+      .from(petActivities)
+      .innerJoin(userPets, eq(petActivities.petId, userPets.id))
+      .where(eq(userPets.userId, userId))
+      .orderBy(desc(petActivities.timestamp))
+      .limit(limit);
+    return activities;
+  }
+
+  // Pet Skills Methods
+  async getAllPetSkills(): Promise<PetSkill[]> {
+    const skills = await db
+      .select()
+      .from(petSkills);
+    return skills;
+  }
+
+  async getPetSkill(skillId: string): Promise<PetSkill | undefined> {
+    const [skill] = await db
+      .select()
+      .from(petSkills)
+      .where(eq(petSkills.id, skillId));
+    return skill || undefined;
+  }
+
+  async createPetSkill(skillData: InsertPetSkill): Promise<PetSkill> {
+    const [skill] = await db
+      .insert(petSkills)
+      .values(skillData)
+      .returning();
+    return skill;
+  }
+
+  // Pet Hunts Methods
+  async createPetHunt(huntData: InsertPetHunt): Promise<PetHunt> {
+    const [hunt] = await db
+      .insert(petHunts)
+      .values(huntData)
+      .returning();
+    return hunt;
+  }
+
+  async getPetHunt(huntId: string): Promise<PetHunt | undefined> {
+    const [hunt] = await db
+      .select()
+      .from(petHunts)
+      .where(eq(petHunts.id, huntId));
+    return hunt || undefined;
+  }
+
+  async updatePetHunt(huntId: string, updates: Partial<PetHunt>): Promise<PetHunt> {
+    const [hunt] = await db
+      .update(petHunts)
+      .set(updates)
+      .where(eq(petHunts.id, huntId))
+      .returning();
+    return hunt;
+  }
+
+  async getActivePetHunts(userId: string): Promise<PetHunt[]> {
+    const hunts = await db
+      .select({
+        id: petHunts.id,
+        petId: petHunts.petId,
+        startedAt: petHunts.startedAt,
+        completesAt: petHunts.completesAt,
+        huntType: petHunts.huntType,
+        isCompleted: petHunts.isCompleted,
+        rewards: petHunts.rewards,
+      })
+      .from(petHunts)
+      .innerJoin(userPets, eq(petHunts.petId, userPets.id))
+      .where(and(
+        eq(userPets.userId, userId),
+        eq(petHunts.isCompleted, false)
+      ))
+      .orderBy(desc(petHunts.startedAt));
+    return hunts;
+  }
+
+  // Pet Breeding Methods
+  async createPetBreeding(breedingData: InsertPetBreeding): Promise<PetBreeding> {
+    const [breeding] = await db
+      .insert(petBreeding)
+      .values(breedingData)
+      .returning();
+    return breeding;
+  }
+
+  async getPetBreeding(breedingId: string): Promise<PetBreeding | undefined> {
+    const [breeding] = await db
+      .select()
+      .from(petBreeding)
+      .where(eq(petBreeding.id, breedingId));
+    return breeding || undefined;
+  }
+
+  async updatePetBreeding(breedingId: string, updates: Partial<PetBreeding>): Promise<PetBreeding> {
+    const [breeding] = await db
+      .update(petBreeding)
+      .set(updates)
+      .where(eq(petBreeding.id, breedingId))
+      .returning();
+    return breeding;
+  }
+
+  async getActivePetBreeding(userId: string): Promise<PetBreeding[]> {
+    const breeding = await db
+      .select()
+      .from(petBreeding)
+      .innerJoin(userPets, eq(petBreeding.petId1, userPets.id))
+      .where(and(
+        eq(userPets.userId, userId),
+        isNull(petBreeding.isSuccessful)
+      ))
+      .orderBy(desc(petBreeding.startedAt));
+    return breeding.map(b => b.pet_breeding);
   }
 }
 
