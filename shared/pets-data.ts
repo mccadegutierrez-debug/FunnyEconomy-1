@@ -221,6 +221,7 @@ export const AVAILABLE_PETS: PetType[] = [
     energyDecay: 168,
     funDecay: 168,
     adoptionCost: 500000
+  
   },
   {
     id: 'fox',
