@@ -15,6 +15,7 @@ import PetsPage from "@/pages/pets-page";
 import AdminPage from "@/pages/admin-page";
 import ProfilePage from "@/pages/profile-page";
 import PublicProfilePage from "@/pages/public-profile-page";
+import FreemiumPage from "@/pages/freemium-page";
 import NotFound from "@/pages/not-found";
 import BanPage from "@/pages/ban-page";
 
@@ -36,6 +37,7 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/games" component={GamesPage} />
+      <ProtectedRoute path="/freemium" component={FreemiumPage} />
       <ProtectedRoute path="/shop" component={ShopPage} />
       <ProtectedRoute path="/inventory" component={InventoryPage} />
       <ProtectedRoute path="/pets" component={PetsPage} />

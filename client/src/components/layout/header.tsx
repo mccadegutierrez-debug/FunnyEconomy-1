@@ -84,6 +84,7 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "Dashboard", active: location === "/" },
     { href: "/games", label: "Games", active: location === "/games" },
+    { href: "/freemium", label: "Freemium", active: location === "/freemium" },
     { href: "/shop", label: "Shop", active: location === "/shop" },
     { href: "/inventory", label: "Inventory", active: location === "/inventory" },
     { href: "/pets", label: "Pets", active: location === "/pets" },
