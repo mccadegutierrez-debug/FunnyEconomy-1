@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertTriangle, Users, DollarSign, Settings, Command, Package, Activity, BarChart3, Search, Plus, Edit2, Trash2, Eye, RefreshCw, Clock, TrendingUp, Database, Server } from "lucide-react";
+import { AlertTriangle, Users, DollarSign, Settings, Command, Package, Activity, BarChart3, Search, Plus, Edit2, Trash2, Eye, RefreshCw, Clock, TrendingUp, Database, Server, Heart } from "lucide-react";
+import { AVAILABLE_PETS } from "@shared/pets-data";
 
 export default function AdminPage() {
   const [command, setCommand] = useState("");
@@ -42,7 +43,34 @@ export default function AdminPage() {
   const [showUserActionDialog, setShowUserActionDialog] = useState(false);
   const [userAction, setUserAction] = useState<string>("");
   const [selectedAdminRole, setSelectedAdminRole] = useState("");
+  const [selectedPetId, setSelectedPetId] = useState("");
+  const [petName, setPetName] = useState("");
+  const [showPetDialog, setShowPetDialog] = useState(false);
+  const [expandedUserActions, setExpandedUserActions] = useState<Set<string>>(new Set());
+  const [showCreatePetDialog, setShowCreatePetDialog] = useState(false);
+  const [newPet, setNewPet] = useState({
+    name: "",
+    emoji: "",
+    rarity: "common",
+    adoptionCost: "",
+    hungerDecay: "",
+    happinessDecay: "",
+    energyDecay: ""
+  });
   const { toast } = useToast();
+
+  // Helper function to toggle user actions expansion
+  const toggleUserActions = (userId: string) => {
+    setExpandedUserActions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
 
   // Check admin access through session-based authentication
   useEffect(() => {
@@ -85,7 +113,7 @@ export default function AdminPage() {
   }, []);
   
   // Fetch admin data using session-based authentication only
-  const { data: users = [], isLoading, error } = useQuery({
+  const { data: users = [], isLoading, error, isFetching: isFetchingUsers } = useQuery({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/admin/users");
@@ -96,7 +124,7 @@ export default function AdminPage() {
   });
 
   // Fetch items for item management
-  const { data: items = [] } = useQuery({
+  const { data: items = [], isFetching: isFetchingItems } = useQuery({
     queryKey: ["/api/admin/items"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/admin/items");
@@ -106,7 +134,7 @@ export default function AdminPage() {
   });
 
   // Fetch transactions for monitoring
-  const { data: transactions = [] } = useQuery({
+  const { data: transactions = [], isFetching: isFetchingTransactions } = useQuery({
     queryKey: ["/api/admin/transactions"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/admin/transactions");
@@ -248,6 +276,73 @@ export default function AdminPage() {
     onError: (error: Error) => {
       toast({
         title: "Remove Coins Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const givePetMutation = useMutation({
+    mutationFn: async ({ userId, petId, petName }: { userId: string; petId: string; petName: string }) => {
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/give-pet`, {
+        body: { petId, petName }
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Pet Given! 🐾",
+        description: data.message || "Pet has been given to the user successfully.",
+      });
+      setSelectedUser(null);
+      setSelectedPetId("");
+      setPetName("");
+      setShowPetDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Give Pet Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createPetMutation = useMutation({
+    mutationFn: async (petData: any) => {
+      const res = await apiRequest("POST", "/api/admin/pets", {
+        body: {
+          name: petData.name,
+          emoji: petData.emoji,
+          rarity: petData.rarity,
+          adoptionCost: parseInt(petData.adoptionCost),
+          hungerDecay: parseInt(petData.hungerDecay),
+          happinessDecay: parseInt(petData.happinessDecay),
+          energyDecay: parseInt(petData.energyDecay)
+        }
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Pet Created! 🐾",
+        description: data.message || "New pet has been created successfully.",
+      });
+      setShowCreatePetDialog(false);
+      setNewPet({
+        name: "",
+        emoji: "",
+        rarity: "common",
+        adoptionCost: "",
+        hungerDecay: "",
+        happinessDecay: "",
+        energyDecay: ""
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Create Pet Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -547,6 +642,10 @@ export default function AdminPage() {
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Analytics
               </TabsTrigger>
+              <TabsTrigger value="pets" data-testid="tab-pets" className="flex-shrink-0">
+                <Heart className="w-4 h-4 mr-2" />
+                Pets
+              </TabsTrigger>
               <TabsTrigger value="system" data-testid="tab-system" className="flex-shrink-0">
                 <Settings className="w-4 h-4 mr-2" />
                 System
@@ -688,9 +787,10 @@ export default function AdminPage() {
                         onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] })}
                         variant="outline"
                         size="sm"
+                        disabled={isFetchingUsers}
                         data-testid="button-refresh-users"
                       >
-                        <RefreshCw className="w-4 h-4" />
+                        <RefreshCw className={`w-4 h-4 ${isFetchingUsers ? 'animate-spin' : ''}`} />
                       </Button>
                     </div>
                   </div>
@@ -803,6 +903,7 @@ export default function AdminPage() {
                             </Button>
                           ) : (
                             <>
+                              {/* Essential actions - always visible */}
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -820,64 +921,91 @@ export default function AdminPage() {
                                 variant="outline"
                                 onClick={() => {
                                   setSelectedUser(user);
-                                  setUserAction("remove-coins");
-                                  setShowUserActionDialog(true);
+                                  setShowPetDialog(true);
                                 }}
-                                data-testid={`button-remove-coins-${user.id}`}
+                                data-testid={`button-give-pet-${user.id}`}
                               >
-                                💸 Remove Coins
+                                🐾 Give Pet
                               </Button>
-                              {user.adminRole !== 'owner' && (
+                              
+                              {/* Show All Actions toggle button */}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => toggleUserActions(user.id)}
+                                data-testid={`button-toggle-actions-${user.id}`}
+                              >
+                                {expandedUserActions.has(user.id) ? "← Less" : "More →"}
+                              </Button>
+                              
+                              {/* Additional actions - show when expanded */}
+                              {expandedUserActions.has(user.id) && (
                                 <>
-                                  {user.adminRole && user.adminRole !== 'none' ? (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => removeAdminRoleMutation.mutate(user.id)}
-                                      data-testid={`button-remove-admin-${user.id}`}
-                                    >
-                                      🚫 Remove Admin
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                        setSelectedUser(user);
-                                        setUserAction("give-admin");
-                                        setShowUserActionDialog(true);
-                                      }}
-                                      data-testid={`button-give-admin-${user.id}`}
-                                    >
-                                      🛡️ Give Admin
-                                    </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setUserAction("remove-coins");
+                                      setShowUserActionDialog(true);
+                                    }}
+                                    data-testid={`button-remove-coins-${user.id}`}
+                                  >
+                                    💸 Remove Coins
+                                  </Button>
+                                  {user.adminRole !== 'owner' && (
+                                    <>
+                                      {user.adminRole && user.adminRole !== 'none' ? (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => removeAdminRoleMutation.mutate(user.id)}
+                                          data-testid={`button-remove-admin-${user.id}`}
+                                        >
+                                          🚫 Remove Admin
+                                        </Button>
+                                      ) : (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            setSelectedUser(user);
+                                            setUserAction("give-admin");
+                                            setShowUserActionDialog(true);
+                                          }}
+                                          data-testid={`button-give-admin-${user.id}`}
+                                        >
+                                          🛡️ Give Admin
+                                        </Button>
+                                      )}
+                                    </>
                                   )}
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setUserAction("temp-ban");
+                                      setShowUserActionDialog(true);
+                                    }}
+                                    data-testid={`button-temp-ban-${user.id}`}
+                                  >
+                                    ⏱️ Temp Ban
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setUserAction("ban");
+                                      setShowUserActionDialog(true);
+                                    }}
+                                    data-testid={`button-ban-${user.id}`}
+                                  >
+                                    🔨 Ban
+                                  </Button>
                                 </>
                               )}
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setUserAction("temp-ban");
-                                  setShowUserActionDialog(true);
-                                }}
-                                data-testid={`button-temp-ban-${user.id}`}
-                              >
-                                ⏱️ Temp Ban
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setUserAction("ban");
-                                  setShowUserActionDialog(true);
-                                }}
-                                data-testid={`button-ban-${user.id}`}
-                              >
-                                🔨 Ban
-                              </Button>
                             </>
                           )}
                         </div>
@@ -965,9 +1093,10 @@ export default function AdminPage() {
                       onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] })}
                       variant="outline"
                       size="sm"
+                      disabled={isFetchingItems}
                       data-testid="button-refresh-items"
                     >
-                      <RefreshCw className="w-4 h-4" />
+                      <RefreshCw className={`w-4 h-4 ${isFetchingItems ? 'animate-spin' : ''}`} />
                     </Button>
                   </div>
                 </CardHeader>
@@ -1086,9 +1215,10 @@ export default function AdminPage() {
                       onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] })}
                       variant="outline"
                       size="sm"
+                      disabled={isFetchingTransactions}
                       data-testid="button-refresh-transactions"
                     >
-                      <RefreshCw className="w-4 h-4" />
+                      <RefreshCw className={`w-4 h-4 ${isFetchingTransactions ? 'animate-spin' : ''}`} />
                     </Button>
                   </div>
                 </CardHeader>
@@ -1308,6 +1438,64 @@ export default function AdminPage() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="pets" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-green-400">Pet Management</h2>
+                  <p className="text-muted-foreground">Manage pet distribution and availability</p>
+                </div>
+                <Dialog open={showCreatePetDialog} onOpenChange={setShowCreatePetDialog}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => {
+                      setNewPet({
+                        name: "",
+                        emoji: "",
+                        rarity: "common",
+                        adoptionCost: "",
+                        hungerDecay: "",
+                        happinessDecay: "",
+                        energyDecay: ""
+                      });
+                    }} data-testid="button-create-pet">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Pet
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {AVAILABLE_PETS.map((pet) => (
+                  <Card key={pet.id} className="p-4 border-green-700 bg-green-900/20" data-testid={`pet-card-${pet.id}`}>
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{pet.emoji}</span>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-green-300">{pet.name}</h3>
+                        <p className="text-sm text-muted-foreground capitalize">{pet.rarity}</p>
+                        <p className="text-sm text-green-400">{pet.adoptionCost.toLocaleString()} coins</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      <p>Hunger decay: {pet.hungerDecay}/hour</p>
+                      <p>Happiness decay: {pet.happinessDecay}/hour</p>
+                      <p>Energy decay: {pet.energyDecay}/hour</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+              
+              <div className="mt-6 p-4 border border-green-700 rounded-lg bg-green-900/10">
+                <h3 className="text-lg font-semibold text-green-300 mb-2">Quick Actions</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Use the "Give Pet" button in the Users tab to grant pets to specific users.
+                  All pets shown above are available for distribution.
+                </p>
+                <div className="text-sm text-green-400">
+                  Total available pets: {AVAILABLE_PETS.length}
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="system" className="space-y-4">
@@ -1669,6 +1857,224 @@ export default function AdminPage() {
                     });
                   }}
                   data-testid="button-cancel-item"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Pet Dialog */}
+        <Dialog open={showPetDialog} onOpenChange={setShowPetDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Give Pet to User</DialogTitle>
+              <DialogDescription>
+                Give {selectedUser?.username} a new pet companion.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="pet-select">Select Pet</Label>
+                <Select value={selectedPetId} onValueChange={setSelectedPetId}>
+                  <SelectTrigger data-testid="select-pet">
+                    <SelectValue placeholder="Choose a pet..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AVAILABLE_PETS.map((pet) => (
+                      <SelectItem key={pet.id} value={pet.id}>
+                        {pet.emoji} {pet.name} ({pet.rarity}) - {pet.adoptionCost.toLocaleString()} coins
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="pet-name">Pet Name (Optional)</Label>
+                <Input
+                  id="pet-name"
+                  value={petName}
+                  onChange={(e) => setPetName(e.target.value)}
+                  placeholder="Custom name for the pet..."
+                  maxLength={50}
+                  data-testid="input-pet-name"
+                />
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => {
+                    if (selectedUser && selectedPetId) {
+                      givePetMutation.mutate({
+                        userId: selectedUser.id,
+                        petId: selectedPetId,
+                        petName: petName || AVAILABLE_PETS.find(p => p.id === selectedPetId)?.name || ""
+                      });
+                    }
+                  }}
+                  disabled={!selectedPetId || givePetMutation.isPending}
+                  data-testid="button-give-pet"
+                >
+                  {givePetMutation.isPending ? "Giving..." : "Give Pet"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPetDialog(false);
+                    setSelectedPetId("");
+                    setPetName("");
+                  }}
+                  data-testid="button-cancel-pet"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Pet Dialog */}
+        <Dialog open={showCreatePetDialog} onOpenChange={setShowCreatePetDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create New Pet</DialogTitle>
+              <DialogDescription>
+                Design a new pet type for the adoption center.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="pet-name">Pet Name</Label>
+                  <Input
+                    id="pet-name"
+                    value={newPet.name}
+                    onChange={(e) => setNewPet({ ...newPet, name: e.target.value })}
+                    placeholder="e.g., Dragon"
+                    data-testid="input-pet-name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pet-emoji">Emoji</Label>
+                  <Input
+                    id="pet-emoji"
+                    value={newPet.emoji}
+                    onChange={(e) => setNewPet({ ...newPet, emoji: e.target.value })}
+                    placeholder="🐉"
+                    maxLength={10}
+                    data-testid="input-pet-emoji"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="pet-rarity">Rarity</Label>
+                  <Select value={newPet.rarity} onValueChange={(value) => setNewPet({ ...newPet, rarity: value })}>
+                    <SelectTrigger data-testid="select-pet-rarity">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="common">Common</SelectItem>
+                      <SelectItem value="uncommon">Uncommon</SelectItem>
+                      <SelectItem value="rare">Rare</SelectItem>
+                      <SelectItem value="epic">Epic</SelectItem>
+                      <SelectItem value="legendary">Legendary</SelectItem>
+                      <SelectItem value="mythic">Mythic</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pet-adoption-cost">Adoption Cost</Label>
+                  <Input
+                    id="pet-adoption-cost"
+                    type="number"
+                    value={newPet.adoptionCost}
+                    onChange={(e) => setNewPet({ ...newPet, adoptionCost: e.target.value })}
+                    placeholder="1000"
+                    min="0"
+                    data-testid="input-pet-adoption-cost"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Decay Rates (per hour)</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="pet-hunger-decay" className="text-sm">Hunger Decay</Label>
+                    <Input
+                      id="pet-hunger-decay"
+                      type="number"
+                      value={newPet.hungerDecay}
+                      onChange={(e) => setNewPet({ ...newPet, hungerDecay: e.target.value })}
+                      placeholder="10"
+                      min="0"
+                      max="100"
+                      data-testid="input-pet-hunger-decay"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pet-happiness-decay" className="text-sm">Happiness Decay</Label>
+                    <Input
+                      id="pet-happiness-decay"
+                      type="number"
+                      value={newPet.happinessDecay}
+                      onChange={(e) => setNewPet({ ...newPet, happinessDecay: e.target.value })}
+                      placeholder="5"
+                      min="0"
+                      max="100"
+                      data-testid="input-pet-happiness-decay"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pet-energy-decay" className="text-sm">Energy Decay</Label>
+                    <Input
+                      id="pet-energy-decay"
+                      type="number"
+                      value={newPet.energyDecay}
+                      onChange={(e) => setNewPet({ ...newPet, energyDecay: e.target.value })}
+                      placeholder="8"
+                      min="0"
+                      max="100"
+                      data-testid="input-pet-energy-decay"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => createPetMutation.mutate(newPet)}
+                  disabled={
+                    !newPet.name.trim() ||
+                    !newPet.emoji.trim() ||
+                    !newPet.adoptionCost ||
+                    !newPet.hungerDecay ||
+                    !newPet.happinessDecay ||
+                    !newPet.energyDecay ||
+                    parseInt(newPet.adoptionCost) < 0 ||
+                    parseInt(newPet.hungerDecay) < 0 ||
+                    parseInt(newPet.happinessDecay) < 0 ||
+                    parseInt(newPet.energyDecay) < 0 ||
+                    createPetMutation.isPending
+                  }
+                  data-testid="button-save-pet"
+                >
+                  {createPetMutation.isPending ? "Creating..." : "Create Pet"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCreatePetDialog(false);
+                    setNewPet({
+                      name: "",
+                      emoji: "",
+                      rarity: "common",
+                      adoptionCost: "",
+                      hungerDecay: "",
+                      happinessDecay: "",
+                      energyDecay: ""
+                    });
+                  }}
+                  data-testid="button-cancel-pet"
                 >
                   Cancel
                 </Button>

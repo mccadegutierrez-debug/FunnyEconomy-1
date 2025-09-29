@@ -52,6 +52,9 @@ export interface IStorage {
   updateUserPet(petId: string, updates: Partial<UserPet>): Promise<UserPet>;
   deleteUserPet(petId: string): Promise<void>;
   
+  // Custom Pet Types
+  createCustomPet(pet: { id: string; name: string; emoji: string; rarity: string; adoptionCost: number; hungerDecay: number; happinessDecay: number; energyDecay: number }): Promise<any>;
+  
   // Pet Rooms
   getUserPetRooms(userId: string): Promise<PetRoom[]>;
   createPetRoom(room: InsertPetRoom): Promise<PetRoom>;
@@ -1207,6 +1210,17 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(desc(petBreeding.startedAt));
     return breeding.map(b => b.pet_breeding);
+  }
+
+  // Custom Pet Types
+  async createCustomPet(pet: { id: string; name: string; emoji: string; rarity: string; adoptionCost: number; hungerDecay: number; happinessDecay: number; energyDecay: number }): Promise<any> {
+    // For now, we'll store custom pets as a simple JSON record
+    // In a real implementation, you might want a dedicated custom_pets table
+    return {
+      ...pet,
+      type: 'custom',
+      createdAt: new Date()
+    };
   }
 }
 

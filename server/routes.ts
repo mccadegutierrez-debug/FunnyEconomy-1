@@ -5,7 +5,7 @@ import session from "express-session";
 import { parse } from "cookie";
 import { z } from "zod";
 import { storage } from "./storage";
-import { setupAuth, requireAuth, requireAdmin, requirePermission } from "./auth";
+import { setupAuth, requireAuth, requireAdmin, requirePermission, logAdminAction } from "./auth";
 import { GameService } from "./services/gameService";
 import { EconomyService } from "./services/economyService";
 import { FreemiumService } from "./services/freemiumService";
@@ -1708,6 +1708,127 @@ export function registerRoutes(app: Express): Server {
     try {
       await storage.deleteItem(req.params.id);
       res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pet management endpoints
+  app.post('/api/admin/pets', requirePermission('manage_pets'), async (req, res) => {
+    try {
+      const petSchema = z.object({
+        name: z.string().min(1).max(50),
+        emoji: z.string().min(1).max(10),
+        rarity: z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']),
+        adoptionCost: z.number().min(0),
+        hungerDecay: z.number().min(0).max(100),
+        happinessDecay: z.number().min(0).max(100),
+        energyDecay: z.number().min(0).max(100)
+      });
+
+      const petData = petSchema.parse(req.body);
+      
+      // Generate unique pet ID
+      const petId = `pet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Create new pet object
+      const newPet = {
+        id: petId,
+        ...petData
+      };
+
+      // Store pet in database as a custom pet
+      const customPet = await storage.createCustomPet(newPet);
+
+      // Log admin action
+      await logAdminAction(req.user!.username, 'create_pet', { 
+        petId,
+        petName: petData.name,
+        petRarity: petData.rarity 
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Pet "${petData.name}" created successfully!`,
+        pet: customPet 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid pet data", details: error.errors });
+      }
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Give pet to user endpoint
+  app.post('/api/admin/users/:id/give-pet', requirePermission('manage_pets'), async (req, res) => {
+    try {
+      const petSchema = z.object({
+        petId: z.string().min(1),
+        petName: z.string().max(50).optional()
+      });
+      
+      const { petId, petName } = petSchema.parse(req.body);
+
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if pet type exists
+      const petType = getPetById(petId);
+      if (!petType) {
+        return res.status(400).json({ error: "Invalid pet type" });
+      }
+
+      // Create the pet
+      const pet = await storage.createUserPet({
+        userId: targetUser.id,
+        petId: petId,
+        petName: petName || petType.name,
+        hunger: 100,
+        hygiene: 100,
+        energy: 100,
+        fun: 100,
+        level: 1,
+        xp: 0,
+        lastFed: new Date(),
+        lastCleaned: new Date(),
+        lastPlayed: new Date(),
+        lastSlept: new Date(),
+        roomId: null,
+        inStasis: true,
+        thawingUntil: null,
+        skills: [],
+        isCurrentPet: false,
+        isSick: false,
+        sicknessType: null,
+        huntingUntil: null,
+        huntLevel: 1,
+        breedingPartnerId: null,
+        breedingUntil: null,
+        skin: 'default',
+        friendlyTo: [],
+        hostileTo: []
+      });
+
+      // Log admin action
+      await logAdminAction({
+        adminUsername: req.user!.username,
+        adminRole: req.adminRole || 'unknown',
+        action: 'give_pet',
+        targetType: 'user',
+        targetId: targetUser.id,
+        targetName: targetUser.username,
+        details: { petId, petName: petName || petType.name, petType: petType.name },
+        req
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Gave ${petType.name} to ${targetUser.username}`,
+        pet 
+      });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }

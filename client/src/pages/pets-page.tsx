@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { AVAILABLE_PETS, getPetById, calculateStatDecay } from '@shared/pets-data';
 import { UserPet, PetRoom, PetSitter, PetSkill, PetActivity, PetHunt } from '@shared/schema';
-import { Heart, Sparkles, Bath, Bed, ShoppingCart, Search, Home, Users, Trophy, History, Snowflake, Target, Plus, Settings, Star, Clock } from 'lucide-react';
+import { Heart, Sparkles, Bath, Bed, ShoppingCart, Search, Home, Users, Trophy, History, Snowflake, Target, Plus, Settings, Star, Clock, ArrowLeft } from 'lucide-react';
 
 export default function PetsPage() {
   const { user } = useAuth();
@@ -294,7 +295,15 @@ export default function PetsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-impact text-primary dm-title mb-4">🐾 Pets</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-4xl font-impact text-primary dm-title">🐾 Pets</h1>
+          <Button variant="outline" asChild>
+            <Link href="/" data-testid="button-home">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </Link>
+          </Button>
+        </div>
         <p className="text-muted-foreground">
           All the pets available in Funny Economy, including their details, cosmetics, and values.
         </p>

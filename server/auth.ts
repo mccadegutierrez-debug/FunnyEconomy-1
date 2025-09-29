@@ -406,14 +406,14 @@ export const AdminPermissions = {
   senior_admin: [
     'view_users', 'view_items', 'view_transactions', 'view_analytics',
     'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
-    'ban', 'remove_coins', 'manage_items'
+    'ban', 'remove_coins', 'manage_items', 'manage_pets'
   ],
   
   // Lead Admin can do senior admin actions plus system commands
   lead_admin: [
     'view_users', 'view_items', 'view_transactions', 'view_analytics',
     'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
-    'ban', 'remove_coins', 'manage_items', 'give_coins_large', 'reset_user',
+    'ban', 'remove_coins', 'manage_items', 'manage_pets', 'give_coins_large', 'reset_user',
     'set_level', 'give_all_limited', 'give_admin_roles'
   ],
   
@@ -421,7 +421,7 @@ export const AdminPermissions = {
   owner: [
     'view_users', 'view_items', 'view_transactions', 'view_analytics',
     'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
-    'ban', 'remove_coins', 'manage_items', 'give_coins_large', 'reset_user',
+    'ban', 'remove_coins', 'manage_items', 'manage_pets', 'give_coins_large', 'reset_user',
     'set_level', 'give_all_limited', 'give_admin_roles', 'reset_economy',
     'clear_transactions', 'give_all_unlimited', 'remove_admin_roles'
   ]

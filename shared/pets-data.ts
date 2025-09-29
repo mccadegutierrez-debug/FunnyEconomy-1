@@ -382,6 +382,154 @@ export const AVAILABLE_PETS: PetType[] = [
     energyDecay: 12,
     funDecay: 6,
     adoptionCost: 55000
+  },
+
+  // New Pets - Row 6
+  {
+    id: 'phoenix',
+    name: 'Phoenix',
+    description: 'A legendary fire bird that rises from its own ashes.',
+    emoji: '🔥',
+    rarity: 'legendary',
+    hungerDecay: 96,
+    hygieneDecay: 168,
+    energyDecay: 72,
+    funDecay: 48,
+    adoptionCost: 300000
+  },
+  {
+    id: 'unicorn',
+    name: 'Unicorn',
+    description: 'A magical horse with a spiral horn that grants wishes.',
+    emoji: '🦄',
+    rarity: 'legendary',
+    hungerDecay: 48,
+    hygieneDecay: 24,
+    energyDecay: 72,
+    funDecay: 36,
+    adoptionCost: 275000
+  },
+  {
+    id: 'penguin',
+    name: 'Penguin',
+    description: 'A tuxedo-wearing bird that slides on ice and loves fish.',
+    emoji: '🐧',
+    rarity: 'common',
+    hungerDecay: 18,
+    hygieneDecay: 12,
+    energyDecay: 24,
+    funDecay: 18,
+    adoptionCost: 5500
+  },
+  {
+    id: 'octopus',
+    name: 'Octopus',
+    description: 'An intelligent sea creature with eight arms and problem-solving skills.',
+    emoji: '🐙',
+    rarity: 'uncommon',
+    hungerDecay: 24,
+    hygieneDecay: 18,
+    energyDecay: 36,
+    funDecay: 24,
+    adoptionCost: 14000
+  },
+  {
+    id: 'shark',
+    name: 'Shark',
+    description: 'A fearsome ocean predator with razor-sharp teeth.',
+    emoji: '🦈',
+    rarity: 'rare',
+    hungerDecay: 36,
+    hygieneDecay: 48,
+    energyDecay: 48,
+    funDecay: 72,
+    adoptionCost: 28000
+  },
+  {
+    id: 'robot',
+    name: 'Robot',
+    description: 'A mechanical companion programmed for friendship and efficiency.',
+    emoji: '🤖',
+    rarity: 'epic',
+    hungerDecay: 168,
+    hygieneDecay: 24,
+    energyDecay: 12,
+    funDecay: 48,
+    adoptionCost: 70000
+  },
+
+  // Row 7
+  {
+    id: 'ghost',
+    name: 'Ghost',
+    description: 'A friendly spirit that phases through walls and glows softly.',
+    emoji: '👻',
+    rarity: 'rare',
+    hungerDecay: 96,
+    hygieneDecay: 168,
+    energyDecay: 72,
+    funDecay: 24,
+    adoptionCost: 32000
+  },
+  {
+    id: 'sloth',
+    name: 'Sloth',
+    description: 'The slowest animal on Earth, taking life at its own pace.',
+    emoji: '🦥',
+    rarity: 'uncommon',
+    hungerDecay: 72,
+    hygieneDecay: 96,
+    energyDecay: 6,
+    funDecay: 48,
+    adoptionCost: 16000
+  },
+  {
+    id: 'panda',
+    name: 'Panda',
+    description: 'A beloved black and white bear that loves bamboo.',
+    emoji: '🐼',
+    rarity: 'rare',
+    hungerDecay: 24,
+    hygieneDecay: 36,
+    energyDecay: 48,
+    funDecay: 24,
+    adoptionCost: 35000
+  },
+  {
+    id: 'butterfly',
+    name: 'Butterfly',
+    description: 'A delicate winged insect that brings beauty and transformation.',
+    emoji: '🦋',
+    rarity: 'common',
+    hungerDecay: 6,
+    hygieneDecay: 8,
+    energyDecay: 12,
+    funDecay: 8,
+    adoptionCost: 2500
+  },
+  {
+    id: 'owl',
+    name: 'Owl',
+    description: 'A wise nocturnal bird with incredible eyesight and silent flight.',
+    emoji: '🦉',
+    rarity: 'uncommon',
+    hungerDecay: 24,
+    hygieneDecay: 18,
+    energyDecay: 36,
+    funDecay: 24,
+    adoptionCost: 13000
+  },
+  {
+    id: 'llama',
+    name: 'Llama',
+    description: 'A fluffy South American animal known for spitting when annoyed.',
+    emoji: '🦙',
+    rarity: 'uncommon',
+    hungerDecay: 36,
+    hygieneDecay: 24,
+    energyDecay: 48,
+    funDecay: 36,
+    adoptionCost: 17000
   }
 ];
 
