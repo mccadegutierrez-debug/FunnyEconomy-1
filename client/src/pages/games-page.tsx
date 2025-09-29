@@ -6,6 +6,9 @@ import Blackjack from "@/components/games/blackjack";
 import Slots from "@/components/games/slots";
 import Coinflip from "@/components/games/coinflip";
 import Trivia from "@/components/games/trivia";
+import Dice from "@/components/games/dice";
+import Roulette from "@/components/games/roulette";
+import Crash from "@/components/games/crash";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +46,36 @@ export default function GamesPage() {
       minBet: 10,
       maxBet: 10000,
       component: Coinflip,
+      color: "accent"
+    },
+    {
+      id: "dice",
+      name: "DICE",
+      icon: "🎲",
+      description: "Roll and predict!",
+      minBet: 10,
+      maxBet: 10000,
+      component: Dice,
+      color: "primary"
+    },
+    {
+      id: "roulette",
+      name: "ROULETTE",
+      icon: "🎡",
+      description: "Spin the wheel!",
+      minBet: 10,
+      maxBet: 10000,
+      component: Roulette,
+      color: "secondary"
+    },
+    {
+      id: "crash",
+      name: "CRASH",
+      icon: "🚀",
+      description: "Cash out before crash!",
+      minBet: 10,
+      maxBet: 10000,
+      component: Crash,
       color: "accent"
     },
     {
@@ -148,7 +181,7 @@ export default function GamesPage() {
               <CardTitle className="font-impact text-2xl text-primary">🏆 Your Game Stats</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <div className="text-2xl mb-2">🃏</div>
                   <div className="font-bold text-primary">Blackjack</div>
@@ -168,6 +201,27 @@ export default function GamesPage() {
                   <div className="font-bold text-accent">Coinflip</div>
                   <div className="text-sm text-muted-foreground">
                     W: {(user.gameStats as any)?.coinflipWins || 0} / L: {(user.gameStats as any)?.coinflipLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🎲</div>
+                  <div className="font-bold text-primary">Dice</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.diceWins || 0} / L: {(user.gameStats as any)?.diceLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🎡</div>
+                  <div className="font-bold text-secondary">Roulette</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.rouletteWins || 0} / L: {(user.gameStats as any)?.rouletteLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🚀</div>
+                  <div className="font-bold text-accent">Crash</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.crashWins || 0} / L: {(user.gameStats as any)?.crashLosses || 0}
                   </div>
                 </div>
                 <div className="text-center p-4 bg-muted rounded-lg">

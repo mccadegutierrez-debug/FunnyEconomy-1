@@ -320,6 +320,36 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post('/api/games/dice', requireAuth, async (req, res) => {
+    try {
+      const { bet, prediction } = req.body;
+      const result = await GameService.playDice(req.user!.username, bet, prediction);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/games/roulette', requireAuth, async (req, res) => {
+    try {
+      const { bet, betType } = req.body;
+      const result = await GameService.playRoulette(req.user!.username, bet, betType);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/games/crash', requireAuth, async (req, res) => {
+    try {
+      const { bet, cashoutAt } = req.body;
+      const result = await GameService.playCrash(req.user!.username, bet, cashoutAt);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   // Freemium routes
   app.post('/api/freemium/claim', requireAuth, async (req, res) => {
     try {
