@@ -142,43 +142,45 @@ export default function GamesPage() {
         )}
 
         {/* User Game Stats */}
-        <Card data-testid="game-stats">
-          <CardHeader>
-            <CardTitle className="font-impact text-2xl text-primary">🏆 Your Game Stats</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl mb-2">🃏</div>
-                <div className="font-bold text-primary">Blackjack</div>
-                <div className="text-sm text-muted-foreground">
-                  W: {user.gameStats?.blackjackWins || 0} / L: {user.gameStats?.blackjackLosses || 0}
+        {user && (
+          <Card data-testid="game-stats">
+            <CardHeader>
+              <CardTitle className="font-impact text-2xl text-primary">🏆 Your Game Stats</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🃏</div>
+                  <div className="font-bold text-primary">Blackjack</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.blackjackWins || 0} / L: {(user.gameStats as any)?.blackjackLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🎰</div>
+                  <div className="font-bold text-secondary">Slots</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.slotsWins || 0} / L: {(user.gameStats as any)?.slotsLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🪙</div>
+                  <div className="font-bold text-accent">Coinflip</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.coinflipWins || 0} / L: {(user.gameStats as any)?.coinflipLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🧠</div>
+                  <div className="font-bold text-primary">Trivia</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.triviaWins || 0} / L: {(user.gameStats as any)?.triviaLosses || 0}
+                  </div>
                 </div>
               </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl mb-2">🎰</div>
-                <div className="font-bold text-secondary">Slots</div>
-                <div className="text-sm text-muted-foreground">
-                  W: {user.gameStats?.slotsWins || 0} / L: {user.gameStats?.slotsLosses || 0}
-                </div>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl mb-2">🪙</div>
-                <div className="font-bold text-accent">Coinflip</div>
-                <div className="text-sm text-muted-foreground">
-                  W: {user.gameStats?.coinflipWins || 0} / L: {user.gameStats?.coinflipLosses || 0}
-                </div>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl mb-2">🧠</div>
-                <div className="font-bold text-primary">Trivia</div>
-                <div className="text-sm text-muted-foreground">
-                  W: {user.gameStats?.triviaWins || 0} / L: {user.gameStats?.triviaLosses || 0}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </main>
 
       <Footer />

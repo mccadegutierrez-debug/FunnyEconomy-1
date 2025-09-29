@@ -22,13 +22,16 @@ export class GameService {
     const win = playerScore > dealerScore && playerScore <= 21;
     const amount = win ? Math.floor(bet * 1.95) : -bet; // House edge
     
+    // Parse gameStats
+    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    
     // Update user coins and stats
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
-        ...user.gameStats,
-        blackjackWins: user.gameStats.blackjackWins + (win ? 1 : 0),
-        blackjackLosses: user.gameStats.blackjackLosses + (win ? 0 : 1)
+        ...gameStats,
+        blackjackWins: (gameStats.blackjackWins || 0) + (win ? 1 : 0),
+        blackjackLosses: (gameStats.blackjackLosses || 0) + (win ? 0 : 1)
       }
     });
 
@@ -37,6 +40,7 @@ export class GameService {
       user: username,
       type: win ? 'earn' : 'spend',
       amount: Math.abs(amount),
+      targetUser: null,
       description: `Blackjack ${win ? 'win' : 'loss'}: ${playerScore} vs ${dealerScore}`
     });
 
@@ -88,13 +92,16 @@ export class GameService {
     const win = multiplier > 0;
     const amount = win ? bet * multiplier - bet : -bet;
 
+    // Parse gameStats
+    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+
     // Update user
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
-        ...user.gameStats,
-        slotsWins: user.gameStats.slotsWins + (win ? 1 : 0),
-        slotsLosses: user.gameStats.slotsLosses + (win ? 0 : 1)
+        ...gameStats,
+        slotsWins: (gameStats.slotsWins || 0) + (win ? 1 : 0),
+        slotsLosses: (gameStats.slotsLosses || 0) + (win ? 0 : 1)
       }
     });
 
@@ -102,6 +109,7 @@ export class GameService {
       user: username,
       type: win ? 'earn' : 'spend',
       amount: Math.abs(amount),
+      targetUser: null,
       description: `Slots ${win ? 'win' : 'loss'}: ${reels.join(' ')} (${multiplier}x)`
     });
 
@@ -131,12 +139,15 @@ export class GameService {
     const win = choice === result;
     const amount = win ? Math.floor(bet * 0.95) : -bet; // 1.95x payout with house edge
 
+    // Parse gameStats
+    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
-        ...user.gameStats,
-        coinflipWins: user.gameStats.coinflipWins + (win ? 1 : 0),
-        coinflipLosses: user.gameStats.coinflipLosses + (win ? 0 : 1)
+        ...gameStats,
+        coinflipWins: (gameStats.coinflipWins || 0) + (win ? 1 : 0),
+        coinflipLosses: (gameStats.coinflipLosses || 0) + (win ? 0 : 1)
       }
     });
 
@@ -144,6 +155,7 @@ export class GameService {
       user: username,
       type: win ? 'earn' : 'spend',
       amount: Math.abs(amount),
+      targetUser: null,
       description: `Coinflip ${win ? 'win' : 'loss'}: ${choice} vs ${result}`
     });
 
@@ -161,10 +173,11 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    const questions = await storage.db?.get('trivia:questions') || [];
-    if (questions.length === 0) {
-      throw new Error("No trivia questions available");
-    }
+    const questions = [
+      { question: "What is the capital of France?", options: ["London", "Paris", "Berlin", "Madrid"], correct: 1 },
+      { question: "Who painted the Mona Lisa?", options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"], correct: 2 },
+      { question: "What is 2 + 2?", options: ["3", "4", "5", "6"], correct: 1 },
+    ];
 
     const question = questions[this.getSecureRandom() % questions.length];
     
@@ -179,7 +192,11 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    const questions = await storage.db?.get('trivia:questions') || [];
+    const questions = [
+      { question: "What is the capital of France?", options: ["London", "Paris", "Berlin", "Madrid"], correct: 1 },
+      { question: "Who painted the Mona Lisa?", options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"], correct: 2 },
+      { question: "What is 2 + 2?", options: ["3", "4", "5", "6"], correct: 1 },
+    ];
     const question = questions[questionId];
     
     if (!question) {
@@ -189,13 +206,16 @@ export class GameService {
     const win = answer === question.correct;
     const amount = win ? 100 : 0; // Fixed reward for trivia
 
+    // Parse gameStats
+    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+
     if (win) {
       await storage.updateUser(user.id, {
         coins: user.coins + amount,
         xp: user.xp + 20,
         gameStats: {
-          ...user.gameStats,
-          triviaWins: user.gameStats.triviaWins + 1
+          ...gameStats,
+          triviaWins: (gameStats.triviaWins || 0) + 1
         }
       });
 
@@ -203,13 +223,14 @@ export class GameService {
         user: username,
         type: 'earn',
         amount,
+        targetUser: null,
         description: `Trivia correct answer: +${amount} coins, +20 XP`
       });
     } else {
       await storage.updateUser(user.id, {
         gameStats: {
-          ...user.gameStats,
-          triviaLosses: user.gameStats.triviaLosses + 1
+          ...gameStats,
+          triviaLosses: (gameStats.triviaLosses || 0) + 1
         }
       });
     }
