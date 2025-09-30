@@ -890,7 +890,28 @@ export function registerRoutes(app: Express): Server {
     try {
       const { petId } = req.body;
       
-      const petType = getPetById(petId);
+      // Check if it's a static pet first
+      let petType = getPetById(petId);
+      
+      // If not found in static pets, check custom pets
+      if (!petType) {
+        const customPet = await storage.getCustomPet(petId);
+        if (customPet) {
+          petType = {
+            id: customPet.petId,
+            name: customPet.name,
+            description: customPet.description || `A custom pet created by admins.`,
+            emoji: customPet.emoji,
+            rarity: customPet.rarity as 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary',
+            hungerDecay: customPet.hungerDecay,
+            hygieneDecay: customPet.hygieneDecay,
+            energyDecay: customPet.energyDecay,
+            funDecay: customPet.funDecay,
+            adoptionCost: customPet.adoptionCost
+          };
+        }
+      }
+      
       if (!petType) {
         return res.status(404).json({ error: "Pet type not found" });
       }
@@ -941,7 +962,7 @@ export function registerRoutes(app: Express): Server {
         lastCleaned: new Date(),
         lastPlayed: new Date(),
         lastSlept: new Date(),
-        roomId: null, // Pet goes to stasis initially
+        roomId: null,
         inStasis: true,
         thawingUntil: null,
         skills: [],
@@ -2007,8 +2028,28 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Check if pet type exists
-      const petType = getPetById(petId);
+      // Check if pet type exists (static or custom)
+      let petType = getPetById(petId);
+      
+      // If not found in static pets, check custom pets
+      if (!petType) {
+        const customPet = await storage.getCustomPet(petId);
+        if (customPet) {
+          petType = {
+            id: customPet.petId,
+            name: customPet.name,
+            description: customPet.description || `A custom pet created by admins.`,
+            emoji: customPet.emoji,
+            rarity: customPet.rarity as 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary',
+            hungerDecay: customPet.hungerDecay,
+            hygieneDecay: customPet.hygieneDecay,
+            energyDecay: customPet.energyDecay,
+            funDecay: customPet.funDecay,
+            adoptionCost: customPet.adoptionCost
+          };
+        }
+      }
+      
       if (!petType) {
         return res.status(400).json({ error: "Invalid pet type" });
       }
