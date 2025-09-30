@@ -205,6 +205,21 @@ export const petBreeding = pgTable("pet_breeding", {
   offspring: jsonb("offspring").default([]).notNull(), // Array of offspring data
 });
 
+export const customPets = pgTable("custom_pets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petId: varchar("pet_id").notNull().unique(), // unique identifier for the pet type
+  name: varchar("name").notNull(),
+  description: text("description").default("A custom pet created by admins.").notNull(),
+  emoji: varchar("emoji").notNull(),
+  rarity: varchar("rarity", { enum: ['common', 'uncommon', 'rare', 'epic', 'legendary'] }).notNull(),
+  hungerDecay: integer("hunger_decay").notNull(), // hours per point lost
+  hygieneDecay: integer("hygiene_decay").notNull(), // hours per point lost
+  energyDecay: integer("energy_decay").notNull(), // hours per point lost
+  funDecay: integer("fun_decay").notNull(), // hours per point lost
+  adoptionCost: integer("adoption_cost").notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`).notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
@@ -306,6 +321,8 @@ export const insertPetHuntSchema = createInsertSchema(petHunts).omit({ id: true,
 export const selectPetHuntSchema = createSelectSchema(petHunts);
 export const insertPetBreedingSchema = createInsertSchema(petBreeding).omit({ id: true, startedAt: true });
 export const selectPetBreedingSchema = createSelectSchema(petBreeding);
+export const insertCustomPetSchema = createInsertSchema(customPets).omit({ id: true, createdAt: true });
+export const selectCustomPetSchema = createSelectSchema(customPets);
 
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -331,3 +348,5 @@ export type InsertPetHunt = z.infer<typeof insertPetHuntSchema>;
 export type PetHunt = typeof petHunts.$inferSelect;
 export type InsertPetBreeding = z.infer<typeof insertPetBreedingSchema>;
 export type PetBreeding = typeof petBreeding.$inferSelect;
+export type InsertCustomPet = z.infer<typeof insertCustomPetSchema>;
+export type CustomPet = typeof customPets.$inferSelect;

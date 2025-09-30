@@ -186,6 +186,16 @@ export class EconomyService {
     if (success) {
       const stolenAmount = Math.floor(betAmount * (0.2 + Math.random() * 0.3)); // 20-50% of bet
       
+      const successMessages = [
+        "You snatched the coins like a meme lord! 💰",
+        "They didn't even see you coming! 😎",
+        "Sneak 100! Mission accomplished! 🥷",
+        "You're a natural-born thief! 🎭",
+        "Easy money! They should've protected it better! 🤑",
+        "Heist successful! Time to celebrate! 🎉",
+        "Smooth criminal vibes! 🕺"
+      ];
+      
       await storage.updateUser(user.id, {
         coins: user.coins + stolenAmount,
         lastRob: new Date(now)
@@ -220,16 +230,28 @@ export class EconomyService {
         read: false
       });
 
+      const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+
       return {
         success: true,
         stolen: stolenAmount,
         newBalance: user.coins + stolenAmount,
-        message: `Successfully robbed ${stolenAmount} coins! 💰`
+        message: `${randomMessage} You stole ${stolenAmount} coins!`
       };
     } else {
       // Failed rob - lose bet amount + fine
       const fine = Math.floor(betAmount * 0.5);
       const totalLoss = betAmount + fine;
+
+      const failureMessages = [
+        "They slapped you so hard you saw stars! ⭐😵",
+        "You tripped over your own feet! Clumsy much? 🤦",
+        "Got caught red-handed! How embarrassing! 😳",
+        "They called the cops on you! 🚨",
+        "You ran into a wall trying to escape! 🧱💥",
+        "Epic fail! Better luck next time! 😅",
+        "They uno-reversed your robbery attempt! 🔄"
+      ];
 
       await storage.updateUser(user.id, {
         coins: Math.max(0, user.coins - totalLoss),
@@ -252,11 +274,13 @@ export class EconomyService {
         read: false
       });
 
+      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+
       return {
         success: false,
         lost: totalLoss,
         newBalance: Math.max(0, user.coins - totalLoss),
-        message: `Rob failed! Lost ${totalLoss} coins (${betAmount} bet + ${fine} fine) 💸`
+        message: `${randomMessage} Lost ${totalLoss} coins (${betAmount} bet + ${fine} fine)!`
       };
     }
   }
@@ -461,6 +485,85 @@ export class EconomyService {
     const selectedLocationKey = location || Object.keys(searchLocations)[Math.floor(Math.random() * Object.keys(searchLocations).length)];
     const searchLocation = searchLocations[selectedLocationKey] || searchLocations['couch'];
     const locationName = searchLocation.name;
+    
+    // Special handling for 'purse' location - 70% success, 30% failure
+    if (selectedLocationKey === 'purse') {
+      const purseSuccess = Math.random() < 0.7;
+      
+      if (purseSuccess) {
+        const amount = searchLocation.coins.min + Math.floor(Math.random() * (searchLocation.coins.max - searchLocation.coins.min + 1));
+        const successMessages = [
+          "Mom caught you but gave you the money anyway! 💸",
+          "You found her secret stash! Shhh... 🤫",
+          "She was in a good mood! Lucky you! 😊",
+          "You're her favorite child! 🥰"
+        ];
+        
+        const updates: any = {
+          coins: user.coins + amount,
+          xp: user.xp + 2,
+          lastSearch: new Date(now)
+        };
+
+        await storage.updateUser(user.id, updates);
+
+        await storage.createTransaction({
+          user: username,
+          type: 'earn',
+          amount,
+          targetUser: null,
+          description: `Searched ${locationName}: ${amount} coins`
+        });
+
+        const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+
+        return {
+          success: true,
+          location: locationName,
+          coins: amount,
+          foundItem: null,
+          newBalance: user.coins + amount,
+          message: `${randomMessage} Got ${amount} coins!`
+        };
+      } else {
+        // Failed - mom caught you and punishment
+        const punishment = 20 + Math.floor(Math.random() * 31); // 20-50 coins
+        const failureMessages = [
+          "Mom slapped you really hard! 😭",
+          "She made you do ALL the chores! 🧹",
+          "Grounded for a week! Worth it? 🚫",
+          "She gave you THE LOOK! Run! 😰"
+        ];
+
+        const updates: any = {
+          coins: Math.max(0, user.coins - punishment),
+          lastSearch: new Date(now)
+        };
+
+        await storage.updateUser(user.id, updates);
+
+        await storage.createTransaction({
+          user: username,
+          type: 'fine',
+          amount: punishment,
+          targetUser: null,
+          description: `Caught searching mom's purse - fined ${punishment} coins`
+        });
+
+        const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+
+        return {
+          success: false,
+          location: locationName,
+          coins: -punishment,
+          foundItem: null,
+          newBalance: Math.max(0, user.coins - punishment),
+          message: `${randomMessage} Lost ${punishment} coins as punishment!`
+        };
+      }
+    }
+    
+    // Normal search for other locations
     const amount = searchLocation.coins.min + Math.floor(Math.random() * (searchLocation.coins.max - searchLocation.coins.min + 1));
     
     // Dynamic chance for item based on location
@@ -588,6 +691,33 @@ export class EconomyService {
     const selectedLocation = location || 'pond';
     const fishTypes = fishingLocations[selectedLocation] || fishingLocations['pond'];
 
+    // 20% failure chance
+    const fishingFailed = Math.random() < 0.2;
+
+    if (fishingFailed) {
+      const failureMessages = [
+        "The fish laughed at your technique! 😂",
+        "You caught a boot instead! 👢",
+        "The fish stole your bait! 🐟💨",
+        "You fell in the water! 💦",
+        "The fish outsmarted you! 🧠🐟"
+      ];
+
+      await storage.updateUser(user.id, {
+        lastFish: new Date(now)
+      });
+
+      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+
+      return {
+        success: false,
+        fish: null,
+        newBalance: user.coins,
+        newXP: user.xp,
+        message: `${randomMessage} No catch this time!`
+      };
+    }
+
     // Random fish selection based on chance
     const rand = Math.random();
     let cumulativeChance = 0;
@@ -600,6 +730,14 @@ export class EconomyService {
         break;
       }
     }
+
+    const successMessages = [
+      "The fish didn't stand a chance! 🐟",
+      "You're basically Aquaman now! 🔱",
+      "Fish fear you! 😱",
+      "Master angler! 🎣✨",
+      "Reel deal champion! 🏆"
+    ];
 
     await storage.updateUser(user.id, {
       coins: user.coins + caughtFish.coins,
@@ -615,12 +753,14 @@ export class EconomyService {
       description: `Caught a ${caughtFish.name}: ${caughtFish.coins} coins, ${caughtFish.xp} XP`
     });
 
+    const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+
     return {
       success: true,
       fish: caughtFish,
       newBalance: user.coins + caughtFish.coins,
       newXP: user.xp + caughtFish.xp,
-      message: `You caught a ${caughtFish.name} and earned ${caughtFish.coins} coins! 🎣`
+      message: `${randomMessage} Caught a ${caughtFish.name}! +${caughtFish.coins} coins!`
     };
   }
 
@@ -1036,6 +1176,33 @@ export class EconomyService {
     const selectedArea = huntType || 'forest';
     const animals = huntingAreas[selectedArea] || huntingAreas['forest'];
 
+    // 15% failure chance
+    const huntingFailed = Math.random() < 0.15;
+
+    if (huntingFailed) {
+      const failureMessages = [
+        "The deer kicked you in the face! 🦌💥",
+        "You scared yourself more than the animal! 😱",
+        "Your gun jammed! Classic! 🔫",
+        "The animal laughed and ran away! 🏃💨",
+        "You tripped on a tree root! 🌳💥"
+      ];
+
+      await storage.updateUser(user.id, {
+        lastHunt: new Date(now)
+      });
+
+      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+
+      return {
+        success: false,
+        animal: null,
+        newBalance: user.coins,
+        newXP: user.xp,
+        message: `${randomMessage} No catch today!`
+      };
+    }
+
     const rand = Math.random();
     let cumulativeChance = 0;
     let caughtAnimal = animals[0];
@@ -1047,6 +1214,14 @@ export class EconomyService {
         break;
       }
     }
+
+    const successMessages = [
+      "You're the next Steve Irwin! 🐊",
+      "The animal surrendered peacefully! 🏳️",
+      "Bullseye! Perfect shot! 🎯",
+      "Nature fears you! 🌲😱",
+      "Legendary hunter! 🏹✨"
+    ];
 
     await storage.updateUser(user.id, {
       coins: user.coins + caughtAnimal.coins,
@@ -1062,12 +1237,14 @@ export class EconomyService {
       description: `Hunted a ${caughtAnimal.name}: ${caughtAnimal.coins} coins, ${caughtAnimal.xp} XP`
     });
 
+    const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+
     return {
       success: true,
       animal: caughtAnimal,
       newBalance: user.coins + caughtAnimal.coins,
       newXP: user.xp + caughtAnimal.xp,
-      message: `You hunted a ${caughtAnimal.name} and earned ${caughtAnimal.coins} coins! 🏹`
+      message: `${randomMessage} Hunted a ${caughtAnimal.name}! +${caughtAnimal.coins} coins!`
     };
   }
 
@@ -1117,6 +1294,33 @@ export class EconomyService {
     const selectedLocation = location || 'backyard';
     const treasures = diggingLocations[selectedLocation] || diggingLocations['backyard'];
 
+    // 20% failure chance
+    const diggingFailed = Math.random() < 0.2;
+
+    if (diggingFailed) {
+      const failureMessages = [
+        "You dug a hole to nowhere! 🕳️",
+        "A mole bit your finger! 🐭😠",
+        "Your shovel broke! 🔨💥",
+        "You found... dirt. Just dirt. 😑",
+        "Hit a rock and hurt your back! 💥🪨"
+      ];
+
+      await storage.updateUser(user.id, {
+        lastDig: new Date(now)
+      });
+
+      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+
+      return {
+        success: false,
+        treasure: null,
+        newBalance: user.coins,
+        newXP: user.xp,
+        message: `${randomMessage} Better luck next time!`
+      };
+    }
+
     const rand = Math.random();
     let cumulativeChance = 0;
     let foundTreasure = treasures[0];
@@ -1128,6 +1332,14 @@ export class EconomyService {
         break;
       }
     }
+
+    const successMessages = [
+      "You struck gold! Well, coins... but still! ⛏️✨",
+      "Your back hurts but it was worth it! 💪",
+      "Jackpot underground! 💎",
+      "You're a digging machine! 🤖",
+      "Treasure hunter extraordinaire! 🏆"
+    ];
 
     await storage.updateUser(user.id, {
       coins: user.coins + foundTreasure.coins,
@@ -1143,12 +1355,14 @@ export class EconomyService {
       description: `Dug up a ${foundTreasure.name}: ${foundTreasure.coins} coins, ${foundTreasure.xp} XP`
     });
 
+    const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+
     return {
       success: true,
       treasure: foundTreasure,
       newBalance: user.coins + foundTreasure.coins,
       newXP: user.xp + foundTreasure.xp,
-      message: `You dug up a ${foundTreasure.name} and earned ${foundTreasure.coins} coins! ⛏️`
+      message: `${randomMessage} Dug up a ${foundTreasure.name}! +${foundTreasure.coins} coins!`
     };
   }
 

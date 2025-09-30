@@ -229,7 +229,7 @@ export class FreemiumService {
 
     if (!user.lastFreemiumClaim) return 0; // Can claim now
 
-    const freemiumCooldown = 11 * 1000; // 11 seconds
+    const freemiumCooldown = 12 * 60 * 60 * 1000; // 12 hours
     const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
     const nextClaimTime = lastClaimTime + freemiumCooldown;
     const now = Date.now();

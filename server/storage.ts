@@ -1,4 +1,4 @@
-import { users, items, transactions, notifications, chatMessages, auditLogs, userPets, petRooms, petSitters, petActivities, petSkills, petHunts, petBreeding, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog, type UserPet, type InsertUserPet, type PetRoom, type InsertPetRoom, type PetSitter, type InsertPetSitter, type PetActivity, type InsertPetActivity, type PetSkill, type InsertPetSkill, type PetHunt, type InsertPetHunt, type PetBreeding, type InsertPetBreeding } from "@shared/schema";
+import { users, items, transactions, notifications, chatMessages, auditLogs, userPets, petRooms, petSitters, petActivities, petSkills, petHunts, petBreeding, customPets, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog, type UserPet, type InsertUserPet, type PetRoom, type InsertPetRoom, type PetSitter, type InsertPetSitter, type PetActivity, type InsertPetActivity, type PetSkill, type InsertPetSkill, type PetHunt, type InsertPetHunt, type PetBreeding, type InsertPetBreeding, type CustomPet, type InsertCustomPet } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull } from "drizzle-orm";
 import session from "express-session";
@@ -53,7 +53,9 @@ export interface IStorage {
   deleteUserPet(petId: string): Promise<void>;
   
   // Custom Pet Types
-  createCustomPet(pet: { id: string; name: string; emoji: string; rarity: string; adoptionCost: number; hungerDecay: number; happinessDecay: number; energyDecay: number }): Promise<any>;
+  createCustomPet(pet: InsertCustomPet): Promise<CustomPet>;
+  getAllCustomPets(): Promise<CustomPet[]>;
+  getCustomPet(petId: string): Promise<CustomPet | undefined>;
   
   // Pet Rooms
   getUserPetRooms(userId: string): Promise<PetRoom[]>;
@@ -1217,14 +1219,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Custom Pet Types
-  async createCustomPet(pet: { id: string; name: string; emoji: string; rarity: string; adoptionCost: number; hungerDecay: number; happinessDecay: number; energyDecay: number }): Promise<any> {
-    // For now, we'll store custom pets as a simple JSON record
-    // In a real implementation, you might want a dedicated custom_pets table
-    return {
-      ...pet,
-      type: 'custom',
-      createdAt: new Date()
-    };
+  async createCustomPet(pet: InsertCustomPet): Promise<CustomPet> {
+    const [customPet] = await db
+      .insert(customPets)
+      .values(pet)
+      .returning();
+    return customPet;
+  }
+
+  async getAllCustomPets(): Promise<CustomPet[]> {
+    return await db.select().from(customPets);
+  }
+
+  async getCustomPet(petId: string): Promise<CustomPet | undefined> {
+    const [customPet] = await db
+      .select()
+      .from(customPets)
+      .where(eq(customPets.petId, petId));
+    return customPet || undefined;
   }
 }
 

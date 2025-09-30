@@ -738,6 +738,35 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get all available pets (static + custom)
+  app.get('/api/pets/available', requireAuth, async (req, res) => {
+    try {
+      // Get custom pets from database
+      const customPets = await storage.getAllCustomPets();
+      
+      // Convert custom pets to the same format as static pets
+      const formattedCustomPets = customPets.map(pet => ({
+        id: pet.petId,
+        name: pet.name,
+        description: pet.description || `A custom pet created by admins.`,
+        emoji: pet.emoji,
+        rarity: pet.rarity as 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary',
+        hungerDecay: pet.hungerDecay,
+        hygieneDecay: pet.hygieneDecay,
+        energyDecay: pet.energyDecay,
+        funDecay: pet.funDecay,
+        adoptionCost: pet.adoptionCost
+      }));
+      
+      // Combine static pets with custom pets
+      const allPets = [...AVAILABLE_PETS, ...formattedCustomPets];
+      
+      res.json(allPets);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   app.post('/api/pets/adopt', requireAuth, async (req, res) => {
     try {
       const { petId } = req.body;
@@ -1811,16 +1840,20 @@ export function registerRoutes(app: Express): Server {
       const petData = petSchema.parse(req.body);
       
       // Generate unique pet ID
-      const petId = `pet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const petId = `custom_${petData.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
       
-      // Create new pet object
-      const newPet = {
-        id: petId,
-        ...petData
-      };
-
-      // Store pet in database as a custom pet
-      const customPet = await storage.createCustomPet(newPet);
+      // Map happinessDecay to both hygieneDecay and funDecay
+      const customPet = await storage.createCustomPet({
+        petId: petId,
+        name: petData.name,
+        emoji: petData.emoji,
+        rarity: petData.rarity,
+        adoptionCost: petData.adoptionCost,
+        hungerDecay: petData.hungerDecay,
+        hygieneDecay: petData.happinessDecay,
+        energyDecay: petData.energyDecay,
+        funDecay: petData.happinessDecay
+      });
 
       // Log admin action
       await logAdminAction(req.user!.username, 'create_pet', { 
