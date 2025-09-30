@@ -1371,12 +1371,52 @@ export class EconomyService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
+    // Check if user has Phone
+    const allItems = await storage.getAllItems();
+    const phone = allItems.find(item => item.name.toLowerCase().includes("phone"));
+    if (phone) {
+      const hasPhone = user.inventory.some(item => item.itemId === phone.id);
+      if (!hasPhone) {
+        throw new Error("You need a Phone to post memes! Buy one from the shop.");
+      }
+    }
+
     const now = Date.now();
     const postmemeCooldown = 11 * 1000; // 11 seconds
 
     if (user.lastPostmeme && (now - user.lastPostmeme.getTime()) < postmemeCooldown) {
       const remaining = postmemeCooldown - (now - user.lastPostmeme.getTime());
       throw new Error(`Postmeme cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+    }
+
+    // 15% failure chance
+    const failed = Math.random() < 0.15;
+
+    if (failed) {
+      const failureMessages = [
+        "Your phone died at 1%! Classic! 📱🪫",
+        "WiFi went down at the worst time! 📶❌",
+        "Posted to the wrong group chat! 😱💬",
+        "Your meme got flagged for being too spicy! 🌶️🚫",
+        "Accidentally liked your ex's post while scrolling! 😳👍"
+      ];
+
+      await storage.updateUser(user.id, {
+        lastPostmeme: new Date(now)
+      });
+
+      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+
+      return {
+        success: false,
+        meme: null,
+        coins: 0,
+        likes: 0,
+        xp: 0,
+        newBalance: user.coins,
+        newXP: user.xp,
+        message: `${randomMessage} No meme posted this time!`
+      };
     }
 
     const memeTypes = {
@@ -1495,12 +1535,53 @@ export class EconomyService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
+    // Check if user has Camera/Streaming Setup
+    const allItems = await storage.getAllItems();
+    const camera = allItems.find(item => item.name.toLowerCase().includes("camera") || item.name.toLowerCase().includes("streaming"));
+    if (camera) {
+      const hasCamera = user.inventory.some(item => item.itemId === camera.id);
+      if (!hasCamera) {
+        throw new Error("You need a Camera or Streaming Setup to stream! Buy one from the shop.");
+      }
+    }
+
     const now = Date.now();
     const streamCooldown = 11 * 1000; // 11 seconds
 
     if (user.lastStream && (now - user.lastStream.getTime()) < streamCooldown) {
       const remaining = streamCooldown - (now - user.lastStream.getTime());
       throw new Error(`Stream cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+    }
+
+    // 15% failure chance
+    const failed = Math.random() < 0.15;
+
+    if (failed) {
+      const failureMessages = [
+        "Stream crashed! Blue screen of death! 💻💀",
+        "Your cat walked in front of the camera! 🐱📹",
+        "Internet lagged at the worst moment! 📡❌",
+        "Forgot to unmute for 20 minutes! 🎤🤦",
+        "Accidentally showed your Discord DMs! 😳💬"
+      ];
+
+      await storage.updateUser(user.id, {
+        lastStream: new Date(now)
+      });
+
+      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+
+      return {
+        success: false,
+        game: null,
+        viewers: 0,
+        trending: false,
+        coins: 0,
+        xp: 0,
+        newBalance: user.coins,
+        newXP: user.xp,
+        message: `${randomMessage} Stream failed!`
+      };
     }
 
     const games = {

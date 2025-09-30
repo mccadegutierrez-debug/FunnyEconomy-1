@@ -533,6 +533,125 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post('/api/inventory/equip/:itemId', requireAuth, async (req, res) => {
+    try {
+      const { itemId } = req.params;
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const inventoryItem = user.inventory.find((item: any) => item.itemId === itemId);
+      if (!inventoryItem) {
+        return res.status(404).json({ error: 'Item not found in inventory' });
+      }
+
+      const itemDetails = await storage.getItem(itemId);
+      if (!itemDetails) {
+        return res.status(404).json({ error: 'Item details not found' });
+      }
+
+      if (itemDetails.type !== 'tool' && itemDetails.type !== 'powerup') {
+        return res.status(400).json({ error: 'Only tools and powerups can be equipped' });
+      }
+
+      // Toggle equipped status
+      const updatedInventory = user.inventory.map((item: any) => ({
+        ...item,
+        equipped: item.itemId === itemId ? !inventoryItem.equipped : item.equipped
+      }));
+
+      await storage.updateUser(user.id, {
+        inventory: updatedInventory
+      });
+
+      res.json({ 
+        success: true, 
+        message: inventoryItem.equipped ? `${itemDetails.name} unequipped!` : `${itemDetails.name} equipped!`,
+        equipped: !inventoryItem.equipped
+      });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/inventory/use/:itemId', requireAuth, async (req, res) => {
+    try {
+      const { itemId } = req.params;
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const inventoryItem = user.inventory.find((item: any) => item.itemId === itemId);
+      if (!inventoryItem) {
+        return res.status(404).json({ error: 'Item not found in inventory' });
+      }
+
+      const itemDetails = await storage.getItem(itemId);
+      if (!itemDetails) {
+        return res.status(404).json({ error: 'Item details not found' });
+      }
+
+      if (itemDetails.type === 'lootbox') {
+        // Open lootbox
+        const rewards = [
+          { name: 'Common Coin Pile', coins: 100, rarity: 'common' },
+          { name: 'Rare Gem', coins: 500, rarity: 'rare' },
+          { name: 'Epic Trophy', coins: 1000, rarity: 'epic' },
+          { name: 'Legendary Treasure', coins: 2500, rarity: 'legendary' }
+        ];
+
+        const random = Math.random();
+        let reward;
+        if (random < 0.5) reward = rewards[0];
+        else if (random < 0.8) reward = rewards[1];
+        else if (random < 0.95) reward = rewards[2];
+        else reward = rewards[3];
+
+        await storage.updateUser(user.id, {
+          coins: user.coins + reward.coins,
+          inventory: user.inventory.map((item: any) => 
+            item.itemId === itemId 
+              ? { ...item, quantity: item.quantity - 1 }
+              : item
+          ).filter((item: any) => item.quantity > 0)
+        });
+
+        return res.json({
+          success: true,
+          message: `You opened the ${itemDetails.name} and got ${reward.name}! +${reward.coins} coins!`,
+          reward: reward
+        });
+      } else if (itemDetails.type === 'consumable') {
+        // Use consumable
+        const effects = itemDetails.effects as any;
+        const consumableEffect = effects?.consumableEffect;
+        
+        await storage.updateUser(user.id, {
+          inventory: user.inventory.map((item: any) => 
+            item.itemId === itemId 
+              ? { ...item, quantity: item.quantity - 1 }
+              : item
+          ).filter((item: any) => item.quantity > 0)
+        });
+
+        return res.json({
+          success: true,
+          message: `You used ${itemDetails.name}! ${consumableEffect?.type || 'Effect applied'}!`,
+          effect: consumableEffect
+        });
+      } else if (itemDetails.type === 'tool' || itemDetails.type === 'powerup') {
+        // Equip instead
+        return res.status(400).json({ error: 'Use the equip endpoint for tools and powerups' });
+      }
+
+      res.status(400).json({ error: 'This item cannot be used' });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
   app.get('/api/user/transactions', requireAuth, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;

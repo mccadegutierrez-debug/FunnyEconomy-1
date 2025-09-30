@@ -24,7 +24,6 @@ export default function InventoryPage() {
 
   const useItemMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      // This would be implemented when the use item functionality is added to the backend
       const res = await apiRequest("POST", `/api/inventory/use/${itemId}`);
       return res.json();
     },
@@ -39,6 +38,28 @@ export default function InventoryPage() {
     onError: (error: Error) => {
       toast({
         title: "Cannot Use Item",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const equipItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const res = await apiRequest("POST", `/api/inventory/equip/${itemId}`);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: data.equipped ? "Item Equipped! ⚡" : "Item Unequipped",
+        description: data.message || "Item status updated!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Cannot Equip Item",
         description: error.message,
         variant: "destructive",
       });
@@ -234,19 +255,19 @@ export default function InventoryPage() {
                     </Button>
                   )}
                   
-                  {item.type === 'tool' && !item.equipped && (
+                  {item.type === 'tool' && (
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant={item.equipped ? "default" : "outline"}
                       className="w-full text-xs font-comic"
                       onClick={(e) => {
                         e.stopPropagation();
-                        useItemMutation.mutate(item.id);
+                        equipItemMutation.mutate(item.id);
                       }}
-                      disabled={useItemMutation.isPending}
+                      disabled={equipItemMutation.isPending}
                       data-testid={`button-equip-${item.id}`}
                     >
-                      EQUIP
+                      {item.equipped ? "UNEQUIP" : "EQUIP"}
                     </Button>
                   )}
                 </CardContent>
