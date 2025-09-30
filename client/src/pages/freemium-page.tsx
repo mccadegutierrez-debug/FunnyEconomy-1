@@ -10,22 +10,29 @@ import excitedImage from "/excited.png";
 
 export default function FreemiumPage() {
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
-  const [selectedRewardIndex, setSelectedRewardIndex] = useState<number | null>(null);
+  const [selectedRewardIndex, setSelectedRewardIndex] = useState<number | null>(
+    null,
+  );
   const [claimed, setClaimed] = useState(false);
   const { toast } = useToast();
 
   // Fetch or generate rewards
-  const { data: rewardsData, isLoading, error, refetch } = useQuery({
+  const {
+    data: rewardsData,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["/api/freemium/pending"],
     queryFn: async () => {
       // First check for pending rewards
       const pendingRes = await apiRequest("GET", "/api/freemium/pending");
       const pendingData = await pendingRes.json();
-      
+
       if (pendingData.rewards) {
         return pendingData.rewards;
       }
-      
+
       // If no pending rewards, try to generate new ones
       const generateRes = await apiRequest("GET", "/api/freemium/generate");
       if (!generateRes.ok) {
@@ -44,7 +51,9 @@ export default function FreemiumPage() {
 
   const claimMutation = useMutation({
     mutationFn: async (rewardIndex: number) => {
-      const res = await apiRequest("POST", "/api/freemium/claim", { rewardIndex });
+      const res = await apiRequest("POST", "/api/freemium/claim", {
+        rewardIndex,
+      });
       return res.json();
     },
     onSuccess: (data) => {
@@ -52,20 +61,20 @@ export default function FreemiumPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/freemium/next"] });
       queryClient.invalidateQueries({ queryKey: ["/api/freemium/pending"] });
-      
+
       createConfetti();
-      
+
       let title = "Reward Claimed! 🎁";
       let description = "";
-      
-      if (data.type === 'coins') {
+
+      if (data.type === "coins") {
         title = "Coin Reward! 💰";
         description = `You received ${data.amount} coins!`;
-      } else if (data.type === 'item') {
+      } else if (data.type === "item") {
         title = `${data.rarity.charAt(0).toUpperCase() + data.rarity.slice(1)} Item! ✨`;
         description = `You received ${data.name}!`;
       }
-      
+
       toast({
         title,
         description,
@@ -91,13 +100,13 @@ export default function FreemiumPage() {
 
   const handleCardClick = (cardIndex: number) => {
     if (flippedCards.includes(cardIndex) || claimed) return;
-    
+
     setFlippedCards([...flippedCards, cardIndex]);
   };
 
   const handleSelectReward = (cardIndex: number) => {
     if (claimed || selectedRewardIndex !== null) return;
-    
+
     // Can only select if all 3 cards are flipped
     if (flippedCards.length < 3) {
       toast({
@@ -107,7 +116,7 @@ export default function FreemiumPage() {
       });
       return;
     }
-    
+
     // Check if rewards exist before claiming
     if (!rewards || rewards.length === 0) {
       toast({
@@ -117,20 +126,20 @@ export default function FreemiumPage() {
       });
       return;
     }
-    
+
     setSelectedRewardIndex(cardIndex);
     claimMutation.mutate(cardIndex);
   };
 
   const createConfetti = () => {
     for (let i = 0; i < 100; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -139,35 +148,35 @@ export default function FreemiumPage() {
 
   const getRarityGlow = (rarity: string) => {
     switch (rarity) {
-      case 'legendary':
-        return 'glow-legendary';
-      case 'epic':
-        return 'glow-epic';
-      case 'rare':
-        return 'glow-rare';
-      case 'uncommon':
-        return 'glow-uncommon';
-      case 'common':
-        return 'glow-common';
+      case "legendary":
+        return "glow-legendary";
+      case "epic":
+        return "glow-epic";
+      case "rare":
+        return "glow-rare";
+      case "uncommon":
+        return "glow-uncommon";
+      case "common":
+        return "glow-common";
       default:
-        return 'glow-primary';
+        return "glow-primary";
     }
   };
 
   const getRarityBorder = (rarity: string) => {
     switch (rarity) {
-      case 'legendary':
-        return 'border-yellow-500';
-      case 'epic':
-        return 'border-purple-500';
-      case 'rare':
-        return 'border-blue-500';
-      case 'uncommon':
-        return 'border-green-500';
-      case 'common':
-        return 'border-gray-400';
+      case "legendary":
+        return "border-yellow-500";
+      case "epic":
+        return "border-purple-500";
+      case "rare":
+        return "border-blue-500";
+      case "uncommon":
+        return "border-green-500";
+      case "common":
+        return "border-gray-400";
       default:
-        return 'border-accent';
+        return "border-accent";
     }
   };
 
@@ -195,9 +204,13 @@ export default function FreemiumPage() {
               <div className="text-6xl mb-4">⏰</div>
               <h2 className="text-3xl font-bold mb-4">Rewards On Cooldown</h2>
               <p className="text-xl text-muted-foreground mb-6">
-                {(error as Error).message || "You need to wait before claiming more rewards."}
+                {(error as Error).message ||
+                  "You need to wait before claiming more rewards."}
               </p>
-              <Button onClick={() => refetch()} data-testid="button-retry-rewards">
+              <Button
+                onClick={() => refetch()}
+                data-testid="button-retry-rewards"
+              >
                 Check Again
               </Button>
             </Card>
@@ -211,7 +224,7 @@ export default function FreemiumPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header Section */}
@@ -240,39 +253,48 @@ export default function FreemiumPage() {
                 const reward = rewards[cardIndex];
                 const isFlipped = flippedCards.includes(cardIndex);
                 const isSelected = selectedRewardIndex === cardIndex;
-                
+
                 return (
                   <div key={cardIndex} className="perspective-1000">
                     <div
-                      className={`card-flip-container ${isFlipped ? 'flipped' : ''}`}
+                      className={`card-flip-container ${isFlipped ? "flipped" : ""}`}
                       data-testid={`card-${cardIndex}`}
                     >
                       {/* Card Front (Back side with image) */}
-                      <div 
+                      <div
                         className="card-face card-front"
                         onClick={() => !isFlipped && handleCardClick(cardIndex)}
                       >
                         <Card className="h-80 cursor-pointer hover:scale-105 transition-transform border-4 border-primary glow-primary">
                           <CardContent className="h-full flex flex-col items-center justify-center p-6">
-                            <img 
-                              src={excitedImage} 
-                              alt="Card back" 
+                            <img
+                              src={excitedImage}
+                              alt="Card back"
                               className="w-full h-full object-contain"
                             />
                           </CardContent>
                         </Card>
                       </div>
-                      
+
                       {/* Card Back (Reward side) */}
-                      <div 
+                      <div
                         className="card-face card-back"
-                        onClick={() => isFlipped && !claimed && handleSelectReward(cardIndex)}
+                        onClick={() =>
+                          isFlipped && !claimed && handleSelectReward(cardIndex)
+                        }
                       >
-                        <Card className={`h-80 border-4 ${reward && isFlipped ? getRarityBorder(reward.rarity) : 'border-accent'} ${reward && isFlipped ? getRarityGlow(reward.rarity) : 'glow-accent'} bg-gradient-to-br from-primary/20 to-accent/20 ${isFlipped && flippedCards.length === 3 && !claimed ? 'cursor-pointer hover:scale-105' : ''} transition-all ${isSelected ? 'ring-4 ring-yellow-500' : ''}`}>
+                        <Card
+                          className={`h-80 border-4 ${reward && isFlipped ? getRarityBorder(reward.rarity) : "border-accent"} ${reward && isFlipped ? getRarityGlow(reward.rarity) : "glow-accent"} bg-gradient-to-br from-primary/20 to-accent/20 ${isFlipped && flippedCards.length === 3 && !claimed ? "cursor-pointer hover:scale-105" : ""} transition-all ${isSelected ? "ring-4 ring-yellow-500" : ""}`}
+                        >
                           <CardContent className="h-full flex flex-col items-center justify-center p-4">
                             {reward && isFlipped ? (
-                              <div className="text-center" data-testid={`reward-${cardIndex}`}>
-                                <div className="text-6xl mb-3 animate-bounce">{reward.icon}</div>
+                              <div
+                                className="text-center"
+                                data-testid={`reward-${cardIndex}`}
+                              >
+                                <div className="text-6xl mb-3 animate-bounce">
+                                  {reward.icon}
+                                </div>
                                 <h3 className="text-2xl font-bold mb-2">
                                   {reward.name}
                                 </h3>
@@ -283,7 +305,7 @@ export default function FreemiumPage() {
                                   {reward.description}
                                 </p>
                                 {flippedCards.length === 3 && !claimed && (
-                                  <Button 
+                                  <Button
                                     className="mt-4"
                                     size="sm"
                                     data-testid={`button-select-${cardIndex}`}
@@ -315,11 +337,15 @@ export default function FreemiumPage() {
                 <ul className="space-y-2 text-left max-w-2xl mx-auto">
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">1.</span>
-                    <span>Click each card to flip and reveal all 3 rewards</span>
+                    <span>
+                      Click each card to flip and reveal all 3 rewards
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">2.</span>
-                    <span>After flipping all cards, select the reward you want</span>
+                    <span>
+                      After flipping all cards, select the reward you want
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">3.</span>
@@ -327,7 +353,9 @@ export default function FreemiumPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">4.</span>
-                    <span>Your rewards persist even if you refresh the page!</span>
+                    <span>
+                      Your rewards persist even if you refresh the page!
+                    </span>
                   </li>
                 </ul>
               </CardContent>
@@ -339,38 +367,72 @@ export default function FreemiumPage() {
             <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-2">
               <CardContent className="p-6">
                 <h3 className="text-xl font-bold mb-4">Reward Chances</h3>
-                <p className="text-sm text-muted-foreground mb-4">Each card has these odds of containing different reward types</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Each card has these odds of containing different reward types
+                </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-coins">
+                  <div
+                    className="bg-background/50 rounded-lg p-3"
+                    data-testid="chance-coins"
+                  >
                     <div className="text-3xl mb-2">💰</div>
                     <div className="font-bold text-accent">Coins</div>
-                    <div className="text-sm text-muted-foreground">40% chance</div>
-                    <div className="text-xs text-muted-foreground mt-1">100-500 coins</div>
+                    <div className="text-sm text-muted-foreground">
+                      40% chance
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      100-500 coins
+                    </div>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-common">
+                  <div
+                    className="bg-background/50 rounded-lg p-3"
+                    data-testid="chance-common"
+                  >
                     <div className="text-3xl mb-2">⚪</div>
                     <div className="font-bold">Common</div>
-                    <div className="text-sm text-muted-foreground">25% chance</div>
+                    <div className="text-sm text-muted-foreground">
+                      25% chance
+                    </div>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-uncommon">
+                  <div
+                    className="bg-background/50 rounded-lg p-3"
+                    data-testid="chance-uncommon"
+                  >
                     <div className="text-3xl mb-2">🟢</div>
                     <div className="font-bold text-green-500">Uncommon</div>
-                    <div className="text-sm text-muted-foreground">15% chance</div>
+                    <div className="text-sm text-muted-foreground">
+                      15% chance
+                    </div>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-rare">
+                  <div
+                    className="bg-background/50 rounded-lg p-3"
+                    data-testid="chance-rare"
+                  >
                     <div className="text-3xl mb-2">🔵</div>
                     <div className="font-bold text-blue-500">Rare</div>
-                    <div className="text-sm text-muted-foreground">10% chance</div>
+                    <div className="text-sm text-muted-foreground">
+                      10% chance
+                    </div>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-epic">
+                  <div
+                    className="bg-background/50 rounded-lg p-3"
+                    data-testid="chance-epic"
+                  >
                     <div className="text-3xl mb-2">🟣</div>
                     <div className="font-bold text-purple-500">Epic</div>
-                    <div className="text-sm text-muted-foreground">5% chance</div>
+                    <div className="text-sm text-muted-foreground">
+                      5% chance
+                    </div>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-legendary">
+                  <div
+                    className="bg-background/50 rounded-lg p-3"
+                    data-testid="chance-legendary"
+                  >
                     <div className="text-3xl mb-2">🟡</div>
                     <div className="font-bold text-yellow-500">Legendary</div>
-                    <div className="text-sm text-muted-foreground">5% chance</div>
+                    <div className="text-sm text-muted-foreground">
+                      5% chance
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -378,9 +440,9 @@ export default function FreemiumPage() {
           </div>
         </div>
       </main>
-      
+
       <Footer />
-      
+
       <style>{`
         .perspective-1000 {
           perspective: 1000px;
