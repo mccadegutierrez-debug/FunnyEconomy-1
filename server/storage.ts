@@ -1,6 +1,6 @@
-import { users, items, transactions, notifications, chatMessages, auditLogs, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog } from "@shared/schema";
+import { users, items, transactions, notifications, chatMessages, auditLogs, pets, petTypes, petRooms, petSkills, petSitters, petBreeding, petHunts, petActivities, type User, type InsertUser, type Item, type Transaction, type Notification, type ChatMessage, type AuditLog, type InsertAuditLog, type Pet, type InsertPet, type PetType, type InsertPetType, type PetRoom, type InsertPetRoom, type PetSkill, type PetSitter, type PetBreeding, type InsertPetBreeding, type PetHunt, type InsertPetHunt, type PetActivity, type InsertPetActivity } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, and, isNull, lt, gte } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -46,6 +46,52 @@ export interface IStorage {
   getAuditLogsByAdmin(adminUsername: string, limit?: number): Promise<AuditLog[]>;
   getAuditLogsByAction(action: string, limit?: number): Promise<AuditLog[]>;
   
+  // Pet Management
+  adoptPet(userId: string, petTypeId: string, customName?: string): Promise<Pet>;
+  getUserPets(userId: string): Promise<Pet[]>;
+  getPet(petId: string): Promise<Pet | undefined>;
+  updatePet(petId: string, updates: Partial<Pet>): Promise<Pet>;
+  deletePet(petId: string): Promise<void>;
+  
+  // Pet Care
+  feedPet(petId: string): Promise<Pet>;
+  cleanPet(petId: string): Promise<Pet>;
+  playWithPet(petId: string): Promise<Pet>;
+  restPet(petId: string): Promise<Pet>;
+  calculateStatDecay(pet: Pet, petType: PetType): Pet;
+  
+  // Pet Training
+  trainPetStat(petId: string, stat: 'attack' | 'defense' | 'sustainability' | 'hunting', points: number): Promise<Pet>;
+  addPetXP(petId: string, xp: number): Promise<Pet>;
+  prestigePet(petId: string): Promise<Pet>;
+  learnSkill(petId: string, skillId: string): Promise<Pet>;
+  
+  // Pet Rooms
+  createPetRoom(userId: string, name: string): Promise<PetRoom>;
+  getUserPetRooms(userId: string): Promise<PetRoom[]>;
+  updatePetRoom(roomId: string, updates: Partial<PetRoom>): Promise<PetRoom>;
+  assignPetToRoom(petId: string, roomId: string): Promise<Pet>;
+  hireSitter(roomId: string, sitterId: string, hours: number): Promise<PetRoom>;
+  
+  // Pet Types/Skills/Sitters
+  getAllPetTypes(): Promise<PetType[]>;
+  getAllPetSkills(): Promise<PetSkill[]>;
+  getAllPetSitters(): Promise<PetSitter[]>;
+  createCustomPetType(data: InsertPetType): Promise<PetType>;
+  
+  // Pet Breeding
+  startBreeding(petId1: string, petId2: string): Promise<PetBreeding>;
+  completeBreeding(breedingId: string): Promise<Pet>;
+  getActiveBreedings(userId: string): Promise<PetBreeding[]>;
+  
+  // Pet Hunting
+  startHunt(petId: string, huntType: string): Promise<PetHunt>;
+  completeHunt(huntId: string): Promise<{ rewards: any; hunt: PetHunt }>;
+  getActiveHunts(userId: string): Promise<PetHunt[]>;
+  
+  // Pet Activities
+  logPetActivity(petId: string, activityType: string, description: string, rewards?: any): Promise<PetActivity>;
+  getPetActivities(petId: string, limit?: number): Promise<PetActivity[]>;
   
   // System
   initializeData(): Promise<void>;
@@ -924,6 +970,427 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit);
     return logs;
+  }
+
+  async adoptPet(userId: string, petTypeId: string, customName?: string): Promise<Pet> {
+    const [petType] = await db.select().from(petTypes).where(eq(petTypes.id, petTypeId));
+    if (!petType) {
+      throw new Error('Pet type not found');
+    }
+
+    const name = customName || petType.name;
+    const [pet] = await db
+      .insert(pets)
+      .values({
+        userId,
+        petTypeId,
+        name,
+      })
+      .returning();
+    return pet;
+  }
+
+  async getUserPets(userId: string): Promise<Pet[]> {
+    return await db.select().from(pets).where(eq(pets.userId, userId));
+  }
+
+  async getPet(petId: string): Promise<Pet | undefined> {
+    const [pet] = await db.select().from(pets).where(eq(pets.id, petId));
+    return pet || undefined;
+  }
+
+  async updatePet(petId: string, updates: Partial<Pet>): Promise<Pet> {
+    const [updatedPet] = await db
+      .update(pets)
+      .set(updates)
+      .where(eq(pets.id, petId))
+      .returning();
+    
+    if (!updatedPet) {
+      throw new Error('Pet not found');
+    }
+    
+    return updatedPet;
+  }
+
+  async deletePet(petId: string): Promise<void> {
+    await db.delete(pets).where(eq(pets.id, petId));
+  }
+
+  calculateStatDecay(pet: Pet, petType: PetType): Pet {
+    const now = new Date();
+    const timeSinceLastFed = pet.lastFed ? (now.getTime() - pet.lastFed.getTime()) / 1000 / 60 / 60 : 0;
+    const timeSinceLastCleaned = pet.lastCleaned ? (now.getTime() - pet.lastCleaned.getTime()) / 1000 / 60 / 60 : 0;
+    const timeSinceLastPlayed = pet.lastPlayed ? (now.getTime() - pet.lastPlayed.getTime()) / 1000 / 60 / 60 : 0;
+    const timeSinceLastSlept = pet.lastSlept ? (now.getTime() - pet.lastSlept.getTime()) / 1000 / 60 / 60 : 0;
+
+    return {
+      ...pet,
+      hunger: Math.max(0, pet.hunger - Math.floor(timeSinceLastFed * petType.hungerDecay)),
+      hygiene: Math.max(0, pet.hygiene - Math.floor(timeSinceLastCleaned * petType.hygieneDecay)),
+      fun: Math.max(0, pet.fun - Math.floor(timeSinceLastPlayed * petType.funDecay)),
+      energy: Math.max(0, pet.energy - Math.floor(timeSinceLastSlept * petType.energyDecay)),
+    };
+  }
+
+  async feedPet(petId: string): Promise<Pet> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    const updatedPet = await this.updatePet(petId, {
+      hunger: Math.min(100, pet.hunger + 25),
+      lastFed: new Date(),
+    });
+
+    await this.addPetXP(petId, 5);
+    return updatedPet;
+  }
+
+  async cleanPet(petId: string): Promise<Pet> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    const updatedPet = await this.updatePet(petId, {
+      hygiene: Math.min(100, pet.hygiene + 30),
+      lastCleaned: new Date(),
+    });
+
+    await this.addPetXP(petId, 5);
+    return updatedPet;
+  }
+
+  async playWithPet(petId: string): Promise<Pet> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    const updatedPet = await this.updatePet(petId, {
+      fun: Math.min(100, pet.fun + 20),
+      lastPlayed: new Date(),
+    });
+
+    await this.addPetXP(petId, 10);
+    return updatedPet;
+  }
+
+  async restPet(petId: string): Promise<Pet> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    const updatedPet = await this.updatePet(petId, {
+      energy: Math.min(100, pet.energy + 40),
+      lastSlept: new Date(),
+    });
+
+    await this.addPetXP(petId, 3);
+    return updatedPet;
+  }
+
+  async trainPetStat(petId: string, stat: 'attack' | 'defense' | 'sustainability' | 'hunting', points: number): Promise<Pet> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    if (pet.trainingPoints < points) {
+      throw new Error('Not enough training points');
+    }
+
+    const updates: Partial<Pet> = {
+      trainingPoints: pet.trainingPoints - points,
+    };
+
+    updates[stat] = (pet[stat] || 0) + points;
+
+    return await this.updatePet(petId, updates);
+  }
+
+  async addPetXP(petId: string, xp: number): Promise<Pet> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    const newXP = pet.xp + xp;
+    const xpNeeded = pet.level * 100;
+    
+    if (newXP >= xpNeeded) {
+      const newLevel = pet.level + 1;
+      return await this.updatePet(petId, {
+        xp: newXP - xpNeeded,
+        level: newLevel,
+        trainingPoints: pet.trainingPoints + 5,
+      });
+    } else {
+      return await this.updatePet(petId, { xp: newXP });
+    }
+  }
+
+  async prestigePet(petId: string): Promise<Pet> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    if (pet.level < 100) {
+      throw new Error('Pet must be level 100 to prestige');
+    }
+
+    return await this.updatePet(petId, {
+      level: 1,
+      xp: 0,
+      prestigeLevel: pet.prestigeLevel + 1,
+      trainingPoints: pet.trainingPoints + 50,
+    });
+  }
+
+  async learnSkill(petId: string, skillId: string): Promise<Pet> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    const [skill] = await db.select().from(petSkills).where(eq(petSkills.skillId, skillId));
+    if (!skill) throw new Error('Skill not found');
+
+    const skills = Array.isArray(pet.skills) ? pet.skills : [];
+    if (skills.includes(skillId)) {
+      throw new Error('Pet already knows this skill');
+    }
+
+    skills.push(skillId);
+
+    return await this.updatePet(petId, { skills });
+  }
+
+  async createPetRoom(userId: string, name: string): Promise<PetRoom> {
+    const existingRooms = await db.select().from(petRooms).where(eq(petRooms.userId, userId));
+    if (existingRooms.length >= 10) {
+      throw new Error('Maximum of 10 rooms per user');
+    }
+
+    const [room] = await db
+      .insert(petRooms)
+      .values({ userId, name })
+      .returning();
+    return room;
+  }
+
+  async getUserPetRooms(userId: string): Promise<PetRoom[]> {
+    return await db.select().from(petRooms).where(eq(petRooms.userId, userId));
+  }
+
+  async updatePetRoom(roomId: string, updates: Partial<PetRoom>): Promise<PetRoom> {
+    const [updatedRoom] = await db
+      .update(petRooms)
+      .set(updates)
+      .where(eq(petRooms.id, roomId))
+      .returning();
+    
+    if (!updatedRoom) {
+      throw new Error('Room not found');
+    }
+    
+    return updatedRoom;
+  }
+
+  async assignPetToRoom(petId: string, roomId: string): Promise<Pet> {
+    const petsInRoom = await db.select().from(pets).where(eq(pets.roomId, roomId));
+    if (petsInRoom.length >= 5) {
+      throw new Error('Maximum of 5 pets per room');
+    }
+
+    return await this.updatePet(petId, { roomId });
+  }
+
+  async hireSitter(roomId: string, sitterId: string, hours: number): Promise<PetRoom> {
+    const [sitter] = await db.select().from(petSitters).where(eq(petSitters.id, sitterId));
+    if (!sitter) throw new Error('Sitter not found');
+
+    const sitterUntil = new Date(Date.now() + hours * 60 * 60 * 1000);
+
+    return await this.updatePetRoom(roomId, { sitterId, sitterUntil });
+  }
+
+  async getAllPetTypes(): Promise<PetType[]> {
+    return await db.select().from(petTypes);
+  }
+
+  async getAllPetSkills(): Promise<PetSkill[]> {
+    return await db.select().from(petSkills);
+  }
+
+  async getAllPetSitters(): Promise<PetSitter[]> {
+    return await db.select().from(petSitters);
+  }
+
+  async createCustomPetType(data: InsertPetType): Promise<PetType> {
+    const [petType] = await db
+      .insert(petTypes)
+      .values({ ...data, isCustom: true })
+      .returning();
+    return petType;
+  }
+
+  async startBreeding(petId1: string, petId2: string): Promise<PetBreeding> {
+    const pet1 = await this.getPet(petId1);
+    const pet2 = await this.getPet(petId2);
+
+    if (!pet1 || !pet2) {
+      throw new Error('One or both pets not found');
+    }
+
+    if (pet1.userId !== pet2.userId) {
+      throw new Error('Both pets must belong to the same user');
+    }
+
+    const completesAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const [breeding] = await db
+      .insert(petBreeding)
+      .values({
+        petId1,
+        petId2,
+        completesAt,
+      })
+      .returning();
+
+    return breeding;
+  }
+
+  async completeBreeding(breedingId: string): Promise<Pet> {
+    const [breeding] = await db.select().from(petBreeding).where(eq(petBreeding.id, breedingId));
+    if (!breeding) throw new Error('Breeding not found');
+
+    if (new Date() < breeding.completesAt) {
+      throw new Error('Breeding not yet complete');
+    }
+
+    const pet1 = await this.getPet(breeding.petId1);
+    const pet2 = await this.getPet(breeding.petId2);
+
+    if (!pet1 || !pet2) {
+      throw new Error('Parent pets not found');
+    }
+
+    const isSuccessful = Math.random() > 0.3;
+
+    if (isSuccessful) {
+      const offspring = await this.adoptPet(pet1.userId, pet1.petTypeId, `${pet1.name} Jr.`);
+      
+      await db
+        .update(petBreeding)
+        .set({ isSuccessful: true, offspringId: offspring.id })
+        .where(eq(petBreeding.id, breedingId));
+
+      return offspring;
+    } else {
+      await db
+        .update(petBreeding)
+        .set({ isSuccessful: false })
+        .where(eq(petBreeding.id, breedingId));
+
+      throw new Error('Breeding failed');
+    }
+  }
+
+  async getActiveBreedings(userId: string): Promise<PetBreeding[]> {
+    const userPets = await this.getUserPets(userId);
+    const petIds = userPets.map(p => p.id);
+
+    if (petIds.length === 0) return [];
+
+    return await db
+      .select()
+      .from(petBreeding)
+      .where(
+        and(
+          isNull(petBreeding.isSuccessful),
+          gte(petBreeding.completesAt, new Date())
+        )
+      );
+  }
+
+  async startHunt(petId: string, huntType: string): Promise<PetHunt> {
+    const pet = await this.getPet(petId);
+    if (!pet) throw new Error('Pet not found');
+
+    const duration = huntType === 'short' ? 1 : huntType === 'medium' ? 4 : 8;
+    const completesAt = new Date(Date.now() + duration * 60 * 60 * 1000);
+
+    const [hunt] = await db
+      .insert(petHunts)
+      .values({
+        petId,
+        huntType,
+        completesAt,
+      })
+      .returning();
+
+    return hunt;
+  }
+
+  async completeHunt(huntId: string): Promise<{ rewards: any; hunt: PetHunt }> {
+    const [hunt] = await db.select().from(petHunts).where(eq(petHunts.id, huntId));
+    if (!hunt) throw new Error('Hunt not found');
+
+    if (new Date() < hunt.completesAt) {
+      throw new Error('Hunt not yet complete');
+    }
+
+    if (hunt.isCompleted) {
+      throw new Error('Hunt already completed');
+    }
+
+    const pet = await this.getPet(hunt.petId);
+    if (!pet) throw new Error('Pet not found');
+
+    const baseReward = hunt.huntType === 'short' ? 100 : hunt.huntType === 'medium' ? 400 : 1000;
+    const huntingBonus = 1 + (pet.hunting / 100);
+    const coins = Math.floor(baseReward * huntingBonus);
+    const xp = hunt.huntType === 'short' ? 20 : hunt.huntType === 'medium' ? 80 : 200;
+
+    const rewards = { coins, xp };
+
+    await db
+      .update(petHunts)
+      .set({ isCompleted: true, rewards })
+      .where(eq(petHunts.id, huntId));
+
+    await this.addPetXP(hunt.petId, xp);
+
+    return { rewards, hunt };
+  }
+
+  async getActiveHunts(userId: string): Promise<PetHunt[]> {
+    const userPets = await this.getUserPets(userId);
+    const petIds = userPets.map(p => p.id);
+
+    if (petIds.length === 0) return [];
+
+    return await db
+      .select()
+      .from(petHunts)
+      .where(
+        and(
+          eq(petHunts.isCompleted, false),
+          gte(petHunts.completesAt, new Date())
+        )
+      );
+  }
+
+  async logPetActivity(petId: string, activityType: string, description: string, rewards?: any): Promise<PetActivity> {
+    const [activity] = await db
+      .insert(petActivities)
+      .values({
+        petId,
+        activityType,
+        description,
+        rewards: rewards || {},
+      })
+      .returning();
+
+    return activity;
+  }
+
+  async getPetActivities(petId: string, limit = 20): Promise<PetActivity[]> {
+    return await db
+      .select()
+      .from(petActivities)
+      .where(eq(petActivities.petId, petId))
+      .orderBy(desc(petActivities.timestamp))
+      .limit(limit);
   }
 
 }

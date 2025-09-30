@@ -10,6 +10,7 @@ import { GameService } from "./services/gameService";
 import { EconomyService } from "./services/economyService";
 import { FreemiumService } from "./services/freemiumService";
 import { filterMessage } from "./utils/profanityFilter";
+import { seedPetData } from "./seed-pet-data";
 import rateLimit from "express-rate-limit";
 
 // Rate limiter for API endpoints
@@ -24,6 +25,9 @@ const apiLimiter = rateLimit({
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
+
+  // Seed pet data on startup
+  seedPetData().catch(console.error);
 
   // Apply rate limiting to all API routes
   app.use('/api', apiLimiter);
@@ -1475,6 +1479,328 @@ export function registerRoutes(app: Express): Server {
         success: true, 
         message: `Owners badge granted to ${username}` 
       });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Pet Management Routes
+  app.post('/api/pets/adopt', requireAuth, async (req, res) => {
+    try {
+      const adoptSchema = z.object({
+        petTypeId: z.string(),
+        customName: z.string().optional(),
+      });
+      
+      const { petTypeId, customName } = adoptSchema.parse(req.body);
+      const pet = await storage.adoptPet(req.user!.id, petTypeId, customName);
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets', requireAuth, async (req, res) => {
+    try {
+      const pets = await storage.getUserPets(req.user!.id);
+      res.json(pets);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/:id', requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.getPet(req.params.id);
+      if (!pet) {
+        return res.status(404).json({ error: 'Pet not found' });
+      }
+      res.json(pet);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:id/feed', requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.feedPet(req.params.id);
+      await storage.logPetActivity(req.params.id, 'feed', 'Fed the pet', { xp: 5 });
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:id/clean', requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.cleanPet(req.params.id);
+      await storage.logPetActivity(req.params.id, 'clean', 'Cleaned the pet', { xp: 5 });
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:id/play', requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.playWithPet(req.params.id);
+      await storage.logPetActivity(req.params.id, 'play', 'Played with the pet', { xp: 10 });
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:id/rest', requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.restPet(req.params.id);
+      await storage.logPetActivity(req.params.id, 'rest', 'Pet took a rest', { xp: 3 });
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:id/train', requireAuth, async (req, res) => {
+    try {
+      const trainSchema = z.object({
+        stat: z.enum(['attack', 'defense', 'sustainability', 'hunting']),
+        points: z.number().min(1).max(100),
+      });
+      
+      const { stat, points } = trainSchema.parse(req.body);
+      const pet = await storage.trainPetStat(req.params.id, stat, points);
+      await storage.logPetActivity(req.params.id, 'train', `Trained ${stat} by ${points} points`);
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:id/learn-skill', requireAuth, async (req, res) => {
+    try {
+      const skillSchema = z.object({
+        skillId: z.string(),
+      });
+      
+      const { skillId } = skillSchema.parse(req.body);
+      const pet = await storage.learnSkill(req.params.id, skillId);
+      await storage.logPetActivity(req.params.id, 'learn_skill', `Learned skill: ${skillId}`);
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:id/prestige', requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.prestigePet(req.params.id);
+      await storage.logPetActivity(req.params.id, 'prestige', 'Pet has prestiged!');
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/types', requireAuth, async (req, res) => {
+    try {
+      const types = await storage.getAllPetTypes();
+      res.json(types);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/skills', requireAuth, async (req, res) => {
+    try {
+      const skills = await storage.getAllPetSkills();
+      res.json(skills);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/sitters', requireAuth, async (req, res) => {
+    try {
+      const sitters = await storage.getAllPetSitters();
+      res.json(sitters);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/rooms', requireAuth, async (req, res) => {
+    try {
+      const roomSchema = z.object({
+        name: z.string().min(1).max(50),
+      });
+      
+      const { name } = roomSchema.parse(req.body);
+      const room = await storage.createPetRoom(req.user!.id, name);
+      res.json({ success: true, room });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/rooms', requireAuth, async (req, res) => {
+    try {
+      const rooms = await storage.getUserPetRooms(req.user!.id);
+      res.json(rooms);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.patch('/api/pets/rooms/:id', requireAuth, async (req, res) => {
+    try {
+      const updateSchema = z.object({
+        name: z.string().min(1).max(50).optional(),
+        floorStyle: z.string().optional(),
+        wallStyle: z.string().optional(),
+        doorStyle: z.string().optional(),
+        windowStyle: z.string().optional(),
+        floorDecorations: z.array(z.any()).optional(),
+        wallDecorations: z.array(z.any()).optional(),
+      });
+      
+      const updates = updateSchema.parse(req.body);
+      const room = await storage.updatePetRoom(req.params.id, updates);
+      res.json({ success: true, room });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/rooms/:id/assign-pet', requireAuth, async (req, res) => {
+    try {
+      const assignSchema = z.object({
+        petId: z.string(),
+      });
+      
+      const { petId } = assignSchema.parse(req.body);
+      const pet = await storage.assignPetToRoom(petId, req.params.id);
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/rooms/:id/hire-sitter', requireAuth, async (req, res) => {
+    try {
+      const hireSchema = z.object({
+        sitterId: z.string(),
+        hours: z.number().min(1).max(72),
+      });
+      
+      const { sitterId, hours } = hireSchema.parse(req.body);
+      const room = await storage.hireSitter(req.params.id, sitterId, hours);
+      res.json({ success: true, room });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/breeding', requireAuth, async (req, res) => {
+    try {
+      const breedingSchema = z.object({
+        petId1: z.string(),
+        petId2: z.string(),
+      });
+      
+      const { petId1, petId2 } = breedingSchema.parse(req.body);
+      const breeding = await storage.startBreeding(petId1, petId2);
+      res.json({ success: true, breeding });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/breeding', requireAuth, async (req, res) => {
+    try {
+      const breedings = await storage.getActiveBreedings(req.user!.id);
+      res.json(breedings);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/breeding/:id/complete', requireAuth, async (req, res) => {
+    try {
+      const offspring = await storage.completeBreeding(req.params.id);
+      res.json({ success: true, offspring });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/:id/hunt', requireAuth, async (req, res) => {
+    try {
+      const huntSchema = z.object({
+        huntType: z.enum(['short', 'medium', 'long']),
+      });
+      
+      const { huntType } = huntSchema.parse(req.body);
+      const hunt = await storage.startHunt(req.params.id, huntType);
+      await storage.logPetActivity(req.params.id, 'hunt', `Started ${huntType} hunt`);
+      res.json({ success: true, hunt });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/hunts', requireAuth, async (req, res) => {
+    try {
+      const hunts = await storage.getActiveHunts(req.user!.id);
+      res.json(hunts);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/pets/hunts/:id/complete', requireAuth, async (req, res) => {
+    try {
+      const result = await storage.completeHunt(req.params.id);
+      await storage.logPetActivity(result.hunt.petId, 'hunt_complete', `Hunt completed!`, result.rewards);
+      res.json({ success: true, ...result });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/pets/:id/activities', requireAuth, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const activities = await storage.getPetActivities(req.params.id, limit);
+      res.json(activities);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/admin/pets/types', requireAdmin, async (req, res) => {
+    try {
+      const petTypeSchema = z.object({
+        petId: z.string(),
+        name: z.string(),
+        description: z.string(),
+        emoji: z.string(),
+        rarity: z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+        hungerDecay: z.number(),
+        hygieneDecay: z.number(),
+        energyDecay: z.number(),
+        funDecay: z.number(),
+        adoptionCost: z.number(),
+      });
+      
+      const data = petTypeSchema.parse(req.body);
+      const petType = await storage.createCustomPetType(data);
+      
+      await logAdminAction(req, 'create_custom_pet_type', 'pet_type', petType.id, petType.name, {
+        petType: data
+      });
+      
+      res.json({ success: true, petType });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }
