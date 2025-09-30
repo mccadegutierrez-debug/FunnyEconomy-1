@@ -92,7 +92,7 @@ export default function PetsPage() {
   // Adopt pet mutation
   const adoptMutation = useMutation({
     mutationFn: async ({ petTypeId, customName }: { petTypeId: string; customName?: string }) => {
-      return await apiRequest('/api/pets/adopt', 'POST', { petTypeId, customName });
+      return await apiRequest('POST', '/api/pets/adopt', { petTypeId, customName });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
@@ -108,7 +108,7 @@ export default function PetsPage() {
 
   // Pet care mutations
   const feedMutation = useMutation({
-    mutationFn: (petId: string) => apiRequest(`/api/pets/${petId}/feed`, 'POST'),
+    mutationFn: (petId: string) => apiRequest('POST', `/api/pets/${petId}/feed`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
       toast({ title: '🍖 Fed!', description: 'Your pet is happy and full!' });
@@ -116,7 +116,7 @@ export default function PetsPage() {
   });
 
   const cleanMutation = useMutation({
-    mutationFn: (petId: string) => apiRequest(`/api/pets/${petId}/clean`, 'POST'),
+    mutationFn: (petId: string) => apiRequest('POST', `/api/pets/${petId}/clean`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
       toast({ title: '🛁 Cleaned!', description: 'Your pet is squeaky clean!' });
@@ -124,7 +124,7 @@ export default function PetsPage() {
   });
 
   const playMutation = useMutation({
-    mutationFn: (petId: string) => apiRequest(`/api/pets/${petId}/play`, 'POST'),
+    mutationFn: (petId: string) => apiRequest('POST', `/api/pets/${petId}/play`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
       toast({ title: '🎾 Played!', description: 'Your pet had so much fun!' });
@@ -132,7 +132,7 @@ export default function PetsPage() {
   });
 
   const restMutation = useMutation({
-    mutationFn: (petId: string) => apiRequest(`/api/pets/${petId}/rest`, 'POST'),
+    mutationFn: (petId: string) => apiRequest('POST', `/api/pets/${petId}/rest`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
       toast({ title: '😴 Rested!', description: 'Your pet is well rested!' });
@@ -142,7 +142,7 @@ export default function PetsPage() {
   // Training mutation
   const trainMutation = useMutation({
     mutationFn: ({ petId, stat, points }: { petId: string; stat: string; points: number }) => 
-      apiRequest(`/api/pets/${petId}/train`, 'POST', { stat, points }),
+      apiRequest('POST', `/api/pets/${petId}/train`, { stat, points }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
       toast({ title: '💪 Trained!', description: 'Your pet grew stronger!' });
@@ -154,7 +154,7 @@ export default function PetsPage() {
   // Learn skill mutation
   const learnSkillMutation = useMutation({
     mutationFn: ({ petId, skillId }: { petId: string; skillId: string }) => 
-      apiRequest(`/api/pets/${petId}/learn-skill`, 'POST', { skillId }),
+      apiRequest('POST', `/api/pets/${petId}/learn-skill`, { skillId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
       toast({ title: '✨ Skill Learned!', description: 'Your pet learned a new skill!' });
@@ -163,7 +163,7 @@ export default function PetsPage() {
 
   // Prestige mutation
   const prestigeMutation = useMutation({
-    mutationFn: (petId: string) => apiRequest(`/api/pets/${petId}/prestige`, 'POST'),
+    mutationFn: (petId: string) => apiRequest('POST', `/api/pets/${petId}/prestige`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
       toast({ title: '⭐ Prestiged!', description: 'Your pet has reached a new prestige level!' });
@@ -172,7 +172,7 @@ export default function PetsPage() {
 
   // Create room mutation
   const createRoomMutation = useMutation({
-    mutationFn: (name: string) => apiRequest('/api/pets/rooms', 'POST', { name }),
+    mutationFn: (name: string) => apiRequest('POST', '/api/pets/rooms', { name }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets/rooms'] });
       toast({ title: '🏠 Room Created!', description: 'Your new pet room is ready!' });
@@ -183,7 +183,7 @@ export default function PetsPage() {
   // Update room mutation
   const updateRoomMutation = useMutation({
     mutationFn: ({ roomId, updates }: { roomId: string; updates: any }) => 
-      apiRequest(`/api/pets/rooms/${roomId}`, 'PATCH', updates),
+      apiRequest('PATCH', `/api/pets/rooms/${roomId}`, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets/rooms'] });
       toast({ title: '✨ Room Updated!', description: 'Your room has been customized!' });
@@ -193,7 +193,7 @@ export default function PetsPage() {
   // Assign pet to room mutation
   const assignPetMutation = useMutation({
     mutationFn: ({ roomId, petId }: { roomId: string; petId: string }) => 
-      apiRequest(`/api/pets/rooms/${roomId}/assign-pet`, 'POST', { petId }),
+      apiRequest('POST', `/api/pets/rooms/${roomId}/assign-pet`, { petId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
       queryClient.invalidateQueries({ queryKey: ['/api/pets/rooms'] });
@@ -204,7 +204,7 @@ export default function PetsPage() {
   // Start breeding mutation
   const startBreedingMutation = useMutation({
     mutationFn: ({ petId1, petId2 }: { petId1: string; petId2: string }) => 
-      apiRequest('/api/pets/breeding', 'POST', { petId1, petId2 }),
+      apiRequest('POST', '/api/pets/breeding', { petId1, petId2 }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets/breeding'] });
       toast({ title: '💕 Breeding Started!', description: 'Your pets are breeding! Check back in 24 hours.' });
@@ -214,7 +214,7 @@ export default function PetsPage() {
   // Start hunt mutation
   const startHuntMutation = useMutation({
     mutationFn: ({ petId, huntType }: { petId: string; huntType: string }) => 
-      apiRequest(`/api/pets/${petId}/hunt`, 'POST', { huntType }),
+      apiRequest('POST', `/api/pets/${petId}/hunt`, { huntType }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pets/hunts'] });
       toast({ title: '🏹 Hunt Started!', description: 'Your pet is on the hunt!' });
@@ -503,7 +503,7 @@ export default function PetsPage() {
                       <CardContent>
                         {isComplete ? (
                           <Button size="sm" onClick={() => {
-                            apiRequest(`/api/pets/hunts/${hunt.id}/complete`, 'POST')
+                            apiRequest('POST', `/api/pets/hunts/${hunt.id}/complete`)
                               .then(() => {
                                 queryClient.invalidateQueries({ queryKey: ['/api/pets/hunts'] });
                                 toast({ title: '🎉 Hunt Complete!', description: 'Your pet returned with rewards!' });
@@ -756,7 +756,7 @@ export default function PetsPage() {
                       <CardContent>
                         {isComplete ? (
                           <Button size="sm" onClick={() => {
-                            apiRequest(`/api/pets/breeding/${breeding.id}/complete`, 'POST')
+                            apiRequest('POST', `/api/pets/breeding/${breeding.id}/complete`)
                               .then(() => {
                                 queryClient.invalidateQueries({ queryKey: ['/api/pets/breeding'] });
                                 queryClient.invalidateQueries({ queryKey: ['/api/pets'] });
