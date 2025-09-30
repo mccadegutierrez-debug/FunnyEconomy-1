@@ -24,19 +24,19 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
     const titles = [
       "Money Saved! 💰",
       "Deposit Hit Different 🤑",
-      "Bank Account Bussin Fr 💸",
+      "We're So Back 💸",
       "Secured The Bag 💼",
-      "W Deposit No Cap 🔥",
+      "W Deposit Fr 🔥",
       "Coins In The Vault 🏦",
-      "Money Moves Only 📈",
+      "Aura Points +100 📈",
       "Stacking Chips Rn 🎰"
     ];
     const descriptions = [
-      "Your money is safely stored, no cap 💯",
-      "Deposit went through smoother than butter fr",
-      "The bank said 'yessir' and took your coins",
-      "Money in the bank hits different ngl",
-      "Your wallet looking kinda thick rn fr fr"
+      "Your money is safely stored, we're so back 💯",
+      "Deposit went through smoother than a mewing streak",
+      "The bank said 'let him cook' and took your coins",
+      "Money in the bank hits different, aura restored ✨",
+      "Your wallet looking absolutely maxxed rn"
     ];
     return {
       title: pickRandom(titles),
@@ -47,42 +47,42 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('deposit failed')) {
     const titles = [
       "Bank Said Nah Bro 💸",
-      "Deposit Rejected LMAO 🚫",
-      "Your Money Dipped 😬",
+      "It's So Over 🚫",
+      "Deposit Rejected LMAO 😬",
       "Bank Machine Said Nope 🔨",
-      "L Deposit Fr Fr 💀",
-      "Caught In 4K Lacking 📸",
+      "L Deposit 💀",
+      "Caught Tweaking At The Bank 📸",
       "Bank Really Said 'Ratio' 🤡",
       "Down Bad With This Deposit 😭",
-      "NPC Energy Detected 🤖",
-      "Goofy Ahh Deposit 💩",
+      "Delulu Energy Detected 🤖",
+      "Chat Is This Real? 💩",
       "Skill Issue Activated 🚨",
-      "Ohio Banking Moment 🌽",
-      "Deposit Got Fanum Taxed 🍔",
+      "Aura Points -1000 🌽",
+      "Deposit Got Ratio'd Hard 🍔",
       "Mid Deposit Energy 😒",
-      "Deposit Said Sybau ✌️",
+      "Bank Said Absolutely Not ✌️",
       "Caught Lacking By The Bank 🎭"
     ];
     const descriptions = [
-      "The bank took one look and said 'absolutely not' lmao",
-      "Your deposit ghosted harder than your ex, fr fr",
-      "L + ratio + the vault door literally slammed in your face",
-      "Even the ATM is laughing at you rn, no cap",
-      "That deposit was giving main character syndrome but flopped 💀",
+      "The bank took one look and said 'it's so over' lmao",
+      "Your deposit ghosted harder than your ex",
+      "L + ratio + the vault door literally slammed shut",
+      "Even the ATM is tweaking rn",
+      "That deposit was giving delulu syndrome but flopped 💀",
       "The bank really said 'skill issue' and dipped",
-      "Not the deposit getting ratio'd by the system fr",
-      "Bro got caught in 4K trying to deposit negative energy",
-      "This deposit screams NPC behavior honestly",
-      "That deposit attempt was straight outta Ohio 💀",
-      "The bank really hit you with the Fanum tax",
-      "Your deposit has zero rizz ngl",
-      "This some goofy ahh banking fr fr",
+      "Not the deposit getting ratio'd by the system",
+      "Bro got caught in 4K trying to deposit negative aura",
+      "This deposit screams delulu behavior honestly",
+      "That deposit attempt killed your mewing streak 💀",
+      "The bank really nuked your aura points",
+      "Your deposit has zero rizz, chat is this real?",
+      "This some unhinged banking behavior",
       "Deposit fumbled the bag so hard 🎒",
       "The vault saw this deposit and said 'it's giving broke'",
       "Bank really said 'cope harder' and blocked you",
       "You're down catastrophically bad with this one chief",
-      "The deposit pulled a Grimace Shake and vanished 💜",
-      "Bro this deposit is absolutely cooked 🍳",
+      "The deposit absolutely cooked your reputation 🍳",
+      "Bro this deposit is absolutely cooked",
       "Bank said 'touch grass' and rejected you"
     ];
     return {
@@ -94,19 +94,19 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('withdrawal successful')) {
     const titles = [
       "Money Retrieved! 💸",
-      "Withdrawal Bussin Fr 🤑",
+      "We're So Back 🤑",
       "Secured The Withdraw W 💰",
       "Bank Compliance Achieved ✅",
       "Coins Extracted Successfully 🏦",
       "Cash Out Hit Different 💯",
-      "W Withdrawal No Cap 🔥"
+      "Aura Points Restored 🔥"
     ];
     const descriptions = [
-      "You successfully got your money, W move fr",
-      "Withdrawal went harder than expected ngl",
-      "The bank said 'valid' and gave you your coins",
+      "You successfully got your money, we're so back",
+      "Withdrawal went harder than expected, let him cook",
+      "The bank said 'based' and gave you your coins",
       "Your withdrawal is giving main character energy ✨",
-      "Money retrieved with maximum efficiency no cap"
+      "Money retrieved with maximum sigma grindset"
     ];
     return {
       title: pickRandom(titles),
@@ -117,43 +117,43 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('withdrawal failed')) {
     const titles = [
       "Withdrawal Denied LMAO 🚨",
-      "Bank Said Hell No 🙅",
-      "Money Machine Broke Fr 💔",
+      "It's So Over 🙅",
+      "Money Machine Broke 💔",
       "Access Denied Bro 🔐",
       "L Withdrawal Detected 💀",
       "Down Bad Withdrawal 😭",
       "Caught Lacking Funds 📉",
-      "Vault Said Sybau ✌️",
+      "Vault Said No Diddy ✌️",
       "Withdrawal Got Ratio'd 🤡",
-      "NPC Withdrawal Energy 🤖",
-      "Goofy Ahh Withdraw Attempt 💩",
-      "Ohio Withdrawal Moment 🌽",
+      "Delulu Withdrawal Energy 🤖",
+      "Chat Is This Real? 💩",
+      "Aura Points Deleted 🌽",
       "Skill Issue At The Bank 🚫",
       "Withdrawal Ate Zero Crumbs 😬",
-      "Bank Left You On Read Fr 📱",
+      "Bank Left You On Read 📱",
       "Withdrawal Fumbled Hard 🎪"
     ];
     const descriptions = [
       "The vault literally laughed and slammed shut lmao",
-      "You're broke af, what did you expect? 💀",
-      "The bank is holding your coins hostage fr fr",
-      "Nice try but the money's staying put, no cap",
+      "You're broke af, chat is this real? 💀",
+      "The bank is holding your coins hostage",
+      "Nice try but the money's staying put, it's so over",
       "Bank really hit you with the 'insufficient funds' ratio",
-      "This withdrawal is giving broke boy summer vibes",
-      "The vault said 'it's giving poverty' and blocked you",
+      "This withdrawal is giving delulu energy",
+      "The vault said 'absolutely cooked' and blocked you",
       "Bro got caught in 4K with zero balance",
-      "Your withdrawal attempt screams NPC behavior",
-      "This some Ohio-level withdrawal energy fr",
+      "Your withdrawal attempt screams tweaking behavior",
+      "This some absolutely unhinged withdrawal energy",
       "Bank said 'touch grass' and denied you",
       "You're down astronomically bad with this one chief",
-      "The withdrawal pulled a Grimace Shake and disappeared 💜",
+      "The withdrawal absolutely tanked your aura points 💀",
       "Vault really said 'cope and seethe' then locked 🔒",
       "This withdrawal is absolutely cooked, no saving it",
       "Bank living rent free in your empty wallet rn",
-      "Not the withdrawal getting fanum taxed before it started 🍔",
-      "Your account balance said 'absolutely not' fr fr",
+      "Not the withdrawal getting ratio'd before it started",
+      "Your account balance said 'it's so over'",
       "The ATM really said 'that's an L bozo' 💀",
-      "Withdrawal has zero rizz with the bank system ngl"
+      "Withdrawal has zero rizz with the bank system"
     ];
     return {
       title: pickRandom(titles),
@@ -164,16 +164,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('transfer successful')) {
     const titles = [
       "Money Sent! 📤",
-      "Transfer Hit Different 💸",
-      "W Transfer No Cap ✅",
+      "We're So Back 💸",
+      "W Transfer 🔥 ✅",
       "Coins Delivered Successfully 🚀",
-      "Transfer Bussin Fr 🤑",
-      "Payment Slaying Rn 💯"
+      "Transfer Slaying 🤑",
+      "Aura Transfer Complete 💯"
     ];
     const descriptions = [
-      "Your coins were sent successfully, W move",
-      "Transfer went through smoother than ice fr",
-      "Payment delivered with sigma energy no cap",
+      "Your coins were sent successfully, based move",
+      "Transfer went through smoother than a mewing streak",
+      "Payment delivered with sigma grindset energy",
       "The transfer is giving main character vibes ✨"
     ];
     return {
@@ -185,41 +185,41 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('transfer failed')) {
     const titles = [
       "Transfer Rejected LMAO 🚫",
-      "Money Vanished Fr 👻",
+      "It's So Over 👻",
       "Payment Blocked Bro 🛑",
       "Transaction Denied 💀",
       "L Transfer Detected 😭",
       "Down Bad Transfer 🤡",
-      "Caught In 4K Lacking 📸",
+      "Caught Tweaking 📸",
       "Transfer Got Ratio'd 📉",
-      "NPC Payment Energy 🤖",
-      "Goofy Ahh Transaction 💩",
-      "Ohio Transfer Moment 🌽",
-      "Transfer Said Sybau ✌️",
+      "Delulu Payment Energy 🤖",
+      "Chat Is This Real? 💩",
+      "Aura Transfer Failed 🌽",
+      "Transfer Said No Diddy ✌️",
       "Skill Issue Transaction 🚨",
       "Transfer Fumbled The Bag 🎒",
       "Payment Has Zero Rizz 😬"
     ];
     const descriptions = [
       "That username doesn't exist lmao (unlike your problems)",
-      "Your coins got lost in the void fr fr",
+      "Your coins got lost in the void, it's so over",
       "The recipient blocked you before you could even send 😭",
       "Skill issue detected, money said bye bye",
       "Transfer really said 'absolutely not' and dipped",
       "Bro got caught in 4K trying to send to a ghost account",
-      "This transfer is giving NPC energy honestly",
-      "Payment fumbled harder than a slippery football 🏈",
+      "This transfer is giving delulu energy honestly",
+      "Payment fumbled harder than a broken mewing streak 🏈",
       "The system really hit you with the ratio special",
-      "Your transfer has zero aura ngl 🌟",
-      "This some goofy ahh payment attempt fr fr",
-      "Transfer pulled a Grimace Shake and vanished 💜",
+      "Your transfer has zero aura points 🌟",
+      "This some absolutely unhinged payment attempt",
+      "Transfer absolutely cooked your reputation",
       "The coins said 'it's giving scam' and bounced",
       "Bro this transfer is absolutely cooked 🍳",
       "Payment really said 'cope' and failed",
       "You're down catastrophically with this transfer chief",
       "The recipient's wallet living rent free without your coins",
-      "Not the transfer getting fanum taxed into oblivion 🍔",
-      "Transaction has zero w rizz with the system",
+      "Not the transfer getting ratio'd into oblivion",
+      "Transaction has zero rizz with the system",
       "Bank said 'that's cap' and blocked the whole thing 🧢"
     ];
     return {
@@ -232,18 +232,18 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('rob successful')) {
     const titles = [
       "Steal Successful! 💰",
-      "Rob Went Crazy Fr 🔥",
+      "Rob Went Crazy 🔥",
       "Criminal Arc Activated 😈",
       "Heist Mode: Enabled 🎭",
-      "W Rob No Cap 💯",
+      "W Rob, Let Him Cook 💯",
       "Stealth 100 Achieved 🥷",
       "Caught Them Lacking 📸"
     ];
     const descriptions = [
-      "You successfully took some coins, sigma energy fr",
-      "Bro really pulled off the heist of the century",
+      "You successfully took some coins, sigma grindset energy",
+      "Bro really pulled off the heist of the century, we're so back",
       "They never saw it coming lmao absolutely cooked them",
-      "Rob went harder than expected no cap 🔥",
+      "Rob went harder than expected, aura points restored 🔥",
       "You're giving main villain energy and it's working ✨"
     ];
     return {
@@ -255,41 +255,41 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('rob failed')) {
     const titles = [
       "Got Caught LMAO 👮",
-      "Heist Failed So Bad 🚔",
-      "You're Trash at This 🤡",
-      "Busted Fr Fr 🚨",
+      "It's So Over 🚔",
+      "Heist Failed So Bad 🤡",
+      "Busted 🚨",
       "L Criminal Arc 💀",
       "Down Bad Thief 😭",
       "Caught In 4K Stealing 📸",
       "Rob Attempt Got Ratio'd 🤦",
-      "NPC Robbery Energy 🤖",
-      "Goofy Ahh Heist 💩",
-      "Ohio Robbery Moment 🌽",
+      "Delulu Robbery Energy 🤖",
+      "Chat Is This Real? 💩",
+      "Aura Points Obliterated 🌽",
       "Skill Issue Detected 🚫",
       "Criminal Has Zero Rizz 😬",
       "Fumbled The Heist 🎪",
-      "Caught Lacking So Hard 🎭",
+      "Caught Tweaking So Hard 🎭",
       "Robbery Ate Zero Crumbs 😒"
     ];
     const descriptions = [
-      "Smooth criminal you are NOT, no cap 💀",
-      "They saw you coming from a mile away lmao",
+      "Smooth criminal you are NOT, it's so over 💀",
+      "They saw you coming from a mile away, chat is this real?",
       "Maybe crime isn't your calling bro",
-      "Get rekt kid, amateur hour is over fr",
+      "Get rekt kid, amateur hour is over",
       "You couldn't steal candy from a baby, that's embarrassing",
       "Bro got caught in 4K red-handed like a total bozo",
-      "This robbery attempt screams NPC behavior honestly",
+      "This robbery attempt screams delulu behavior honestly",
       "The police really said 'that's an L' and arrested you",
       "Your criminal arc is giving main character delusion 💀",
-      "This some goofy ahh crime attempt fr fr",
+      "This some absolutely unhinged crime attempt",
       "You're down astronomically bad as a thief chief",
-      "The heist pulled a Grimace Shake and flopped 💜",
+      "The heist absolutely tanked your aura points",
       "Bro your stealth stat is absolutely cooked 🍳",
       "Police living rent free in your failed robbery plans",
-      "Not the robbery getting fanum taxed by the cops 🍔",
-      "Your crime skills have zero w rizz ngl",
+      "Not the robbery getting ratio'd by the cops",
+      "Your crime skills have zero rizz",
       "They really said 'cope' and handcuffed you",
-      "That robbery was straight outta Ohio, total fail 🌽",
+      "That robbery killed your mewing streak 💀",
       "Criminal career ate dust and left no crumbs 😭",
       "The victim said 'skill issue' and called the cops"
     ];
@@ -304,15 +304,15 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
     const titles = [
       "Card Game Win! 🎉",
       "Blackjack W Hit Different 🃏",
-      "Cards Blessed You Fr 🙏",
+      "We're So Back 🙏",
       "Dealer Got Ratio'd 💯",
       "Gambling Arc Activated 🎰",
-      "W Blackjack No Cap 🔥"
+      "Based Blackjack Win 🔥"
     ];
     const descriptions = [
-      "You won the card game, absolute legend fr",
+      "You won the card game, absolute legend, let him cook",
       "Blackjack said 'you're valid' and paid out 🤑",
-      "Dealer got absolutely demolished, no cap",
+      "Dealer got absolutely demolished, aura points restored",
       "The cards are giving main character energy for you ✨"
     ];
     return {
@@ -324,15 +324,15 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('blackjack loss')) {
     const titles = [
       "Blackjack Said Nah LMAO 🃏",
-      "Dealer Demolished You Fr 💀",
-      "Cards Hate You Bro 😬",
+      "It's So Over 💀",
+      "Dealer Demolished You 😬",
       "L + Ratio + No Skill 📉",
       "Down Bad At Cards 😭",
       "Caught Lacking At Blackjack 🎭",
-      "Goofy Ahh Card Game 💩",
-      "Ohio Blackjack Moment 🌽",
-      "NPC Gambling Energy 🤖",
-      "Cards Said Sybau ✌️",
+      "Chat Is This Real? 💩",
+      "Aura Points Deleted 🌽",
+      "Delulu Gambling Energy 🤖",
+      "Cards Said No Diddy ✌️",
       "Skill Issue At The Table 🚨",
       "Blackjack Fumbled You 🎪",
       "Zero Rizz With Cards 😒",
@@ -340,23 +340,23 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Cards Ate And Left Nothing 🍽️"
     ];
     const descriptions = [
-      "Get absolutely demolished, the house always wins no cap",
+      "Get absolutely demolished, the house always wins, it's so over",
       "Maybe stick to Uno? Or go fish? Literally anything else lmao",
-      "That was painful to watch fr fr 😭",
+      "That was painful to watch, chat is this real? 😭",
       "Massive skill issue detected",
       "The cards literally hate you on a personal level bro",
       "Dealer really hit you with the ratio special 💀",
       "Bro got caught in 4K with the worst hand possible",
-      "This blackjack attempt screams NPC behavior",
-      "Your luck stat is absolutely cooked fr fr 🍳",
+      "This blackjack attempt screams delulu behavior",
+      "Your luck stat is absolutely cooked 🍳",
       "Cards said 'it's giving L energy' and took your money",
       "You're down catastrophically at this table chief",
-      "The dealer pulled a Grimace Shake on your wallet 💜",
+      "The dealer absolutely nuked your aura points 💀",
       "Blackjack living rent free in your empty balance",
-      "Not your hand getting fanum taxed by the dealer 🍔",
-      "Your card skills have zero w rizz ngl",
+      "Not your hand getting ratio'd by the dealer",
+      "Your card skills have zero rizz",
       "Dealer said 'cope harder' and took everything",
-      "That game was straight outta Ohio, total disaster 🌽",
+      "That game killed your mewing streak 💀",
       "Cards ate your coins and left zero crumbs 😭",
       "The table said 'skill issue' and cleaned you out",
       "Bro's gambling arc ended before it even started 💀"
@@ -370,16 +370,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('slots win')) {
     const titles = [
       "Slot Machine Win! 🎰",
-      "Slots Bussin Fr 🤑",
-      "W Spin No Cap 💯",
+      "We're So Back 🤑",
+      "W Spin 💯",
       "Jackpot Energy Achieved ✨",
       "Slots Said Yessir 🔥",
       "Machine Blessed You 🙏"
     ];
     const descriptions = [
-      "The slot machine paid out, you're valid fr",
+      "The slot machine paid out, you're valid, we're so back",
       "Slots hit different when they actually pay 🎊",
-      "The machine said 'you deserve this' no cap",
+      "The machine said 'let him cook' and paid out",
       "Your luck is giving main character vibes rn ✨"
     ];
     return {
@@ -391,14 +391,14 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('slots loss')) {
     const titles = [
       "Slots Said Nah LMAO 🎰",
-      "Machine Ate Your Coins Fr 💸",
-      "Massive L Bro 😂",
+      "It's So Over 💸",
+      "Machine Ate Your Coins 😂",
       "Not Even Close 💀",
       "Down Bad At Slots 😭",
       "Caught Lacking By Machine 🎭",
-      "Goofy Ahh Spin 💩",
-      "Ohio Slots Moment 🌽",
-      "NPC Gambling Detected 🤖",
+      "Chat Is This Real? 💩",
+      "Aura Points Obliterated 🌽",
+      "Delulu Gambling Detected 🤖",
       "Slots Got You Good 🤡",
       "Skill Issue At Machine 🚨",
       "Zero Rizz With Spins 😬",
@@ -408,22 +408,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
     ];
     const descriptions = [
       "The machine is literally mocking you rn lmao",
-      "Your luck ran out faster than your wallet fr fr",
-      "Maybe gambling isn't your thing chief, no cap",
-      "That was painful to watch ngl 😭",
+      "Your luck ran out faster than your wallet, it's so over",
+      "Maybe gambling isn't your thing chief",
+      "That was painful to watch, chat is this real? 😭",
       "The slots straight up laughed at your bet bro",
       "Machine really hit you with the ratio treatment 💀",
       "Bro got caught in 4K losing everything",
-      "This slot attempt screams NPC behavior honestly",
-      "Your spin luck is absolutely cooked fr fr 🍳",
+      "This slot attempt screams delulu behavior honestly",
+      "Your spin luck is absolutely cooked 🍳",
       "Slots said 'it's giving broke energy' and took it all",
       "You're down catastrophically with slots chief",
-      "The machine pulled a Grimace Shake on you 💜",
+      "The machine absolutely deleted your aura points",
       "Slots living rent free in your empty wallet",
-      "Not your spin getting fanum taxed by the machine 🍔",
-      "Your gambling skills have zero w rizz ngl",
+      "Not your spin getting ratio'd by the machine",
+      "Your gambling skills have zero rizz",
       "Machine said 'cope and seethe' then ate your coins",
-      "That spin was straight outta Ohio, pure loss 🌽",
+      "That spin killed your mewing streak 💀",
       "Slots ate your money and left zero crumbs 😭",
       "The reels said 'skill issue' and took everything",
       "Bro's slot career ended in one spin 💀"
@@ -437,15 +437,15 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('coinflip win')) {
     const titles = [
       "Coin Toss Win! 🪙",
-      "Coinflip W Hit Different 💯",
-      "Coin Blessed You Fr 🙏",
+      "We're So Back 💯",
+      "Coin Blessed You 🙏",
       "50/50 Victory Achieved ✅",
       "Flip Game Strong 🔥"
     ];
     const descriptions = [
-      "You guessed correctly, absolute legend fr",
+      "You guessed correctly, absolute legend, we're so back",
       "Coin said 'you're valid' and landed your way 🪙",
-      "The flip gods blessed you no cap",
+      "The flip gods blessed you, aura points restored",
       "50/50 and you actually won, rare moment ✨"
     ];
     return {
@@ -457,38 +457,38 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('coinflip loss')) {
     const titles = [
       "Wrong Side LMAO 🪙",
-      "Coin Hates You Fr 😤",
-      "50/50 and Still Lost 💀",
-      "Flipped and Flopped Bro 🤦",
+      "It's So Over 😤",
+      "Coin Hates You 💀",
+      "50/50 and Still Lost 🤦",
       "Down Bad At Coinflip 😭",
       "Caught Lacking On Flip 🎭",
-      "Goofy Ahh Coin Toss 💩",
-      "Ohio Flip Moment 🌽",
-      "NPC Coinflip Energy 🤖",
-      "Coin Said Sybau ✌️",
+      "Chat Is This Real? 💩",
+      "Aura Points -50 🌽",
+      "Delulu Coinflip Energy 🤖",
+      "Coin Said No Diddy ✌️",
       "Skill Issue On 50/50 🚨",
       "Zero Rizz With Flips 😬",
       "Coin Living Rent Free 🏠",
       "Flip Ate Zero Crumbs 😒"
     ];
     const descriptions = [
-      "It's literally a coin flip and you STILL lost lmao",
-      "The coin said 'absolutely not' fr fr",
-      "How do you lose a 50/50? That's actually impressive ngl",
+      "It's literally a coin flip and you STILL lost, chat is this real?",
+      "The coin said 'absolutely not', it's so over",
+      "How do you lose a 50/50? That's actually impressive",
       "Maybe try rock-paper-scissors instead bro",
-      "That coin has personal beef with you, no cap 💀",
+      "That coin has personal beef with you 💀",
       "Coin really hit you with the ratio on a 50/50 💀",
       "Bro got caught in 4K losing a fair flip",
-      "This coinflip attempt screams NPC behavior",
-      "Your flip luck is absolutely cooked fr fr 🍳",
+      "This coinflip attempt screams delulu behavior",
+      "Your flip luck is absolutely cooked 🍳",
       "Coin said 'it's giving L energy' and betrayed you",
       "You're down astronomically on a 50/50 chief",
-      "The flip pulled a Grimace Shake and failed you 💜",
+      "The flip absolutely nuked your aura points",
       "Coin living rent free in your losing streak",
-      "Not the flip getting fanum taxed against you 🍔",
-      "Your coinflip skills have zero w rizz ngl",
+      "Not the flip getting ratio'd against you",
+      "Your coinflip skills have zero rizz",
       "Coin said 'cope' and landed opposite",
-      "That flip was straight outta Ohio, pure loss 🌽",
+      "That flip killed your mewing streak 💀",
       "Flip ate your bet and left zero crumbs 😭",
       "The coin said 'skill issue' even on 50/50",
       "Bro lost a coin toss, that's actually wild 💀"
@@ -504,14 +504,14 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
     const titles = [
       "Right Answer! 🧠",
       "Brain Cells Activated 💡",
-      "W Intelligence No Cap 🎓",
-      "Smart Move Fr 📚",
+      "W Intelligence 🎓",
+      "Based Answer 📚",
       "Big Brain Energy ✨",
-      "Knowledge Is Power 💯"
+      "Looksmaxxing IQ 💯"
     ];
     const descriptions = [
-      "You got it right, absolute genius fr",
-      "Brain really said 'I got you' no cap",
+      "You got it right, absolute genius, let him cook",
+      "Brain really said 'I got you', we're so back",
       "That answer hit different, pure intelligence ✨",
       "Your IQ is giving main character vibes 🧠"
     ];
@@ -525,38 +525,38 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
     const titles = [
       "Big Brain Moment... NOT 🧠",
       "Wrong Answer LMAO 🚫",
-      "Intelligence -1000 💀",
-      "Not Even Close Bro 😬",
+      "It's So Over 💀",
+      "Intelligence -1000 😬",
       "L Brain Cell Activity 😭",
       "Down Bad IQ Moment 🤡",
-      "Caught Lacking Intelligence 📉",
-      "Goofy Ahh Answer 💩",
-      "Ohio Answer Energy 🌽",
-      "NPC Response Detected 🤖",
-      "Brain Said Sybau ✌️",
+      "Caught Tweaking Intelligence 📉",
+      "Chat Is This Real? 💩",
+      "Aura Points Deleted 🌽",
+      "Delulu Response Detected 🤖",
+      "Brain Said No Diddy ✌️",
       "Skill Issue On Quiz 🚨",
       "Zero Rizz With Knowledge 😒",
       "Answer Fumbled Hard 🎪",
       "Brain Has Left The Chat 👋"
     ];
     const descriptions = [
-      "That answer was wild af, no cap 💀",
+      "That answer was wild af, chat is this real? 💀",
       "Did you even read the question lmao",
-      "Your brain took a day off fr fr",
+      "Your brain took a day off, it's so over",
       "Maybe Google it next time? Just a thought",
       "Not your best moment chief, that was embarrassing",
       "Bro really hit submit on that answer 💀",
       "That response got caught in 4K being completely wrong",
-      "This answer screams NPC behavior honestly",
+      "This answer screams delulu behavior honestly",
       "Your IQ stat is absolutely cooked rn 🍳",
       "Brain cells said 'it's giving stupidity' and bounced",
       "You're down catastrophically in the intelligence department",
-      "The answer pulled a Grimace Shake and disappeared 💜",
+      "The answer absolutely tanked your aura points",
       "Common sense living rent free outside your head",
-      "Not your answer getting fanum taxed by logic 🍔",
-      "Your quiz skills have zero w rizz ngl",
+      "Not your answer getting ratio'd by logic",
+      "Your quiz skills have zero rizz",
       "Brain said 'cope' and gave the worst answer possible",
-      "That answer was straight outta Ohio, pure nonsense 🌽",
+      "That answer killed your mewing streak 💀",
       "Knowledge ate dust and left zero crumbs 😭",
       "The quiz said 'skill issue' and marked you wrong",
       "Bro's brain really said 'absolutely not' today 💀"
@@ -571,16 +571,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('daily reward') || titleLower.includes('coin reward')) {
     const titles = [
       "Daily Gift Claimed! 🎁",
-      "Freebies Secured Fr 💰",
-      "W Daily Reward 🔥",
-      "Free Coins Bussin 🤑",
+      "Freebies Secured 💰",
+      "We're So Back 🔥",
+      "Free Coins Slaying 🤑",
       "Daily Blessing Received 🙏",
-      "Reward Game Strong 💯"
+      "Gooning Session Reward 💯"
     ];
     const descriptions = [
-      "You got your daily free coins, W move",
-      "Daily reward hit different fr fr",
-      "Free money is always valid no cap 💸",
+      "You got your daily free coins, we're so back",
+      "Daily reward hit different, sigma grindset paying off",
+      "Free money is always valid, aura points restored 💸",
       "The system blessed you today ✨"
     ];
     return {
@@ -593,12 +593,12 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
     const titles = [
       "Free Item! ✨",
       "Item Drop Secured 🎁",
-      "W Loot No Cap 💯",
-      "Reward Bussin Fr 🔥"
+      "W Loot 💯",
+      "Reward Slaying 🔥"
     ];
     const descriptions = [
       "You received a free item, that's valid",
-      "Free loot is always a W fr fr",
+      "Free loot is always a W, we're so back",
       "The item drop blessed you today ✨"
     ];
     return {
@@ -611,12 +611,12 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
     const titles = [
       "Mystery Box! 📦",
       "Lootbox W Secured 🎁",
-      "RNG Blessed You Fr 🎰",
+      "RNG Blessed You 🎰",
       "Box Drop Hit Different 🔥"
     ];
     const descriptions = [
       "You got a mystery box, open it for surprises",
-      "Lootbox RNG is on your side no cap 🎲",
+      "Lootbox RNG is on your side, let him cook 🎲",
       "The box gods blessed you today ✨"
     ];
     return {
@@ -629,15 +629,15 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('work') && (titleLower.includes('success') || titleLower.includes('earn'))) {
     const titles = [
       "Work Complete! 💼",
-      "Grind Paid Off Fr 💰",
+      "Grind Paid Off 💰",
       "W Work Ethic 🔥",
-      "Hustle Mode Activated 💯",
-      "Money Earned Bussin 🤑"
+      "Sigma Grindset Activated 💯",
+      "Money Earned Slaying 🤑"
     ];
     const descriptions = [
       "You finished your work and earned coins, sigma grindset",
-      "Work hit different when it pays fr fr",
-      "The grind is real and it's paying off no cap 💸"
+      "Work hit different when it pays, we're so back",
+      "The grind is real and it's paying off, aura points up 💸"
     ];
     return {
       title: pickRandom(titles),
@@ -648,13 +648,13 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('fish') && titleLower.includes('success')) {
     const titles = [
       "Fishing Success! 🎣",
-      "Caught A Big One Fr 🐟",
+      "Caught A Big One 🐟",
       "W Fishing Skills 🔥",
       "Fisherman Arc Activated 🌊"
     ];
     const descriptions = [
       "You caught something valuable, fishing W",
-      "The fish really said 'take my money' lmao",
+      "The fish really said 'take my money', we're so back",
       "Fishing skills are giving main character energy ✨"
     ];
     return {
@@ -666,14 +666,14 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('hunt') && titleLower.includes('success')) {
     const titles = [
       "Hunting Success! 🏹",
-      "Hunt Went Crazy Fr 🦌",
+      "Hunt Went Crazy 🦌",
       "W Hunter Skills 🔥",
       "Predator Mode Enabled 💯"
     ];
     const descriptions = [
       "Your hunt was successful, apex predator energy",
-      "Hunt hit different when you actually catch something fr",
-      "The wilderness blessed you today no cap 🌲"
+      "Hunt hit different when you actually catch something",
+      "The wilderness blessed you today, sigma grindset 🌲"
     ];
     return {
       title: pickRandom(titles),
@@ -684,14 +684,14 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('dig') && titleLower.includes('success')) {
     const titles = [
       "Digging Success! ⛏️",
-      "Found Treasure Fr 💎",
+      "Found Treasure 💎",
       "W Mining Skills 🔥",
       "Excavation Complete 💯"
     ];
     const descriptions = [
       "You found something valuable while digging, W move",
-      "Digging really paid off this time no cap",
-      "The ground blessed you with treasure fr fr ✨"
+      "Digging really paid off this time, we're so back",
+      "The ground blessed you with treasure ✨"
     ];
     return {
       title: pickRandom(titles),
@@ -704,11 +704,11 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Mission Complete! 🕵️",
       "Crime Spree Activated 😈",
       "W Criminal Arc 🔥",
-      "Heist Successful Fr 💰"
+      "Heist Successful 💰"
     ];
     const descriptions = [
       "Your mission was successful, villain energy",
-      "Crime really does pay sometimes fr fr 💸",
+      "Crime really does pay sometimes, sigma grindset 💸",
       "The criminal arc is giving main antagonist vibes ✨"
     ];
     return {
@@ -720,14 +720,14 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('stream') && titleLower.includes('success')) {
     const titles = [
       "Streaming Success! 📺",
-      "Stream Popped Off Fr 🎮",
+      "Stream Popped Off 🎮",
       "W Content Creator 🔥",
       "Viewers Blessed You 👑"
     ];
     const descriptions = [
       "Your stream went well and you earned coins, content king",
-      "Stream hit different when the viewers show up fr",
-      "The algorithm blessed you today no cap 📈"
+      "Stream hit different when the viewers show up",
+      "The algorithm blessed you today, we're so back 📈"
     ];
     return {
       title: pickRandom(titles),
@@ -738,14 +738,14 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('meme') && titleLower.includes('success')) {
     const titles = [
       "Meme Posted! 😂",
-      "Meme Went Viral Fr 🔥",
+      "Meme Went Viral 🔥",
       "W Meme Game 💯",
-      "Content Creator Energy ✨"
+      "Based Content Creator ✨"
     ];
     const descriptions = [
       "Your meme was popular and you earned coins, based",
-      "Meme really popped off no cap 📈",
-      "The meme lords blessed you today fr fr"
+      "Meme really popped off, we're so back 📈",
+      "The meme lords blessed you today, let him cook"
     ];
     return {
       title: pickRandom(titles),
@@ -757,15 +757,15 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('level') && (titleLower.includes('up') || titleLower.includes('gain'))) {
     const titles = [
       "Level Up! 🆙",
-      "Leveling Bussin Fr 📈",
-      "W Progress No Cap 🔥",
+      "We're So Back 📈",
+      "W Progress 🔥",
       "XP Grind Paid Off 💯",
-      "Main Character Moment ✨"
+      "Looksmaxxing Progress ✨"
     ];
     const descriptions = [
-      "Congratulations! You reached a new level, W grind",
-      "Level up hit different fr fr 🎊",
-      "The XP gods blessed you no cap",
+      "Congratulations! You reached a new level, sigma grindset",
+      "Level up hit different, we're so back 🎊",
+      "The XP gods blessed you, aura points up",
       "Your progress is giving main character energy ✨"
     ];
     return {
@@ -777,198 +777,185 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   // Pet-specific failures
   if (titleLower.includes('adoption') && titleLower.includes('fail')) {
     const titles = [
-      "Pet Ghosted You Fr 👻",
-      "Adoption Rejected LMAO 🚫",
-      "Pet Said Nah Bro 🐾",
+      "Pet Ghosted You 👻",
+      "It's So Over 🚫",
+      "Adoption Rejected LMAO 🐾",
       "Rejected by Pixels 💀",
       "L Pet Owner Energy 😭",
       "Down Bad With Pets 🤡",
-      "Caught Lacking By Pet 🎭",
-      "Goofy Ahh Adoption 💩",
-      "Ohio Pet Moment 🌽",
-      "NPC Pet Parent 🤖",
+      "Caught Tweaking With Pets 🎭",
+      "Chat Is This Real? 💩",
+      "Aura Points Deleted 🌽",
+      "Delulu Pet Parent 🤖",
       "Pet Has Zero Rizz For You 😬",
       "Adoption Fumbled Hard 🎪"
     ];
     const descriptions = [
-      "Not even pets want you rn lmao",
-      "That pet took one look and dipped fr fr",
-      "Maybe try adopting a rock instead? No cap",
+      "Not even pets want you rn, it's so over lmao",
+      "That pet took one look and dipped",
+      "Maybe try adopting a rock instead? Just saying",
       "The pet literally swiped left on you 😭",
-      "You got rejected by pixels, that's wild bro",
-      "Pet really said 'it's giving bad owner vibes' and left 💀",
+      "You got rejected by pixels, chat is this real? 💀",
+      "Pet really said 'it's giving bad owner vibes' and left",
       "Bro got caught in 4K being rejected by a digital pet",
-      "This adoption attempt screams NPC behavior",
+      "This adoption attempt screams delulu behavior",
       "Your pet parent skills are absolutely cooked 🍳",
       "Pet said 'cope' and chose literally anyone else",
       "You're down catastrophically in the pet department",
-      "The adoption pulled a Grimace Shake and failed 💜",
+      "The adoption absolutely tanked your aura points",
       "Pet living rent free in someone else's home",
-      "Not the adoption getting fanum taxed by rejection 🍔",
-      "Your pet owner aura has zero w rizz ngl"
+      "Not the adoption getting ratio'd by rejection",
+      "Your pet owner aura has zero rizz"
     ];
     return {
       title: pickRandom(titles),
       description: pickRandom(descriptions)
     };
   }
-
-  if (titleLower.includes('room') && (titleLower.includes('fail') || titleLower.includes('error'))) {
+  
+  if (titleLower.includes('pet') && titleLower.includes('feed')) {
     const titles = [
-      "Room Rejected LMAO 🚪",
-      "No Room for You Fr 🙅",
-      "Room Creation Failed 💥",
-      "Not Happening Bro 🛑",
-      "L Room Energy 💀",
-      "Down Bad Room Setup 😭",
-      "Caught Lacking Design Skills 🎨",
-      "Goofy Ahh Room 💩",
-      "Ohio Room Moment 🌽",
-      "NPC Interior Designer 🤖"
+      "Pet Fed! 🍖",
+      "Feeding Success 🐾",
+      "W Pet Owner 💯",
+      "Pet Care Activated 🔥"
     ];
     const descriptions = [
-      "That room name is straight up trash, pick another lmao",
-      "Room rejected faster than your last relationship fr fr 💀",
-      "The room builder literally quit on you",
-      "Nice try but that ain't gonna work, no cap",
-      "Room really said 'it's giving bad taste' and dipped",
-      "Bro got caught in 4K with terrible room ideas",
-      "This room creation screams NPC behavior",
-      "Your interior design skills are absolutely cooked 🍳"
+      "Your pet is now fed and happy, based owner",
+      "Pet said 'thank you' with maximum cuteness ✨",
+      "Feeding went smoothly, we're so back"
     ];
     return {
       title: pickRandom(titles),
       description: pickRandom(descriptions)
     };
   }
-
-  if (titleLower.includes('sitter') && (titleLower.includes('fail') || titleLower.includes('error'))) {
+  
+  if (titleLower.includes('pet') && titleLower.includes('hungry')) {
     const titles = [
-      "Sitter Said Hell No 👎",
-      "Hiring Failed LMAO 🚫",
-      "They're Too Good Fr 😤",
-      "Offer Rejected 💀",
-      "L Employer Energy 😭",
-      "Down Bad Hiring 🤡",
-      "Sitter Ghosted You 👻",
-      "Goofy Ahh Job Offer 💩"
+      "Pet Is Starving 🍽️",
+      "Feed Your Pet ASAP 🐾",
+      "Hunger Alert! 🚨",
+      "Pet Needs Food 💀"
     ];
     const descriptions = [
-      "They're too expensive for your broke self lmao",
-      "That sitter literally laughed at your offer fr fr",
-      "Maybe pay them better next time? Just saying",
-      "They saw your pets and dipped, no cap 😭",
-      "Not even pet sitters want to work for you bro",
-      "Sitter really said 'that's not enough' and left 💀",
-      "Your job offer has zero rizz with professionals ngl"
+      "Your pet is getting hangry, feed them before it's too late",
+      "The pet is giving 'I'm about to ghost you' energy 😭",
+      "Feed the poor thing, what are you doing? 💀"
     ];
     return {
       title: pickRandom(titles),
       description: pickRandom(descriptions)
     };
   }
-
-  // Work/Economy failures  
-  if ((titleLower.includes('work') || titleLower.includes('fish') || titleLower.includes('hunt') || 
-       titleLower.includes('dig') || titleLower.includes('crime') || titleLower.includes('stream') || 
-       titleLower.includes('meme')) && titleLower.includes('fail')) {
+  
+  if (titleLower.includes('pet') && titleLower.includes('died')) {
     const titles = [
-      "Mission Failed LMAO 💥",
-      "You Got Fired Fr 🔥",
-      "Boss Said Nah 🙅",
-      "Work Said Bye 😬",
-      "L Work Performance 💀",
-      "Down Bad At Job 😭",
-      "Caught Lacking Skills 📉",
-      "Goofy Ahh Work Ethic 💩",
-      "Ohio Job Moment 🌽",
-      "NPC Employee Energy 🤖",
-      "Work Has Zero Rizz 😒",
-      "Career Fumbled Hard 🎪"
+      "Pet Died 💀",
+      "It's So Over 😭",
+      "You Monster 🪦",
+      "L Pet Owner 💔",
+      "Down Catastrophically Bad 😢"
     ];
     const descriptions = [
-      "You're on break... permanently lmao",
-      "That was the worst performance ever fr fr 💀",
-      "Maybe unemployment is your calling? No cap",
-      "Your boss is disappointed (again) ngl",
-      "You tried I guess? At least you showed up",
-      "Work really said 'you're fired' and meant it 🔥",
-      "Bro got caught in 4K being terrible at the job",
-      "This work attempt screams NPC behavior",
-      "Your job skills are absolutely cooked fr fr 🍳",
-      "Boss said 'it's giving incompetence' and let you go",
-      "You're down catastrophically in your career chief"
+      "Your pet died from neglect, you absolute monster, it's so over",
+      "RIP to your pet, maybe try harder next time? 💀",
+      "The pet said 'goodbye cruel world' and dipped",
+      "You really let your pet die, chat is this real? 😭"
     ];
     return {
       title: pickRandom(titles),
       description: pickRandom(descriptions)
     };
   }
-
-  // General Errors and Failures
+  
+  if (titleLower.includes('pet') && titleLower.includes('level')) {
+    const titles = [
+      "Pet Leveled Up! 🆙",
+      "Pet Growth Complete 🐾",
+      "W Pet Training 💯",
+      "Pet Looksmaxxing ✨"
+    ];
+    const descriptions = [
+      "Your pet gained a level, sigma pet owner grindset",
+      "Pet said 'I'm getting stronger', we're so back 🔥",
+      "Training paying off, your pet is evolving ✨"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+  
+  // Inventory/Items
+  if (titleLower.includes('item added') || titleLower.includes('item received')) {
+    const titles = [
+      "Item Acquired! ✨",
+      "Loot Secured 🎁",
+      "W Item Get 💯",
+      "Inventory Update 🔥"
+    ];
+    const descriptions = [
+      "New item added to your inventory, we're so back",
+      "Item secured successfully, sigma grindset ✨",
+      "Your collection is growing nicely"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+  
+  if (titleLower.includes('item sold')) {
+    const titles = [
+      "Item Sold! 💰",
+      "Sale Complete ✅",
+      "W Merchant Skills 🔥",
+      "Coins Secured 🤑"
+    ];
+    const descriptions = [
+      "You successfully sold the item, we're so back 💸",
+      "Sale went through smoothly, sigma grindset",
+      "Money acquired, your trading skills are elite ✨"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+  
+  if (titleLower.includes('inventory full')) {
+    const titles = [
+      "Inventory Full! 🎒",
+      "No Space Left 💀",
+      "Clean Your Inventory 🧹",
+      "Hoarding Problem Detected 😭"
+    ];
+    const descriptions = [
+      "Your inventory is completely full, clean it out bro",
+      "You're hoarding like crazy, sell some stuff",
+      "No more space available, it's so over until you clean up"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+  
+  // Errors/Failures
   if (titleLower.includes('insufficient') || titleLower.includes('not enough')) {
     const titles = [
-      "You're Broke AF 💸",
-      "Wallet Empty Fr 🪫",
-      "Broke Boy Hours 😭",
-      "Too Poor LMAO 💀",
-      "L Financial Status 🤡",
-      "Down Bad Financially 📉",
-      "Caught Lacking Funds 💔",
-      "Goofy Ahh Bank Balance 💩",
-      "Ohio Wealth Level 🌽",
-      "NPC Money Management 🤖",
-      "Zero Rizz With Money 😬",
-      "Wallet Fumbled The Bag 🎒"
+      "Broke AF 💸",
+      "It's So Over 💀",
+      "Not Enough Coins 😭",
+      "Wallet Empty LMAO 🤡",
+      "Down Bad Financially 📉"
     ];
     const descriptions = [
-      "Maybe get a job? Just a thought lmao",
-      "Your wallet is literally crying rn fr fr",
-      "That's embarrassing ngl 😭",
-      "Time to start grinding chief, no cap",
-      "Money doesn't grow on trees bro",
-      "Wallet really said 'absolutely nothing in here' 💀",
-      "Bro got caught in 4K being completely broke",
-      "This financial situation screams NPC behavior",
-      "Your money management is absolutely cooked 🍳",
-      "Bank account said 'it's giving poverty' fr fr",
-      "You're down astronomically in the wealth department",
-      "Funds pulled a Grimace Shake and vanished 💜",
-      "Money living rent free... nowhere because you have none",
-      "Not your balance getting fanum taxed to zero 🍔"
-    ];
-    return {
-      title: pickRandom(titles),
-      description: pickRandom(descriptions)
-    };
-  }
-
-  if (titleLower.includes('error') || titleLower.includes('failed')) {
-    const titles = [
-      "Something Broke LMAO 💥",
-      "That Failed Fr 😬",
-      "Error Detected Bro 🚨",
-      "Nah That Ain't It 🤷",
-      "L System Moment 💀",
-      "Down Bad Technology 😭",
-      "Caught In 4K Glitching 🎭",
-      "Goofy Ahh Error 💩",
-      "Ohio Tech Moment 🌽",
-      "NPC System Behavior 🤖",
-      "Code Has Zero Rizz 😬",
-      "System Fumbled Hard 🎪"
-    ];
-    const descriptions = [
-      "Something went wrong but we're not telling you what lmao",
-      "The code took a break fr, try again later",
-      "It's broken, deal with it chief 💀",
-      "Technology said 'absolutely not' rn",
-      "Try again or don't, we don't care ngl",
-      "System really hit you with the 'error 404: skill not found'",
-      "Bro got caught in 4K by a system failure",
-      "This error screams NPC coding behavior",
-      "The system is absolutely cooked right now 🍳",
-      "Code said 'it's giving broken' and crashed"
+      "You don't have enough money for that, chat is this real? 💀",
+      "Your wallet is crying rn, go earn some coins",
+      "Insufficient funds detected, sigma grindset needed 💸",
+      "You're broke, it's so over until you grind"
     ];
     return {
       title: pickRandom(titles),
@@ -980,33 +967,33 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('cooldown') || titleLower.includes('wait')) {
     const titles = [
       "Slow Down Bro 🕒",
-      "Chill Out Fr ⏰",
+      "Chill Out ⏰",
       "Touch Grass 🧘",
       "Not So Fast LMAO 🛑",
       "L Patience 💀",
       "Down Bad Spamming 😭",
-      "Caught Lacking Chill 🎭",
-      "Goofy Ahh Speed 💩",
-      "Ohio Pace Energy 🌽",
-      "NPC Spam Behavior 🤖",
+      "Caught Tweaking 🎭",
+      "Chat Is This Real? 💩",
+      "Aura Points -100 🌽",
+      "Delulu Spam Behavior 🤖",
       "Zero Rizz With Timing 😬",
       "Patience Fumbled 🎪"
     ];
     const descriptions = [
-      "Bro you're doing way too much rn, take a break fr",
+      "Bro you're doing way too much rn, take a break",
       "The system needs a breather from you lmao",
-      "Calm down, you're not that important no cap",
+      "Calm down, you're not that important, it's so over for now",
       "Wait your turn like everyone else chief",
       "You're being too thirsty, relax bro 💀",
       "System really said 'touch grass' and timed you out",
       "Bro got caught in 4K spamming like crazy",
-      "This spam attempt screams NPC behavior",
+      "This spam attempt screams delulu behavior",
       "Your patience stat is absolutely cooked 🍳",
       "Cooldown said 'it's giving desperate' and blocked you",
       "You're down catastrophically with the spam chief",
-      "The timer pulled a Grimace Shake on your impatience 💜",
+      "The timer absolutely nuked your aura points 💀",
       "Patience living rent free... but not in your brain",
-      "Not you getting fanum taxed by the cooldown system 🍔"
+      "Not you getting ratio'd by the cooldown system"
     ];
     return {
       title: pickRandom(titles),
@@ -1018,7 +1005,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('welcome back')) {
     return {
       title: "Welcome Back! 👋",
-      description: description || "Great to see you again!"
+      description: description || "Great to see you again, we're so back!"
     };
   }
   
@@ -1033,7 +1020,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('purchase') || titleLower.includes('bought') || titleLower.includes('buy')) {
     return {
       title: "Item Purchased! 🛒",
-      description: description?.replace(/bought/gi, 'purchased') || "You successfully bought the item!"
+      description: description?.replace(/bought/gi, 'purchased') || "You successfully bought the item, we're so back!"
     };
   }
   
