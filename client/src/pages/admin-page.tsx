@@ -2150,7 +2150,6 @@ export default function AdminPage() {
                       <SelectItem value="rare">Rare</SelectItem>
                       <SelectItem value="epic">Epic</SelectItem>
                       <SelectItem value="legendary">Legendary</SelectItem>
-                      <SelectItem value="mythic">Mythic</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

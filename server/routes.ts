@@ -1949,7 +1949,7 @@ export function registerRoutes(app: Express): Server {
       const petSchema = z.object({
         name: z.string().min(1).max(50),
         emoji: z.string().min(1).max(10),
-        rarity: z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']),
+        rarity: z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
         adoptionCost: z.number().min(0),
         hungerDecay: z.number().min(0).max(100),
         happinessDecay: z.number().min(0).max(100),
@@ -1975,11 +1975,9 @@ export function registerRoutes(app: Express): Server {
       });
 
       // Log admin action
-      await logAdminAction(req.user!.username, 'create_pet', { 
-        petId,
-        petName: petData.name,
-        petRarity: petData.rarity 
-      });
+      if (req.user) {
+        await logAdminAction(req.user.username, 'create_pet', petId);
+      }
 
       res.json({ 
         success: true, 
