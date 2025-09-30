@@ -110,11 +110,121 @@ export const auditLogs = pgTable("audit_logs", {
   timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
 });
 
+// Pet System Tables
+export const petTypes = pgTable("pet_types", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petId: varchar("pet_id").notNull().unique(),
+  name: varchar("name").notNull(),
+  description: text("description").notNull(),
+  emoji: varchar("emoji").notNull(),
+  rarity: varchar("rarity", { enum: ['common', 'uncommon', 'rare', 'epic', 'legendary'] }).notNull(),
+  hungerDecay: integer("hunger_decay").notNull(),
+  hygieneDecay: integer("hygiene_decay").notNull(),
+  energyDecay: integer("energy_decay").notNull(),
+  funDecay: integer("fun_decay").notNull(),
+  adoptionCost: integer("adoption_cost").notNull(),
+  isCustom: boolean("is_custom").default(false).notNull(),
+});
+
+export const pets = pgTable("pets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  petTypeId: varchar("pet_type_id").notNull(),
+  name: varchar("name").notNull(),
+  hunger: integer("hunger").default(100).notNull(),
+  hygiene: integer("hygiene").default(100).notNull(),
+  energy: integer("energy").default(100).notNull(),
+  fun: integer("fun").default(100).notNull(),
+  level: integer("level").default(1).notNull(),
+  xp: integer("xp").default(0).notNull(),
+  trainingPoints: integer("training_points").default(0).notNull(),
+  prestigeLevel: integer("prestige_level").default(0).notNull(),
+  attack: integer("attack").default(0).notNull(),
+  defense: integer("defense").default(0).notNull(),
+  sustainability: integer("sustainability").default(0).notNull(),
+  hunting: integer("hunting").default(0).notNull(),
+  skills: jsonb("skills").default([]).notNull(),
+  lastFed: timestamp("last_fed"),
+  lastCleaned: timestamp("last_cleaned"),
+  lastPlayed: timestamp("last_played"),
+  lastSlept: timestamp("last_slept"),
+  roomId: varchar("room_id"),
+  adoptedAt: timestamp("adopted_at").default(sql`now()`).notNull(),
+  isSick: boolean("is_sick").default(false).notNull(),
+  sicknessType: varchar("sickness_type"),
+});
+
+export const petRooms = pgTable("pet_rooms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  name: varchar("name").notNull(),
+  floorStyle: varchar("floor_style").default('wooden').notNull(),
+  wallStyle: varchar("wall_style").default('plain').notNull(),
+  doorStyle: varchar("door_style").default('wooden').notNull(),
+  windowStyle: varchar("window_style"),
+  floorDecorations: jsonb("floor_decorations").default([]).notNull(),
+  wallDecorations: jsonb("wall_decorations").default([]).notNull(),
+  sitterId: varchar("sitter_id"),
+  sitterUntil: timestamp("sitter_until"),
+  createdAt: timestamp("created_at").default(sql`now()`).notNull(),
+});
+
+export const petSkills = pgTable("pet_skills", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  skillId: varchar("skill_id").notNull().unique(),
+  name: varchar("name").notNull(),
+  description: text("description").notNull(),
+  effect: jsonb("effect").default(sql`'{}'`).notNull(),
+  trainingCost: integer("training_cost").notNull(),
+  category: varchar("category").notNull(),
+});
+
+export const petSitters = pgTable("pet_sitters", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sitterId: varchar("sitter_id").notNull().unique(),
+  name: varchar("name").notNull(),
+  description: text("description").notNull(),
+  abilities: jsonb("abilities").default([]).notNull(),
+  hourlyRate: integer("hourly_rate").notNull(),
+  isPremiumOnly: boolean("is_premium_only").default(false).notNull(),
+});
+
+export const petBreeding = pgTable("pet_breeding", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petId1: varchar("pet_id_1").notNull(),
+  petId2: varchar("pet_id_2").notNull(),
+  startedAt: timestamp("started_at").default(sql`now()`).notNull(),
+  completesAt: timestamp("completes_at").notNull(),
+  isSuccessful: boolean("is_successful"),
+  offspringId: varchar("offspring_id"),
+});
+
+export const petActivities = pgTable("pet_activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petId: varchar("pet_id").notNull(),
+  activityType: varchar("activity_type").notNull(),
+  description: text("description").notNull(),
+  rewards: jsonb("rewards").default(sql`'{}'`).notNull(),
+  timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
+});
+
+export const petHunts = pgTable("pet_hunts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petId: varchar("pet_id").notNull(),
+  startedAt: timestamp("started_at").default(sql`now()`).notNull(),
+  completesAt: timestamp("completes_at").notNull(),
+  huntType: varchar("hunt_type").notNull(),
+  isCompleted: boolean("is_completed").default(false).notNull(),
+  rewards: jsonb("rewards").default(sql`'{}'`).notNull(),
+});
+
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
   notifications: many(notifications),
+  pets: many(pets),
+  petRooms: many(petRooms),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -131,6 +241,76 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   }),
 }));
 
+export const petTypesRelations = relations(petTypes, ({ many }) => ({
+  pets: many(pets),
+}));
+
+export const petsRelations = relations(pets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [pets.userId],
+    references: [users.id],
+  }),
+  petType: one(petTypes, {
+    fields: [pets.petTypeId],
+    references: [petTypes.id],
+  }),
+  room: one(petRooms, {
+    fields: [pets.roomId],
+    references: [petRooms.id],
+  }),
+  activities: many(petActivities),
+  hunts: many(petHunts),
+  breedingAsPet1: many(petBreeding, { relationName: "pet1" }),
+  breedingAsPet2: many(petBreeding, { relationName: "pet2" }),
+}));
+
+export const petRoomsRelations = relations(petRooms, ({ one, many }) => ({
+  user: one(users, {
+    fields: [petRooms.userId],
+    references: [users.id],
+  }),
+  pets: many(pets),
+  sitter: one(petSitters, {
+    fields: [petRooms.sitterId],
+    references: [petSitters.id],
+  }),
+}));
+
+export const petSittersRelations = relations(petSitters, ({ many }) => ({
+  rooms: many(petRooms),
+}));
+
+export const petBreedingRelations = relations(petBreeding, ({ one }) => ({
+  pet1: one(pets, {
+    fields: [petBreeding.petId1],
+    references: [pets.id],
+    relationName: "pet1",
+  }),
+  pet2: one(pets, {
+    fields: [petBreeding.petId2],
+    references: [pets.id],
+    relationName: "pet2",
+  }),
+  offspring: one(pets, {
+    fields: [petBreeding.offspringId],
+    references: [pets.id],
+  }),
+}));
+
+export const petActivitiesRelations = relations(petActivities, ({ one }) => ({
+  pet: one(pets, {
+    fields: [petActivities.petId],
+    references: [pets.id],
+  }),
+}));
+
+export const petHuntsRelations = relations(petHunts, ({ one }) => ({
+  pet: one(pets, {
+    fields: [petHunts.petId],
+    references: [pets.id],
+  }),
+}));
+
 // Create insert and select schemas from tables
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, lastActive: true });
 export const selectUserSchema = createSelectSchema(users);
@@ -143,6 +323,24 @@ export const selectNotificationSchema = createSelectSchema(notifications);
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, timestamp: true });
 export const selectAuditLogSchema = createSelectSchema(auditLogs);
 
+// Pet schemas
+export const insertPetTypeSchema = createInsertSchema(petTypes).omit({ id: true });
+export const selectPetTypeSchema = createSelectSchema(petTypes);
+export const insertPetSchema = createInsertSchema(pets).omit({ id: true, adoptedAt: true });
+export const selectPetSchema = createSelectSchema(pets);
+export const insertPetRoomSchema = createInsertSchema(petRooms).omit({ id: true, createdAt: true });
+export const selectPetRoomSchema = createSelectSchema(petRooms);
+export const insertPetSkillSchema = createInsertSchema(petSkills).omit({ id: true });
+export const selectPetSkillSchema = createSelectSchema(petSkills);
+export const insertPetSitterSchema = createInsertSchema(petSitters).omit({ id: true });
+export const selectPetSitterSchema = createSelectSchema(petSitters);
+export const insertPetBreedingSchema = createInsertSchema(petBreeding).omit({ id: true, startedAt: true });
+export const selectPetBreedingSchema = createSelectSchema(petBreeding);
+export const insertPetActivitySchema = createInsertSchema(petActivities).omit({ id: true, timestamp: true });
+export const selectPetActivitySchema = createSelectSchema(petActivities);
+export const insertPetHuntSchema = createInsertSchema(petHunts).omit({ id: true, startedAt: true });
+export const selectPetHuntSchema = createSelectSchema(petHunts);
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -153,3 +351,21 @@ export type Event = typeof events.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
+
+// Pet type exports
+export type InsertPetType = z.infer<typeof insertPetTypeSchema>;
+export type PetType = typeof petTypes.$inferSelect;
+export type InsertPet = z.infer<typeof insertPetSchema>;
+export type Pet = typeof pets.$inferSelect;
+export type InsertPetRoom = z.infer<typeof insertPetRoomSchema>;
+export type PetRoom = typeof petRooms.$inferSelect;
+export type InsertPetSkill = z.infer<typeof insertPetSkillSchema>;
+export type PetSkill = typeof petSkills.$inferSelect;
+export type InsertPetSitter = z.infer<typeof insertPetSitterSchema>;
+export type PetSitter = typeof petSitters.$inferSelect;
+export type InsertPetBreeding = z.infer<typeof insertPetBreedingSchema>;
+export type PetBreeding = typeof petBreeding.$inferSelect;
+export type InsertPetActivity = z.infer<typeof insertPetActivitySchema>;
+export type PetActivity = typeof petActivities.$inferSelect;
+export type InsertPetHunt = z.infer<typeof insertPetHuntSchema>;
+export type PetHunt = typeof petHunts.$inferSelect;
