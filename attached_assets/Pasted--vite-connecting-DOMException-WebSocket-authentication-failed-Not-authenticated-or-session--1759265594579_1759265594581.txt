@@ -1,0 +1,103 @@
+[vite] connecting...
+DOMException {}
+
+WebSocket authentication failed: Not authenticated or session expired
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+
+Pet creation error: 
+Error {}
+
+Pet creation mutation error: 
+Error {}
+message: "400: {"error":"relation \"custom_pets\" does not exist"}"
+stack: "Error: 400: {"error":"relation \"custom_pets\" does not exist"}↵ at throwIfResNotOk (https://eaea8c48-908f-4c58-9875-6d0836f2196c-00-6bp8kd7m3wq6.picard.replit.dev/src/lib/queryClient.ts:5:11)↵ at async apiRequest (https://eaea8c48-908f-4c58-9875-6d0836f2196c-00-6bp8kd7m3wq6.picard.replit.dev/src/lib/queryClient.ts:29:3)↵ at async Object.mutationFn (https://eaea8c48-908f-4c58-9875-6d0836f2196c-00-6bp8kd7m3wq6.picard.replit.dev/src/pages/admin-page.tsx?t=1759265355339:311:21)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://eaea8c48-908f-4c58-9875-6d0836f2196c-00-6bp8kd7m3wq6.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://eaea8c48-908f-4c58-9875-6d0836f2196c-00-6bp8kd7m3wq6.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://eaea8c48-908f-4c58-9875-6d0836f2196c-00-6bp8kd7m3wq6.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://eaea8c48-908f-4c58-9875-6d0836f2196c-00-6bp8kd7m3wq6.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400

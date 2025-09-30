@@ -318,19 +318,28 @@ export default function AdminPage() {
 
   const createPetMutation = useMutation({
     mutationFn: async (petData: any) => {
-      const res = await apiRequest("POST", "/api/admin/pets", {
-        body: {
-          name: petData.name,
-          emoji: petData.emoji,
-          rarity: petData.rarity,
-          adoptionCost: parseInt(petData.adoptionCost),
-          hungerDecay: parseInt(petData.hungerDecay),
-          hygieneDecay: parseInt(petData.hygieneDecay),
-          energyDecay: parseInt(petData.energyDecay),
-          funDecay: parseInt(petData.funDecay)
+      try {
+        const res = await apiRequest("POST", "/api/admin/pets", {
+          body: {
+            name: petData.name,
+            emoji: petData.emoji,
+            rarity: petData.rarity,
+            adoptionCost: parseInt(petData.adoptionCost),
+            hungerDecay: parseInt(petData.hungerDecay),
+            hygieneDecay: parseInt(petData.hygieneDecay),
+            energyDecay: parseInt(petData.energyDecay),
+            funDecay: parseInt(petData.funDecay)
+          }
+        });
+        const data = await res.json();
+        if (!data.success && data.error) {
+          throw new Error(data.error);
         }
-      });
-      return res.json();
+        return data;
+      } catch (error: any) {
+        console.error("Pet creation error:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       toast({
@@ -350,9 +359,10 @@ export default function AdminPage() {
       });
     },
     onError: (error: Error) => {
+      console.error("Pet creation mutation error:", error);
       toast({
         title: "Create Pet Failed",
-        description: error.message,
+        description: error.message || "Unknown error occurred",
         variant: "destructive",
       });
     },

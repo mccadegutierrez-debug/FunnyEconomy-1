@@ -1986,6 +1986,7 @@ export function registerRoutes(app: Express): Server {
       const customPet = await storage.createCustomPet({
         petId: petId,
         name: petData.name,
+        description: `A custom pet created by admins.`,
         emoji: petData.emoji,
         rarity: petData.rarity,
         adoptionCost: petData.adoptionCost,
@@ -1997,7 +1998,15 @@ export function registerRoutes(app: Express): Server {
 
       // Log admin action
       if (req.user) {
-        await logAdminAction(req.user.username, 'create_pet', petId);
+        await logAdminAction({
+          adminUsername: req.user.username,
+          adminRole: req.user.adminRole || 'admin',
+          action: 'create_pet',
+          targetType: 'pet',
+          targetId: petId,
+          targetName: petData.name,
+          req: req
+        });
       }
 
       res.json({ 
