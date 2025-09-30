@@ -973,7 +973,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async adoptPet(userId: string, petTypeId: string, customName?: string): Promise<Pet> {
-    const [petType] = await db.select().from(petTypes).where(eq(petTypes.id, petTypeId));
+    const [petType] = await db.select().from(petTypes).where(eq(petTypes.petId, petTypeId));
     if (!petType) {
       throw new Error('Pet type not found');
     }
@@ -983,7 +983,7 @@ export class DatabaseStorage implements IStorage {
       .insert(pets)
       .values({
         userId,
-        petTypeId,
+        petTypeId: petType.id,
         name,
       })
       .returning();

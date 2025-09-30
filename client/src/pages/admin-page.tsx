@@ -55,7 +55,9 @@ export default function AdminPage() {
   const [expandedUserActions, setExpandedUserActions] = useState<Set<string>>(new Set());
   const [showCreatePetDialog, setShowCreatePetDialog] = useState(false);
   const [newPet, setNewPet] = useState({
+    petId: "",
     name: "",
+    description: "",
     emoji: "",
     rarity: "common",
     adoptionCost: "",
@@ -163,7 +165,7 @@ export default function AdminPage() {
   const executeCommandMutation = useMutation({
     mutationFn: async (cmd: string) => {
       const res = await apiRequest("POST", "/api/admin/command", {
-        body: { command: cmd }
+        command: cmd
       });
       return res.json();
     },
@@ -187,7 +189,7 @@ export default function AdminPage() {
   const banUserMutation = useMutation({
     mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/ban`, {
-        body: { reason }
+        reason
       });
       return res.json();
     },
@@ -227,7 +229,8 @@ export default function AdminPage() {
   const tempBanUserMutation = useMutation({
     mutationFn: async ({ userId, reason, duration }: { userId: string; reason: string; duration: string }) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/tempban`, {
-        body: { reason, duration: parseInt(duration) || 1 }
+        reason,
+        duration: parseInt(duration) || 1
       });
       return res.json();
     },
@@ -247,7 +250,7 @@ export default function AdminPage() {
   const giveCoinsUserMutation = useMutation({
     mutationFn: async ({ userId, amount }: { userId: string; amount: string }) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/give-coins`, {
-        body: { amount: parseInt(amount) || 0 }
+        amount: parseInt(amount) || 0
       });
       return res.json();
     },
@@ -266,7 +269,7 @@ export default function AdminPage() {
   const removeCoinsUserMutation = useMutation({
     mutationFn: async ({ userId, amount }: { userId: string; amount: string }) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/remove-coins`, {
-        body: { amount: parseInt(amount) || 0 }
+        amount: parseInt(amount) || 0
       });
       return res.json();
     },
@@ -292,7 +295,8 @@ export default function AdminPage() {
   const givePetMutation = useMutation({
     mutationFn: async ({ userId, petId, petName }: { userId: string; petId: string; petName: string }) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/give-pet`, {
-        body: { petId, petName }
+        petId,
+        petName
       });
       return res.json();
     },
@@ -319,17 +323,17 @@ export default function AdminPage() {
   const createPetMutation = useMutation({
     mutationFn: async (petData: any) => {
       try {
-        const res = await apiRequest("POST", "/api/admin/pets", {
-          body: {
-            name: petData.name,
-            emoji: petData.emoji,
-            rarity: petData.rarity,
-            adoptionCost: parseInt(petData.adoptionCost),
-            hungerDecay: parseInt(petData.hungerDecay),
-            hygieneDecay: parseInt(petData.hygieneDecay),
-            energyDecay: parseInt(petData.energyDecay),
-            funDecay: parseInt(petData.funDecay)
-          }
+        const res = await apiRequest("POST", "/api/admin/pets/types", {
+          petId: petData.petId,
+          name: petData.name,
+          description: petData.description,
+          emoji: petData.emoji,
+          rarity: petData.rarity,
+          adoptionCost: parseInt(petData.adoptionCost),
+          hungerDecay: parseInt(petData.hungerDecay),
+          hygieneDecay: parseInt(petData.hygieneDecay),
+          energyDecay: parseInt(petData.energyDecay),
+          funDecay: parseInt(petData.funDecay)
         });
         const data = await res.json();
         if (!data.success && data.error) {
@@ -348,7 +352,9 @@ export default function AdminPage() {
       });
       setShowCreatePetDialog(false);
       setNewPet({
+        petId: "",
         name: "",
+        description: "",
         emoji: "",
         rarity: "common",
         adoptionCost: "",
@@ -1495,7 +1501,9 @@ export default function AdminPage() {
                   <DialogTrigger asChild>
                     <Button onClick={() => {
                       setNewPet({
+                        petId: "",
                         name: "",
+                        description: "",
                         emoji: "",
                         rarity: "common",
                         adoptionCost: "",
@@ -1516,7 +1524,11 @@ export default function AdminPage() {
                 {STATIC_PET_TYPES.map((pet) => (
                   <Card key={pet.petId} className="p-4 border-green-700 bg-green-900/20" data-testid={`pet-card-${pet.petId}`}>
                     <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{pet.emoji}</span>
+                      <img 
+                        src={`/PetIcons/${pet.iconPath}`} 
+                        alt={pet.name} 
+                        className="w-16 h-16 object-contain"
+                      />
                       <div className="flex-1">
                         <h3 className="font-semibold text-green-300">{pet.name}</h3>
                         <p className="text-sm text-muted-foreground capitalize">{pet.rarity}</p>
@@ -2124,6 +2136,16 @@ export default function AdminPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              <div>
+                <Label htmlFor="pet-id">Pet ID (Unique Identifier)</Label>
+                <Input
+                  id="pet-id"
+                  value={newPet.petId}
+                  onChange={(e) => setNewPet({ ...newPet, petId: e.target.value })}
+                  placeholder="e.g., dragon_fire"
+                  data-testid="input-pet-id"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="pet-name">Pet Name</Label>
@@ -2146,6 +2168,16 @@ export default function AdminPage() {
                     data-testid="input-pet-emoji"
                   />
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="pet-description">Description</Label>
+                <Textarea
+                  id="pet-description"
+                  value={newPet.description}
+                  onChange={(e) => setNewPet({ ...newPet, description: e.target.value })}
+                  placeholder="e.g., A majestic fire-breathing dragon"
+                  data-testid="input-pet-description"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -2237,7 +2269,9 @@ export default function AdminPage() {
                 <Button
                   onClick={() => createPetMutation.mutate(newPet)}
                   disabled={
+                    !newPet.petId.trim() ||
                     !newPet.name.trim() ||
+                    !newPet.description.trim() ||
                     !newPet.emoji.trim() ||
                     !newPet.adoptionCost ||
                     !newPet.hungerDecay ||
@@ -2260,7 +2294,9 @@ export default function AdminPage() {
                   onClick={() => {
                     setShowCreatePetDialog(false);
                     setNewPet({
+                      petId: "",
                       name: "",
+                      description: "",
                       emoji: "",
                       rarity: "common",
                       adoptionCost: "",

@@ -1484,6 +1484,33 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Give pet to user (admin)
+  app.post('/api/admin/users/:userId/give-pet', requireAdmin, async (req, res) => {
+    try {
+      const givePetSchema = z.object({
+        petId: z.string(),
+        petName: z.string().max(50).optional(),
+      });
+      
+      const { petId, petName } = givePetSchema.parse(req.body);
+      const pet = await storage.adoptPet(req.params.userId, petId, petName);
+      
+      await logAdminAction(req, 'give_pet', 'pet', pet.id, petName || 'Pet', {
+        userId: req.params.userId,
+        petId,
+        petName
+      });
+      
+      res.json({ 
+        success: true, 
+        message: `Pet "${pet.name}" has been given to the user`,
+        pet 
+      });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   // Pet Management Routes
   app.post('/api/pets/adopt', requireAuth, async (req, res) => {
     try {

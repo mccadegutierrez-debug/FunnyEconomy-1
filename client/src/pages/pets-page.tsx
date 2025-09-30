@@ -850,9 +850,8 @@ export default function PetsPage() {
             <Button 
               onClick={() => {
                 if (selectedPetType) {
-                  const petTypeId = petTypes.find(pt => pt.petId === selectedPetType.petId)?.id || selectedPetType.petId;
                   adoptMutation.mutate({ 
-                    petTypeId,
+                    petTypeId: selectedPetType.petId,
                     customName: customPetName || undefined 
                   });
                 }
