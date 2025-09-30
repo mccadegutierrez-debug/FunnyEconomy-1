@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertTriangle, Users, DollarSign, Settings, Command, Package, Activity, BarChart3, Search, Plus, Edit2, Trash2, Eye, RefreshCw, Clock, TrendingUp, Database, Server, Heart } from "lucide-react";
-import { AVAILABLE_PETS } from "@shared/pets-data";
+import { STATIC_PET_TYPES } from "@shared/pet-types-data";
 
 export default function AdminPage() {
   const [command, setCommand] = useState("");
@@ -1513,8 +1513,8 @@ export default function AdminPage() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {AVAILABLE_PETS.map((pet) => (
-                  <Card key={pet.id} className="p-4 border-green-700 bg-green-900/20" data-testid={`pet-card-${pet.id}`}>
+                {STATIC_PET_TYPES.map((pet) => (
+                  <Card key={pet.petId} className="p-4 border-green-700 bg-green-900/20" data-testid={`pet-card-${pet.petId}`}>
                     <div className="flex items-center space-x-3">
                       <span className="text-2xl">{pet.emoji}</span>
                       <div className="flex-1">
@@ -1540,7 +1540,7 @@ export default function AdminPage() {
                   All pets shown above are available for distribution.
                 </p>
                 <div className="text-sm text-green-400">
-                  Total available pets: {AVAILABLE_PETS.length}
+                  Total available pets: {STATIC_PET_TYPES.length}
                 </div>
               </div>
             </TabsContent>
@@ -2063,8 +2063,8 @@ export default function AdminPage() {
                     <SelectValue placeholder="Choose a pet..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {AVAILABLE_PETS.map((pet) => (
-                      <SelectItem key={pet.id} value={pet.id}>
+                    {STATIC_PET_TYPES.map((pet) => (
+                      <SelectItem key={pet.petId} value={pet.petId}>
                         {pet.emoji} {pet.name} ({pet.rarity}) - {pet.adoptionCost.toLocaleString()} coins
                       </SelectItem>
                     ))}
@@ -2089,7 +2089,7 @@ export default function AdminPage() {
                       givePetMutation.mutate({
                         userId: selectedUser.id,
                         petId: selectedPetId,
-                        petName: petName || AVAILABLE_PETS.find(p => p.id === selectedPetId)?.name || ""
+                        petName: petName || STATIC_PET_TYPES.find(p => p.petId === selectedPetId)?.name || ""
                       });
                     }
                   }}
