@@ -1972,9 +1972,10 @@ export function registerRoutes(app: Express): Server {
         emoji: z.string().min(1).max(10),
         rarity: z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
         adoptionCost: z.number().min(0),
-        hungerDecay: z.number().min(0).max(100),
-        happinessDecay: z.number().min(0).max(100),
-        energyDecay: z.number().min(0).max(100)
+        hungerDecay: z.number().min(0),
+        hygieneDecay: z.number().min(0),
+        energyDecay: z.number().min(0),
+        funDecay: z.number().min(0)
       });
 
       const petData = petSchema.parse(req.body);
@@ -1982,7 +1983,6 @@ export function registerRoutes(app: Express): Server {
       // Generate unique pet ID
       const petId = `custom_${petData.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
       
-      // Map happinessDecay to both hygieneDecay and funDecay
       const customPet = await storage.createCustomPet({
         petId: petId,
         name: petData.name,
@@ -1990,9 +1990,9 @@ export function registerRoutes(app: Express): Server {
         rarity: petData.rarity,
         adoptionCost: petData.adoptionCost,
         hungerDecay: petData.hungerDecay,
-        hygieneDecay: petData.happinessDecay,
+        hygieneDecay: petData.hygieneDecay,
         energyDecay: petData.energyDecay,
-        funDecay: petData.happinessDecay
+        funDecay: petData.funDecay
       });
 
       // Log admin action

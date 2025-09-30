@@ -29,16 +29,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   
   if (titleLower.includes('deposit failed')) {
     const titles = [
-      "Bank Said Nope 💸",
-      "Deposit Rejected 🚫",
-      "Your Money Got Lost 😬",
-      "Bank Machine Broke 🔨"
+      "Bank Said Nah Bruh 💸",
+      "Deposit Rejected LMAO 🚫",
+      "Your Money Dipped 😬",
+      "Bank Machine Said Nope 🔨"
     ];
     const descriptions = [
-      "The bank looked at your coins and said 'nah'",
-      "Your deposit ghosted harder than your ex",
-      "The vault door slammed in your face",
-      "Even the ATM is laughing at you right now"
+      "The bank took one look and said 'absolutely not' lmao",
+      "Your deposit ghosted harder than your ex, fr fr",
+      "L + ratio + the vault door literally slammed in your face",
+      "Even the ATM is laughing at you rn, no cap"
     ];
     return {
       title: pickRandom(titles),
@@ -55,16 +55,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   
   if (titleLower.includes('withdrawal failed')) {
     const titles = [
-      "Withdrawal Denied 🚨",
-      "Bank Said No 🙅",
-      "Money Machine Broke 💔",
-      "Access Denied 🔐"
+      "Withdrawal Denied LMAO 🚨",
+      "Bank Said Hell No 🙅",
+      "Money Machine Broke Fr 💔",
+      "Access Denied Bruh 🔐"
     ];
     const descriptions = [
-      "The vault laughed and slammed shut",
-      "You're broke, what did you expect?",
-      "The bank is keeping your coins hostage",
-      "Nice try, but the money's staying put"
+      "The vault literally laughed and slammed shut lmao",
+      "You're broke af, what did you expect? 💀",
+      "The bank is holding your coins hostage fr fr",
+      "Nice try but the money's staying put, no cap"
     ];
     return {
       title: pickRandom(titles),
@@ -81,16 +81,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   
   if (titleLower.includes('transfer failed')) {
     const titles = [
-      "Transfer Rejected 🚫",
-      "Money Vanished 👻",
-      "Payment Blocked 🛑",
-      "Transaction Denied ❌"
+      "Transfer Rejected LMAO 🚫",
+      "Money Vanished Fr 👻",
+      "Payment Blocked Bruh 🛑",
+      "Transaction Denied 💀"
     ];
     const descriptions = [
-      "That username doesn't exist (unlike your problems)",
-      "Your coins got lost in the void",
-      "The recipient blocked you before you could send",
-      "Money doesn't grow on trees, and it doesn't travel either"
+      "That username doesn't exist lmao (unlike your problems)",
+      "Your coins got lost in the void fr fr",
+      "The recipient blocked you before you could even send 😭",
+      "Skill issue detected, money said bye bye"
     ];
     return {
       title: pickRandom(titles),
@@ -108,17 +108,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   
   if (titleLower.includes('rob failed')) {
     const titles = [
-      "Got Caught Red-Handed 👮",
-      "Heist Failed Miserably 🚔",
-      "You're a Terrible Thief 🤡",
-      "Busted! 🚨"
+      "Got Caught LMAO 👮",
+      "Heist Failed So Bad 🚔",
+      "You're Trash at This 🤡",
+      "Busted Fr Fr 🚨"
     ];
     const descriptions = [
-      "Smooth criminal you are NOT",
-      "They saw you coming from a mile away",
-      "Maybe crime isn't your calling",
-      "Get rekt, amateur hour is over",
-      "You couldn't steal candy from a baby"
+      "Smooth criminal you are NOT, no cap 💀",
+      "They saw you coming from a mile away lmao",
+      "Maybe crime isn't your calling bruh",
+      "Get rekt kid, amateur hour is over fr",
+      "You couldn't steal candy from a baby, that's embarrassing"
     ];
     return {
       title: pickRandom(titles),
@@ -136,17 +136,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   
   if (titleLower.includes('blackjack loss')) {
     const titles = [
-      "Blackjack Said No 🃏",
-      "Dealer Destroyed You 💀",
-      "Cards Weren't in Your Favor 😬",
-      "L + Ratio 📉"
+      "Blackjack Said Nah LMAO 🃏",
+      "Dealer Demolished You Fr 💀",
+      "Cards Hate You Bruh 😬",
+      "L + Ratio + No Skill 📉"
     ];
     const descriptions = [
-      "Get wrecked, the house always wins",
-      "Maybe stick to Uno?",
-      "That was embarrassing to watch",
-      "Skill issue detected",
-      "The cards literally hate you"
+      "Get absolutely demolished, the house always wins no cap",
+      "Maybe stick to Uno? Or go fish? Literally anything else lmao",
+      "That was painful to watch fr fr 😭",
+      "Massive skill issue detected",
+      "The cards literally hate you on a personal level bruh"
     ];
     return {
       title: pickRandom(titles),
@@ -163,17 +163,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   
   if (titleLower.includes('slots loss')) {
     const titles = [
-      "Slots Said Nope 🎰",
-      "Machine Ate Your Coins 💸",
-      "Big Fat L 😂",
-      "Not Even Close 🙅"
+      "Slots Said Nah LMAO 🎰",
+      "Machine Ate Your Coins Fr 💸",
+      "Massive L Bruh 😂",
+      "Not Even Close 💀"
     ];
     const descriptions = [
-      "The machine is literally mocking you",
-      "Your luck ran out faster than your wallet",
-      "Maybe gambling isn't your thing",
-      "That was painful to watch, not gonna lie",
-      "The slots just laughed at your bet"
+      "The machine is literally mocking you rn lmao",
+      "Your luck ran out faster than your wallet fr fr",
+      "Maybe gambling isn't your thing chief, no cap",
+      "That was painful to watch ngl 😭",
+      "The slots straight up laughed at your bet bruh"
     ];
     return {
       title: pickRandom(titles),
@@ -190,17 +190,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   
   if (titleLower.includes('coinflip loss')) {
     const titles = [
-      "Wrong Side 🪙",
-      "Coin Hates You 😤",
-      "50/50 and You Lost 💀",
-      "Flipped and Flopped 🤦"
+      "Wrong Side LMAO 🪙",
+      "Coin Hates You Fr 😤",
+      "50/50 and Still Lost 💀",
+      "Flipped and Flopped Bruh 🤦"
     ];
     const descriptions = [
-      "It's literally a coin flip and you still lost",
-      "The coin said 'not today'",
-      "How do you lose a 50/50? Impressive",
-      "Maybe try rock-paper-scissors instead",
-      "That coin has beef with you personally"
+      "It's literally a coin flip and you STILL lost lmao",
+      "The coin said 'absolutely not' fr fr",
+      "How do you lose a 50/50? That's actually impressive ngl",
+      "Maybe try rock-paper-scissors instead bruh",
+      "That coin has personal beef with you, no cap 💀"
     ];
     return {
       title: pickRandom(titles),
@@ -219,16 +219,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   if (titleLower.includes('wrong answer')) {
     const titles = [
       "Big Brain Moment... NOT 🧠",
-      "Wrong Answer 🚫",
-      "Intelligence -100 🤡",
-      "Not Even Close 😬"
+      "Wrong Answer LMAO 🚫",
+      "Intelligence -1000 💀",
+      "Not Even Close Bruh 😬"
     ];
     const descriptions = [
-      "That answer was wild, bro",
-      "Did you even read the question?",
-      "Your brain took a day off, huh?",
-      "Maybe Google it next time?",
-      "Not your best moment, chief"
+      "That answer was wild af, no cap 💀",
+      "Did you even read the question lmao",
+      "Your brain took a day off fr fr",
+      "Maybe Google it next time? Just a thought",
+      "Not your best moment chief, that was embarrassing"
     ];
     return {
       title: pickRandom(titles),
@@ -319,17 +319,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   // Pet-specific failures
   if (titleLower.includes('adoption') && titleLower.includes('fail')) {
     const titles = [
-      "Pet Ghosted You 👻",
-      "Adoption Rejected 🚫",
-      "Pet Said No 🐾",
-      "You Got Rejected by a Pixel Pet 😭"
+      "Pet Ghosted You Fr 👻",
+      "Adoption Rejected LMAO 🚫",
+      "Pet Said Nah Bruh 🐾",
+      "Rejected by Pixels 💀"
     ];
     const descriptions = [
-      "Not even pets want you right now",
-      "That pet took one look and ran",
-      "Maybe try adopting a rock instead?",
-      "The pet swiped left on you",
-      "Congratulations, you got rejected by pixels"
+      "Not even pets want you rn lmao",
+      "That pet took one look and dipped fr fr",
+      "Maybe try adopting a rock instead? No cap",
+      "The pet literally swiped left on you 😭",
+      "You got rejected by pixels, that's wild bruh"
     ];
     return {
       title: pickRandom(titles),
@@ -339,16 +339,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
 
   if (titleLower.includes('room') && (titleLower.includes('fail') || titleLower.includes('error'))) {
     const titles = [
-      "Room Rejected 🚪",
-      "No Room for You 🙅",
+      "Room Rejected LMAO 🚪",
+      "No Room for You Fr 🙅",
       "Room Creation Failed 💥",
-      "Not Happening 🛑"
+      "Not Happening Bruh 🛑"
     ];
     const descriptions = [
-      "That room name is trash, pick another",
-      "Room rejected faster than your last relationship",
-      "The room builder quit on you",
-      "Nice try, but that ain't gonna work"
+      "That room name is straight up trash, pick another lmao",
+      "Room rejected faster than your last relationship fr fr 💀",
+      "The room builder literally quit on you",
+      "Nice try but that ain't gonna work, no cap"
     ];
     return {
       title: pickRandom(titles),
@@ -358,17 +358,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
 
   if (titleLower.includes('sitter') && (titleLower.includes('fail') || titleLower.includes('error'))) {
     const titles = [
-      "Sitter Said Nope 👎",
-      "Hiring Failed 🚫",
-      "They're Too Good for You 😤",
-      "Sitter Rejected Your Offer 💀"
+      "Sitter Said Hell No 👎",
+      "Hiring Failed LMAO 🚫",
+      "They're Too Good Fr 😤",
+      "Offer Rejected 💀"
     ];
     const descriptions = [
-      "They're too expensive for your broke self",
-      "That sitter laughed at your offer",
-      "Maybe pay them better next time?",
-      "They saw your pets and ran away",
-      "Not even pet sitters want to work for you"
+      "They're too expensive for your broke self lmao",
+      "That sitter literally laughed at your offer fr fr",
+      "Maybe pay them better next time? Just saying",
+      "They saw your pets and dipped, no cap 😭",
+      "Not even pet sitters want to work for you bruh"
     ];
     return {
       title: pickRandom(titles),
@@ -381,17 +381,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
        titleLower.includes('dig') || titleLower.includes('crime') || titleLower.includes('stream') || 
        titleLower.includes('meme')) && titleLower.includes('fail')) {
     const titles = [
-      "Mission Failed 💥",
-      "You Got Fired 🔥",
-      "Boss Said No 🙅",
-      "Work Rejected You 😬"
+      "Mission Failed LMAO 💥",
+      "You Got Fired Fr 🔥",
+      "Boss Said Nah 🙅",
+      "Work Said Bye 😬"
     ];
     const descriptions = [
-      "You're on break... permanently",
-      "That was the worst performance ever",
-      "Maybe unemployment is your calling?",
-      "Your boss is disappointed (again)",
-      "You tried, I guess?"
+      "You're on break... permanently lmao",
+      "That was the worst performance ever fr fr 💀",
+      "Maybe unemployment is your calling? No cap",
+      "Your boss is disappointed (again) ngl",
+      "You tried I guess? At least you showed up"
     ];
     return {
       title: pickRandom(titles),
@@ -402,17 +402,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   // General Errors and Failures
   if (titleLower.includes('insufficient') || titleLower.includes('not enough')) {
     const titles = [
-      "You're Broke 💸",
-      "Wallet Empty 🪫",
-      "Insufficient Funds 😭",
-      "Too Poor For This 💀"
+      "You're Broke AF 💸",
+      "Wallet Empty Fr 🪫",
+      "Broke Boy Hours 😭",
+      "Too Poor LMAO 💀"
     ];
     const descriptions = [
-      "Maybe get a job?",
-      "Your wallet is crying right now",
-      "That's embarrassing, not gonna lie",
-      "Time to start grinding, chief",
-      "Money doesn't grow on trees, unfortunately"
+      "Maybe get a job? Just a thought lmao",
+      "Your wallet is literally crying rn fr fr",
+      "That's embarrassing ngl 😭",
+      "Time to start grinding chief, no cap",
+      "Money doesn't grow on trees bruh"
     ];
     return {
       title: pickRandom(titles),
@@ -422,17 +422,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
 
   if (titleLower.includes('error') || titleLower.includes('failed')) {
     const titles = [
-      "Something Broke 💥",
-      "Yikes, That Failed 😬",
-      "Error Detected 🚨",
-      "Well That Didn't Work 🤷"
+      "Something Broke LMAO 💥",
+      "That Failed Fr 😬",
+      "Error Detected Bruh 🚨",
+      "Nah That Ain't It 🤷"
     ];
     const descriptions = [
-      "Something went wrong, but we're not telling you what",
-      "The code took a break, try again later",
-      "It's broken, deal with it",
-      "Technology said 'not today'",
-      "Try again, or don't, we don't care"
+      "Something went wrong but we're not telling you what lmao",
+      "The code took a break fr, try again later",
+      "It's broken, deal with it chief 💀",
+      "Technology said 'absolutely not' rn",
+      "Try again or don't, we don't care ngl"
     ];
     return {
       title: pickRandom(titles),
@@ -443,17 +443,17 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   // Cooldowns/Waiting
   if (titleLower.includes('cooldown') || titleLower.includes('wait')) {
     const titles = [
-      "Slow Down There 🕒",
-      "Chill Out For a Sec ⏰",
-      "Patience, Young Grasshopper 🧘",
-      "Not So Fast 🛑"
+      "Slow Down Bruh 🕒",
+      "Chill Out Fr ⏰",
+      "Touch Grass 🧘",
+      "Not So Fast LMAO 🛑"
     ];
     const descriptions = [
-      "Bro, you're doing too much. Take a break",
-      "The system needs a breather from you",
-      "Calm down, you're not that important",
-      "Wait your turn like everyone else",
-      "You're being too thirsty, relax"
+      "Bro you're doing way too much rn, take a break fr",
+      "The system needs a breather from you lmao",
+      "Calm down, you're not that important no cap",
+      "Wait your turn like everyone else chief",
+      "You're being too thirsty, relax bruh 💀"
     ];
     return {
       title: pickRandom(titles),
