@@ -104,20 +104,20 @@ export default function FreemiumPage() {
     switch (reward.type) {
       case 'coins':
         return (
-          <div className="text-center py-8">
+          <div className="text-center py-8" data-testid="reward-coins">
             <div className="text-6xl mb-4 animate-bounce">💰</div>
             <h3 className="text-3xl font-bold text-accent mb-2">
               {reward.amount} Coins!
             </h3>
             <p className="text-muted-foreground">
-              Your new balance: {reward.newBalance} coins
+              Added to your balance
             </p>
           </div>
         );
       case 'item':
         return (
-          <div className="text-center py-8">
-            <div className="text-6xl mb-4 animate-bounce">✨</div>
+          <div className="text-center py-8" data-testid="reward-item">
+            <div className="text-6xl mb-4 animate-bounce">{reward.item.icon || '✨'}</div>
             <h3 className="text-3xl font-bold text-primary mb-2">
               {reward.item.name}
             </h3>
@@ -128,8 +128,8 @@ export default function FreemiumPage() {
         );
       case 'lootbox':
         return (
-          <div className="text-center py-8">
-            <div className="text-6xl mb-4 animate-bounce">📦</div>
+          <div className="text-center py-8" data-testid="reward-lootbox">
+            <div className="text-6xl mb-4 animate-bounce">{reward.item.icon || '📦'}</div>
             <h3 className="text-3xl font-bold text-secondary mb-2">
               {reward.item.name}
             </h3>
@@ -189,7 +189,7 @@ export default function FreemiumPage() {
                     <div className="card-face card-back">
                       <Card className="h-80 border-4 border-accent glow-accent bg-gradient-to-br from-primary/20 to-accent/20">
                         <CardContent className="h-full flex items-center justify-center">
-                          {selectedCard === cardIndex && reward ? (
+                          {flippedCards.includes(cardIndex) && reward ? (
                             renderReward()
                           ) : (
                             <Gift className="w-24 h-24 text-primary" />
@@ -201,21 +201,6 @@ export default function FreemiumPage() {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="text-center">
-            {flippedCards.length > 0 && (
-              <Button
-                onClick={resetCards}
-                size="lg"
-                className="font-bold"
-                data-testid="button-claim-another"
-              >
-                <Gift className="w-5 h-5 mr-2" />
-                Claim Another Reward
-              </Button>
-            )}
           </div>
 
           {/* Info Section */}
@@ -237,6 +222,49 @@ export default function FreemiumPage() {
                     <span>Rewards include coins, items, and special lootboxes!</span>
                   </li>
                 </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Reward Chances Section */}
+          <div className="mt-8 text-center">
+            <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-2">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold mb-4">Reward Chances</h3>
+                <p className="text-sm text-muted-foreground mb-4">Each card has the same odds of containing these rewards</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-coins">
+                    <div className="text-3xl mb-2">💰</div>
+                    <div className="font-bold text-accent">Coins</div>
+                    <div className="text-sm text-muted-foreground">40% chance</div>
+                    <div className="text-xs text-muted-foreground mt-1">100-500 coins</div>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-common">
+                    <div className="text-3xl mb-2">⚪</div>
+                    <div className="font-bold">Common</div>
+                    <div className="text-sm text-muted-foreground">25% chance</div>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-uncommon">
+                    <div className="text-3xl mb-2">🟢</div>
+                    <div className="font-bold text-green-500">Uncommon</div>
+                    <div className="text-sm text-muted-foreground">15% chance</div>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-rare">
+                    <div className="text-3xl mb-2">🔵</div>
+                    <div className="font-bold text-blue-500">Rare</div>
+                    <div className="text-sm text-muted-foreground">10% chance</div>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-epic">
+                    <div className="text-3xl mb-2">🟣</div>
+                    <div className="font-bold text-purple-500">Epic</div>
+                    <div className="text-sm text-muted-foreground">5% chance</div>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3" data-testid="chance-legendary">
+                    <div className="text-3xl mb-2">🟡</div>
+                    <div className="font-bold text-yellow-500">Legendary</div>
+                    <div className="text-sm text-muted-foreground">5% chance</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
