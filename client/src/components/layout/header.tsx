@@ -88,7 +88,6 @@ export default function Header() {
     { href: "/shop", label: "Shop", active: location === "/shop" },
     { href: "/inventory", label: "Inventory", active: location === "/inventory" },
     { href: "/pets", label: "Pets", active: location === "/pets" },
-    { href: "/leaderboard", label: "Leaderboard", active: location === "/leaderboard" },
   ];
 
   return (
@@ -252,6 +251,11 @@ export default function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/inventory" data-testid="menu-inventory">
                     🎒 Inventory
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/leaderboard" data-testid="menu-leaderboard">
+                    🏆 Leaderboard
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

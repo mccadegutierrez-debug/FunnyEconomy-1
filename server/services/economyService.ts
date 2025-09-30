@@ -547,6 +547,16 @@ export class EconomyService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
+    // Check if user has Fishing Rod
+    const allItems = await storage.getAllItems();
+    const fishingRod = allItems.find(item => item.name === "Fishing Rod");
+    if (fishingRod) {
+      const hasFishingRod = user.inventory.some(item => item.itemId === fishingRod.id);
+      if (!hasFishingRod) {
+        throw new Error("You need a Fishing Rod to fish! Buy one from the shop.");
+      }
+    }
+
     const now = Date.now();
     const fishCooldown = 11 * 1000; // 11 seconds
 
@@ -987,6 +997,16 @@ export class EconomyService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
+    // Check if user has Hunting Rifle
+    const allItems = await storage.getAllItems();
+    const huntingRifle = allItems.find(item => item.name === "Hunting Rifle");
+    if (huntingRifle) {
+      const hasHuntingRifle = user.inventory.some(item => item.itemId === huntingRifle.id);
+      if (!hasHuntingRifle) {
+        throw new Error("You need a Hunting Rifle to hunt! Buy one from the shop.");
+      }
+    }
+
     const now = Date.now();
     const huntCooldown = 11 * 1000; // 11 seconds
 
@@ -1007,9 +1027,9 @@ export class EconomyService {
         { name: 'Bear', coins: 400, chance: 0.25, xp: 20 }
       ],
       'dragons-lair': [
-        { name: 'Bear', coins: 400, chance: 0.4, xp: 20 },
-        { name: 'Dragon', coins: 1000, chance: 0.35, xp: 40 },
-        { name: 'Kraken', coins: 2000, chance: 0.25, xp: 60 }
+        { name: 'Bear', coins: 400, chance: 0.87, xp: 20 },
+        { name: 'Dragon', coins: 1000, chance: 0.08, xp: 40 },
+        { name: 'Kraken', coins: 2000, chance: 0.05, xp: 60 }
       ]
     };
 
@@ -1055,6 +1075,16 @@ export class EconomyService {
   static async dig(username: string, location?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
+
+    // Check if user has Shovel
+    const allItems = await storage.getAllItems();
+    const shovel = allItems.find(item => item.name === "Shovel");
+    if (shovel) {
+      const hasShovel = user.inventory.some(item => item.itemId === shovel.id);
+      if (!hasShovel) {
+        throw new Error("You need a Shovel to dig! Buy one from the shop.");
+      }
+    }
 
     const now = Date.now();
     const digCooldown = 11 * 1000; // 11 seconds

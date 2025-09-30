@@ -350,6 +350,36 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post('/api/games/lottery', requireAuth, async (req, res) => {
+    try {
+      const { bet, numbers } = req.body;
+      const result = await GameService.playLottery(req.user!.username, bet, numbers);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/games/mines', requireAuth, async (req, res) => {
+    try {
+      const { bet, tilesRevealed } = req.body;
+      const result = await GameService.playMines(req.user!.username, bet, tilesRevealed);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/games/plinko', requireAuth, async (req, res) => {
+    try {
+      const { bet, risk } = req.body;
+      const result = await GameService.playPlinko(req.user!.username, bet, risk);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   // Freemium routes
   app.get('/api/freemium/generate', requireAuth, async (req, res) => {
     try {

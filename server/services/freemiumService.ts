@@ -10,7 +10,7 @@ export class FreemiumService {
     if (!user) throw new Error("User not found");
 
     const now = Date.now();
-    const freemiumCooldown = 11 * 1000; // 11 seconds
+    const freemiumCooldown = 12 * 60 * 60 * 1000; // 12 hours
 
     if (user.lastFreemiumClaim) {
       const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();

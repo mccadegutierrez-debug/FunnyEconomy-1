@@ -298,30 +298,34 @@ export class DatabaseStorage implements IStorage {
     const sampleItems = [
       // Tools (Equipment that provides passive benefits)
       {
-        name: "Fishing Rod",
-        description: "Passive +50 coins/hour",
-        price: 5000,
+        name: "Shovel",
+        description: "A sturdy shovel for digging. Required to dig for treasure!",
+        price: 500,
         type: 'tool' as const,
         rarity: 'common' as const,
-        effects: {
-          passive: { winRateBoost: 0, coinsPerHour: 50 },
-          active: { useCooldown: 0, duration: 0, effect: "" }
-        },
+        effects: {},
         stock: 2147483647,
-        currentPrice: 5000
+        currentPrice: 500
+      },
+      {
+        name: "Fishing Rod",
+        description: "A reliable fishing rod. Required to catch fish!",
+        price: 750,
+        type: 'tool' as const,
+        rarity: 'common' as const,
+        effects: {},
+        stock: 2147483647,
+        currentPrice: 750
       },
       {
         name: "Hunting Rifle",
-        description: "Passive +75 coins/hour, +5% gambling luck",
-        price: 8000,
+        description: "A powerful hunting rifle. Required to hunt animals!",
+        price: 1200,
         type: 'tool' as const,
         rarity: 'uncommon' as const,
-        effects: {
-          passive: { winRateBoost: 5, coinsPerHour: 75 },
-          active: { useCooldown: 0, duration: 0, effect: "" }
-        },
+        effects: {},
         stock: 2147483647,
-        currentPrice: 8000
+        currentPrice: 1200
       },
       {
         name: "Laptop",

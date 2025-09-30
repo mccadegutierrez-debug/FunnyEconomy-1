@@ -9,6 +9,9 @@ import Trivia from "@/components/games/trivia";
 import Dice from "@/components/games/dice";
 import Roulette from "@/components/games/roulette";
 import Crash from "@/components/games/crash";
+import Lottery from "@/components/games/lottery";
+import Mines from "@/components/games/mines";
+import Plinko from "@/components/games/plinko";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +90,36 @@ export default function GamesPage() {
       maxBet: 0,
       component: Trivia,
       color: "primary"
+    },
+    {
+      id: "lottery",
+      name: "LOTTERY",
+      icon: "🎟️",
+      description: "Pick your lucky numbers!",
+      minBet: 10,
+      maxBet: 10000,
+      component: Lottery,
+      color: "primary"
+    },
+    {
+      id: "mines",
+      name: "MINES",
+      icon: "💣",
+      description: "Avoid the mines!",
+      minBet: 10,
+      maxBet: 10000,
+      component: Mines,
+      color: "secondary"
+    },
+    {
+      id: "plinko",
+      name: "PLINKO",
+      icon: "🎯",
+      description: "Drop the ball!",
+      minBet: 10,
+      maxBet: 10000,
+      component: Plinko,
+      color: "accent"
     }
   ];
 
@@ -229,6 +262,27 @@ export default function GamesPage() {
                   <div className="font-bold text-primary">Trivia</div>
                   <div className="text-sm text-muted-foreground">
                     W: {(user.gameStats as any)?.triviaWins || 0} / L: {(user.gameStats as any)?.triviaLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🎟️</div>
+                  <div className="font-bold text-primary">Lottery</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.lotteryWins || 0} / L: {(user.gameStats as any)?.lotteryLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">💣</div>
+                  <div className="font-bold text-secondary">Mines</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.minesWins || 0} / L: {(user.gameStats as any)?.minesLosses || 0}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl mb-2">🎯</div>
+                  <div className="font-bold text-accent">Plinko</div>
+                  <div className="text-sm text-muted-foreground">
+                    W: {(user.gameStats as any)?.plinkoWins || 0} / L: {(user.gameStats as any)?.plinkoLosses || 0}
                   </div>
                 </div>
               </div>

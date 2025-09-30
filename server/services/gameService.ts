@@ -445,6 +445,246 @@ export class GameService {
     };
   }
 
+  // Lottery game - pick 5 numbers (1-50), match winning numbers
+  static async playLottery(username: string, bet: number, numbers: number[]) {
+    const user = await storage.getUserByUsername(username);
+    if (!user) throw new Error("User not found");
+
+    if (bet < 10 || bet > 10000) {
+      throw new Error("Bet must be between 10 and 10,000 coins");
+    }
+
+    if (user.coins < bet) {
+      throw new Error("Insufficient coins");
+    }
+
+    if (!numbers || numbers.length !== 5) {
+      throw new Error("You must pick exactly 5 numbers");
+    }
+
+    // Validate numbers are between 1-50 and unique
+    if (numbers.some(n => n < 1 || n > 50)) {
+      throw new Error("Numbers must be between 1 and 50");
+    }
+
+    if (new Set(numbers).size !== 5) {
+      throw new Error("Numbers must be unique");
+    }
+
+    // Generate 5 random winning numbers
+    const winningNumbers: number[] = [];
+    while (winningNumbers.length < 5) {
+      const num = (this.getSecureRandom() % 50) + 1;
+      if (!winningNumbers.includes(num)) {
+        winningNumbers.push(num);
+      }
+    }
+
+    // Count matches
+    const matches = numbers.filter(n => winningNumbers.includes(n)).length;
+    
+    let multiplier = 0;
+    let win = false;
+    
+    if (matches === 5) {
+      multiplier = 100; // 100x for all 5 matches
+      win = true;
+    } else if (matches === 4) {
+      multiplier = 10; // 10x for 4 matches
+      win = true;
+    } else if (matches === 3) {
+      multiplier = 2; // 2x for 3 matches
+      win = true;
+    }
+
+    const amount = win ? bet * multiplier - bet : -bet;
+    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+
+    await storage.updateUser(user.id, {
+      coins: user.coins + amount,
+      gameStats: {
+        ...gameStats,
+        lotteryWins: (gameStats.lotteryWins || 0) + (win ? 1 : 0),
+        lotteryLosses: (gameStats.lotteryLosses || 0) + (win ? 0 : 1)
+      }
+    });
+
+    await storage.createTransaction({
+      user: username,
+      type: win ? 'earn' : 'spend',
+      amount: Math.abs(amount),
+      targetUser: null,
+      description: `Lottery ${win ? 'win' : 'loss'}: ${matches} matches (${multiplier}x)`
+    });
+
+    return {
+      win,
+      amount,
+      matches,
+      multiplier,
+      playerNumbers: numbers,
+      winningNumbers,
+      newBalance: user.coins + amount
+    };
+  }
+
+  // Mines game - 5x5 grid with 5 mines, reveal tiles one by one
+  static async playMines(username: string, bet: number, tilesRevealed: number) {
+    const user = await storage.getUserByUsername(username);
+    if (!user) throw new Error("User not found");
+
+    if (bet < 10 || bet > 10000) {
+      throw new Error("Bet must be between 10 and 10,000 coins");
+    }
+
+    if (user.coins < bet) {
+      throw new Error("Insufficient coins");
+    }
+
+    if (tilesRevealed < 1 || tilesRevealed > 20) {
+      throw new Error("Must reveal between 1 and 20 tiles");
+    }
+
+    // Generate mine positions (5 mines in 25 tiles)
+    const minePositions: number[] = [];
+    while (minePositions.length < 5) {
+      const pos = this.getSecureRandom() % 25;
+      if (!minePositions.includes(pos)) {
+        minePositions.push(pos);
+      }
+    }
+
+    // Simulate revealing tiles
+    const revealedPositions: number[] = [];
+    let hitMine = false;
+    
+    for (let i = 0; i < tilesRevealed; i++) {
+      let pos = this.getSecureRandom() % 25;
+      let attempts = 0;
+      
+      // Find an unrevealed position
+      while (revealedPositions.includes(pos) && attempts < 100) {
+        pos = this.getSecureRandom() % 25;
+        attempts++;
+      }
+      
+      revealedPositions.push(pos);
+      
+      // Check if hit a mine
+      if (minePositions.includes(pos)) {
+        hitMine = true;
+        break;
+      }
+    }
+
+    const win = !hitMine;
+    // Each safe tile = 1.2x multiplier compounded
+    const multiplier = win ? Math.pow(1.2, revealedPositions.length) : 0;
+    const amount = win ? Math.floor(bet * multiplier) - bet : -bet;
+
+    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+
+    await storage.updateUser(user.id, {
+      coins: user.coins + amount,
+      gameStats: {
+        ...gameStats,
+        minesWins: (gameStats.minesWins || 0) + (win ? 1 : 0),
+        minesLosses: (gameStats.minesLosses || 0) + (win ? 0 : 1)
+      }
+    });
+
+    await storage.createTransaction({
+      user: username,
+      type: win ? 'earn' : 'spend',
+      amount: Math.abs(amount),
+      targetUser: null,
+      description: `Mines ${win ? 'win' : 'loss'}: ${revealedPositions.length} tiles (${multiplier.toFixed(2)}x)`
+    });
+
+    return {
+      win,
+      amount,
+      tilesRevealed: revealedPositions.length,
+      multiplier: parseFloat(multiplier.toFixed(2)),
+      minePositions,
+      revealedPositions,
+      hitMine,
+      newBalance: user.coins + amount
+    };
+  }
+
+  // Plinko game - ball drops through pegs with different risk levels
+  static async playPlinko(username: string, bet: number, risk: 'low' | 'medium' | 'high') {
+    const user = await storage.getUserByUsername(username);
+    if (!user) throw new Error("User not found");
+
+    if (bet < 10 || bet > 10000) {
+      throw new Error("Bet must be between 10 and 10,000 coins");
+    }
+
+    if (user.coins < bet) {
+      throw new Error("Insufficient coins");
+    }
+
+    if (!['low', 'medium', 'high'].includes(risk)) {
+      throw new Error("Risk must be low, medium, or high");
+    }
+
+    // Define multiplier distributions based on risk level
+    // 9 slots for plinko landing positions
+    const multipliers = {
+      low: [1.5, 1.3, 1.1, 1.0, 0.9, 1.0, 1.1, 1.3, 1.5],
+      medium: [3.0, 2.0, 1.5, 1.0, 0.5, 1.0, 1.5, 2.0, 3.0],
+      high: [10.0, 5.0, 2.0, 1.0, 0.5, 1.0, 2.0, 5.0, 10.0]
+    };
+
+    // Simulate ball drop (weighted towards center)
+    const random = this.getSecureRandom() % 10000;
+    let slotIndex: number;
+    
+    if (random < 1000) slotIndex = 0; // 10%
+    else if (random < 2500) slotIndex = 1; // 15%
+    else if (random < 4500) slotIndex = 2; // 20%
+    else if (random < 6500) slotIndex = 3; // 20%
+    else if (random < 7500) slotIndex = 4; // 10%
+    else if (random < 8500) slotIndex = 5; // 10%
+    else if (random < 9000) slotIndex = 6; // 5%
+    else if (random < 9500) slotIndex = 7; // 5%
+    else slotIndex = 8; // 5%
+
+    const multiplier = multipliers[risk][slotIndex];
+    const win = multiplier >= 1.0;
+    const amount = Math.floor(bet * multiplier) - bet;
+
+    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+
+    await storage.updateUser(user.id, {
+      coins: user.coins + amount,
+      gameStats: {
+        ...gameStats,
+        plinkoWins: (gameStats.plinkoWins || 0) + (win ? 1 : 0),
+        plinkoLosses: (gameStats.plinkoLosses || 0) + (win ? 0 : 1)
+      }
+    });
+
+    await storage.createTransaction({
+      user: username,
+      type: win ? 'earn' : 'spend',
+      amount: Math.abs(amount),
+      targetUser: null,
+      description: `Plinko ${win ? 'win' : 'loss'}: ${risk} risk, slot ${slotIndex} (${multiplier}x)`
+    });
+
+    return {
+      win,
+      amount,
+      multiplier,
+      slotIndex,
+      risk,
+      newBalance: user.coins + amount
+    };
+  }
+
   // Helper methods
   private static getRandomCardValue(): number {
     // Simplified blackjack - return value between 15-25
