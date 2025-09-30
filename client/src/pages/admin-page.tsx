@@ -32,7 +32,13 @@ export default function AdminPage() {
     price: "",
     type: "tool",
     rarity: "common",
-    stock: ""
+    stock: "",
+    effects: {
+      passive: { winRateBoost: 0, coinsPerHour: 0 },
+      active: { useCooldown: 0, duration: 0, effect: "" }
+    },
+    lootboxContents: [] as { itemName: string; rarity: string; chance: number }[],
+    consumableEffect: { type: "", magnitude: 0, duration: 0 }
   });
   const [adminKey, setAdminKey] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(true);
@@ -54,8 +60,9 @@ export default function AdminPage() {
     rarity: "common",
     adoptionCost: "",
     hungerDecay: "",
-    happinessDecay: "",
-    energyDecay: ""
+    hygieneDecay: "",
+    energyDecay: "",
+    funDecay: ""
   });
   const { toast } = useToast();
 
@@ -318,8 +325,9 @@ export default function AdminPage() {
           rarity: petData.rarity,
           adoptionCost: parseInt(petData.adoptionCost),
           hungerDecay: parseInt(petData.hungerDecay),
-          happinessDecay: parseInt(petData.happinessDecay),
-          energyDecay: parseInt(petData.energyDecay)
+          hygieneDecay: parseInt(petData.hygieneDecay),
+          energyDecay: parseInt(petData.energyDecay),
+          funDecay: parseInt(petData.funDecay)
         }
       });
       return res.json();
@@ -336,8 +344,9 @@ export default function AdminPage() {
         rarity: "common",
         adoptionCost: "",
         hungerDecay: "",
-        happinessDecay: "",
-        energyDecay: ""
+        hygieneDecay: "",
+        energyDecay: "",
+        funDecay: ""
       });
     },
     onError: (error: Error) => {
@@ -351,6 +360,17 @@ export default function AdminPage() {
 
   const createItemMutation = useMutation({
     mutationFn: async (itemData: any) => {
+      const effectsData: any = {
+        passive: itemData.effects.passive,
+        active: itemData.effects.active
+      };
+      
+      if (itemData.type === 'lootbox') {
+        effectsData.lootboxContents = itemData.lootboxContents;
+      } else if (itemData.type === 'consumable') {
+        effectsData.consumableEffect = itemData.consumableEffect;
+      }
+      
       const res = await apiRequest("POST", "/api/admin/items", {
         body: {
           name: itemData.name,
@@ -360,10 +380,7 @@ export default function AdminPage() {
           type: itemData.type,
           rarity: itemData.rarity,
           currentPrice: parseFloat(itemData.price) || 0,
-          effects: {
-            passive: { winRateBoost: 0, coinsPerHour: 0 },
-            active: { useCooldown: 0, duration: 0, effect: "" }
-          }
+          effects: effectsData
         }
       });
       return res.json();
@@ -379,7 +396,13 @@ export default function AdminPage() {
         price: "",
         type: "tool",
         rarity: "common",
-        stock: ""
+        stock: "",
+        effects: {
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "" }
+        },
+        lootboxContents: [],
+        consumableEffect: { type: "", magnitude: 0, duration: 0 }
       });
       setShowItemDialog(false);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] });
@@ -1081,7 +1104,13 @@ export default function AdminPage() {
                             price: "",
                             type: "tool",
                             rarity: "common",
-                            stock: ""
+                            stock: "",
+                            effects: {
+                              passive: { winRateBoost: 0, coinsPerHour: 0 },
+                              active: { useCooldown: 0, duration: 0, effect: "" }
+                            },
+                            lootboxContents: [],
+                            consumableEffect: { type: "", magnitude: 0, duration: 0 }
                           });
                         }} data-testid="button-create-item">
                           <Plus className="w-4 h-4 mr-2" />
@@ -1174,7 +1203,13 @@ export default function AdminPage() {
                                   price: item.currentPrice?.toString() || item.price?.toString(),
                                   type: item.type,
                                   rarity: item.rarity,
-                                  stock: item.stock === 2147483647 ? "999999" : item.stock?.toString()
+                                  stock: item.stock === 2147483647 ? "999999" : item.stock?.toString(),
+                                  effects: item.effects || {
+                                    passive: { winRateBoost: 0, coinsPerHour: 0 },
+                                    active: { useCooldown: 0, duration: 0, effect: "" }
+                                  },
+                                  lootboxContents: item.effects?.lootboxContents || [],
+                                  consumableEffect: item.effects?.consumableEffect || { type: "", magnitude: 0, duration: 0 }
                                 });
                                 setShowItemDialog(true);
                               }}
@@ -1455,8 +1490,9 @@ export default function AdminPage() {
                         rarity: "common",
                         adoptionCost: "",
                         hungerDecay: "",
-                        happinessDecay: "",
-                        energyDecay: ""
+                        hygieneDecay: "",
+                        energyDecay: "",
+                        funDecay: ""
                       });
                     }} data-testid="button-create-pet">
                       <Plus className="w-4 h-4 mr-2" />
@@ -1478,9 +1514,10 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground">
-                      <p>Hunger decay: {pet.hungerDecay}/hour</p>
-                      <p>Happiness decay: {pet.happinessDecay}/hour</p>
-                      <p>Energy decay: {pet.energyDecay}/hour</p>
+                      <p>Hunger decay: {pet.hungerDecay}h</p>
+                      <p>Hygiene decay: {pet.hygieneDecay}h</p>
+                      <p>Energy decay: {pet.energyDecay}h</p>
+                      <p>Fun decay: {pet.funDecay}h</p>
                     </div>
                   </Card>
                 ))}
@@ -1821,6 +1858,134 @@ export default function AdminPage() {
                   </Select>
                 </div>
               </div>
+
+              {/* Type-specific fields */}
+              {newItem.type === 'lootbox' && (
+                <div className="space-y-3 p-3 border rounded-md bg-muted/50">
+                  <Label className="text-sm font-semibold">Lootbox Configuration</Label>
+                  <p className="text-xs text-muted-foreground">Configure items and drop chances (stored in effects.lootboxContents)</p>
+                  <Textarea
+                    placeholder='e.g., [{"itemName": "Gold Coin", "rarity": "common", "chance": 50}, {"itemName": "Diamond", "rarity": "rare", "chance": 10}]'
+                    value={JSON.stringify(newItem.lootboxContents, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        setNewItem({ ...newItem, lootboxContents: parsed });
+                      } catch {}
+                    }}
+                    rows={4}
+                    data-testid="textarea-lootbox-contents"
+                  />
+                </div>
+              )}
+
+              {newItem.type === 'consumable' && (
+                <div className="space-y-3 p-3 border rounded-md bg-muted/50">
+                  <Label className="text-sm font-semibold">Consumable Effects</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label htmlFor="consumable-type" className="text-xs">Effect Type</Label>
+                      <Input
+                        id="consumable-type"
+                        value={newItem.consumableEffect.type}
+                        onChange={(e) => setNewItem({ ...newItem, consumableEffect: { ...newItem.consumableEffect, type: e.target.value }})}
+                        placeholder="e.g., heal, boost"
+                        data-testid="input-consumable-type"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="consumable-magnitude" className="text-xs">Magnitude</Label>
+                      <Input
+                        id="consumable-magnitude"
+                        type="number"
+                        value={newItem.consumableEffect.magnitude}
+                        onChange={(e) => setNewItem({ ...newItem, consumableEffect: { ...newItem.consumableEffect, magnitude: parseInt(e.target.value) || 0 }})}
+                        placeholder="e.g., 50"
+                        data-testid="input-consumable-magnitude"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="consumable-duration" className="text-xs">Duration (sec)</Label>
+                      <Input
+                        id="consumable-duration"
+                        type="number"
+                        value={newItem.consumableEffect.duration}
+                        onChange={(e) => setNewItem({ ...newItem, consumableEffect: { ...newItem.consumableEffect, duration: parseInt(e.target.value) || 0 }})}
+                        placeholder="e.g., 3600"
+                        data-testid="input-consumable-duration"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(newItem.type === 'tool' || newItem.type === 'powerup') && (
+                <div className="space-y-3 p-3 border rounded-md bg-muted/50">
+                  <Label className="text-sm font-semibold">Item Effects</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Passive Effects</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="win-rate-boost" className="text-xs">Win Rate Boost (%)</Label>
+                        <Input
+                          id="win-rate-boost"
+                          type="number"
+                          value={newItem.effects.passive.winRateBoost}
+                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, passive: { ...newItem.effects.passive, winRateBoost: parseInt(e.target.value) || 0 }}})}
+                          placeholder="0"
+                          data-testid="input-win-rate-boost"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="coins-per-hour" className="text-xs">Coins Per Hour</Label>
+                        <Input
+                          id="coins-per-hour"
+                          type="number"
+                          value={newItem.effects.passive.coinsPerHour}
+                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, passive: { ...newItem.effects.passive, coinsPerHour: parseInt(e.target.value) || 0 }}})}
+                          placeholder="0"
+                          data-testid="input-coins-per-hour"
+                        />
+                      </div>
+                    </div>
+                    <Label className="text-xs mt-2">Active Effects</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label htmlFor="effect-text" className="text-xs">Effect</Label>
+                        <Input
+                          id="effect-text"
+                          value={newItem.effects.active.effect}
+                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, active: { ...newItem.effects.active, effect: e.target.value }}})}
+                          placeholder="e.g., double_coins"
+                          data-testid="input-effect-text"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="effect-duration" className="text-xs">Duration (sec)</Label>
+                        <Input
+                          id="effect-duration"
+                          type="number"
+                          value={newItem.effects.active.duration}
+                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, active: { ...newItem.effects.active, duration: parseInt(e.target.value) || 0 }}})}
+                          placeholder="0"
+                          data-testid="input-effect-duration"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="use-cooldown" className="text-xs">Cooldown (sec)</Label>
+                        <Input
+                          id="use-cooldown"
+                          type="number"
+                          value={newItem.effects.active.useCooldown}
+                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, active: { ...newItem.effects.active, useCooldown: parseInt(e.target.value) || 0 }}})}
+                          placeholder="0"
+                          data-testid="input-use-cooldown"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="flex space-x-2">
                 <Button
                   onClick={() => {
@@ -1853,7 +2018,13 @@ export default function AdminPage() {
                       price: "",
                       type: "tool",
                       rarity: "common",
-                      stock: ""
+                      stock: "",
+                      effects: {
+                        passive: { winRateBoost: 0, coinsPerHour: 0 },
+                        active: { useCooldown: 0, duration: 0, effect: "" }
+                      },
+                      lootboxContents: [],
+                      consumableEffect: { type: "", magnitude: 0, duration: 0 }
                     });
                   }}
                   data-testid="button-cancel-item"
@@ -1998,7 +2169,7 @@ export default function AdminPage() {
               </div>
               <div className="space-y-2">
                 <Label>Decay Rates (per hour)</Label>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="pet-hunger-decay" className="text-sm">Hunger Decay</Label>
                     <Input
@@ -2006,23 +2177,23 @@ export default function AdminPage() {
                       type="number"
                       value={newPet.hungerDecay}
                       onChange={(e) => setNewPet({ ...newPet, hungerDecay: e.target.value })}
-                      placeholder="10"
+                      placeholder="12"
                       min="0"
                       max="100"
                       data-testid="input-pet-hunger-decay"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="pet-happiness-decay" className="text-sm">Happiness Decay</Label>
+                    <Label htmlFor="pet-hygiene-decay" className="text-sm">Hygiene Decay</Label>
                     <Input
-                      id="pet-happiness-decay"
+                      id="pet-hygiene-decay"
                       type="number"
-                      value={newPet.happinessDecay}
-                      onChange={(e) => setNewPet({ ...newPet, happinessDecay: e.target.value })}
-                      placeholder="5"
+                      value={newPet.hygieneDecay}
+                      onChange={(e) => setNewPet({ ...newPet, hygieneDecay: e.target.value })}
+                      placeholder="18"
                       min="0"
                       max="100"
-                      data-testid="input-pet-happiness-decay"
+                      data-testid="input-pet-hygiene-decay"
                     />
                   </div>
                   <div>
@@ -2032,10 +2203,23 @@ export default function AdminPage() {
                       type="number"
                       value={newPet.energyDecay}
                       onChange={(e) => setNewPet({ ...newPet, energyDecay: e.target.value })}
-                      placeholder="8"
+                      placeholder="24"
                       min="0"
                       max="100"
                       data-testid="input-pet-energy-decay"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pet-fun-decay" className="text-sm">Fun Decay</Label>
+                    <Input
+                      id="pet-fun-decay"
+                      type="number"
+                      value={newPet.funDecay}
+                      onChange={(e) => setNewPet({ ...newPet, funDecay: e.target.value })}
+                      placeholder="12"
+                      min="0"
+                      max="100"
+                      data-testid="input-pet-fun-decay"
                     />
                   </div>
                 </div>
@@ -2048,12 +2232,14 @@ export default function AdminPage() {
                     !newPet.emoji.trim() ||
                     !newPet.adoptionCost ||
                     !newPet.hungerDecay ||
-                    !newPet.happinessDecay ||
+                    !newPet.hygieneDecay ||
                     !newPet.energyDecay ||
+                    !newPet.funDecay ||
                     parseInt(newPet.adoptionCost) < 0 ||
                     parseInt(newPet.hungerDecay) < 0 ||
-                    parseInt(newPet.happinessDecay) < 0 ||
+                    parseInt(newPet.hygieneDecay) < 0 ||
                     parseInt(newPet.energyDecay) < 0 ||
+                    parseInt(newPet.funDecay) < 0 ||
                     createPetMutation.isPending
                   }
                   data-testid="button-save-pet"
@@ -2070,8 +2256,9 @@ export default function AdminPage() {
                       rarity: "common",
                       adoptionCost: "",
                       hungerDecay: "",
-                      happinessDecay: "",
-                      energyDecay: ""
+                      hygieneDecay: "",
+                      energyDecay: "",
+                      funDecay: ""
                     });
                   }}
                   data-testid="button-cancel-pet"

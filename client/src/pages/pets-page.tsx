@@ -99,6 +99,16 @@ export default function PetsPage() {
     enabled: !!user,
   });
 
+  // Fetch all available pets (static + custom)
+  const { data: availablePets = [] } = useQuery({
+    queryKey: ['/api/pets/available'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/pets/available');
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
   // Adopt pet mutation
   const adoptPetMutation = useMutation({
     mutationFn: async (petId: string) => {
@@ -250,7 +260,7 @@ export default function PetsPage() {
   });
 
   // Filter pets based on search and rarity
-  const filteredPets = AVAILABLE_PETS.filter(pet => {
+  const filteredPets = availablePets.filter((pet: any) => {
     const matchesSearch = pet.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRarity = selectedRarity === 'all' || pet.rarity === selectedRarity;
     return matchesSearch && matchesRarity;
@@ -419,10 +429,12 @@ export default function PetsPage() {
                         </Badge>
                       )}
                       {pet.thawingUntil && new Date() < new Date(pet.thawingUntil) && (
-                        <Badge variant="outline" className="w-full mb-2">
-                          <Clock className="w-3 h-3 mr-1" />
-                          Thawing... {getHoursRemaining(pet.thawingUntil)}h left
-                        </Badge>
+                        <>
+                          <Badge variant="outline" className="w-full mb-2">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Thawing... {getHoursRemaining(pet.thawingUntil)}h left
+                          </Badge>
+                        </>
                       )}
                       {(pet.huntingUntil && new Date() < new Date(pet.huntingUntil)) && (
                         <Badge variant="outline" className="w-full mb-2">
@@ -746,7 +758,7 @@ export default function PetsPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {filteredPets.map((pet) => {
+            {filteredPets.map((pet: any) => {
               const isOwned = userPets.some(userPet => userPet.petId === pet.id);
               
               return (

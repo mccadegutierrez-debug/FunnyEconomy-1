@@ -15,7 +15,7 @@ export default function FreemiumPage() {
   const { toast } = useToast();
 
   // Fetch or generate rewards
-  const { data: rewardsData, isLoading, refetch } = useQuery({
+  const { data: rewardsData, isLoading, error, refetch } = useQuery({
     queryKey: ["/api/freemium/pending"],
     queryFn: async () => {
       // First check for pending rewards
@@ -26,13 +26,18 @@ export default function FreemiumPage() {
         return pendingData.rewards;
       }
       
-      // If no pending rewards, generate new ones
+      // If no pending rewards, try to generate new ones
       const generateRes = await apiRequest("GET", "/api/freemium/generate");
+      if (!generateRes.ok) {
+        const errorData = await generateRes.json();
+        throw new Error(errorData.error || "Failed to generate rewards");
+      }
       const generateData = await generateRes.json();
       return generateData.rewards;
     },
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    retry: false,
   });
 
   const rewards = rewardsData || [];
@@ -75,6 +80,7 @@ export default function FreemiumPage() {
       }, 3000);
     },
     onError: (error: Error) => {
+      setSelectedRewardIndex(null);
       toast({
         title: "Claim Failed",
         description: error.message,
@@ -97,6 +103,16 @@ export default function FreemiumPage() {
       toast({
         title: "Flip all cards first",
         description: "You must flip all 3 cards before selecting a reward",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if rewards exist before claiming
+    if (!rewards || rewards.length === 0) {
+      toast({
+        title: "No rewards available",
+        description: "Please wait for the page to load rewards",
         variant: "destructive",
       });
       return;
@@ -162,6 +178,29 @@ export default function FreemiumPage() {
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <div className="text-2xl">Loading rewards...</div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <Card className="p-8">
+              <div className="text-6xl mb-4">⏰</div>
+              <h2 className="text-3xl font-bold mb-4">Rewards On Cooldown</h2>
+              <p className="text-xl text-muted-foreground mb-6">
+                {(error as Error).message || "You need to wait before claiming more rewards."}
+              </p>
+              <Button onClick={() => refetch()} data-testid="button-retry-rewards">
+                Check Again
+              </Button>
+            </Card>
           </div>
         </main>
         <Footer />
