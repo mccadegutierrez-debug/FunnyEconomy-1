@@ -6,6 +6,13 @@ interface FriendlyMessage {
 }
 
 /**
+ * Picks a random item from an array
+ */
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/**
  * Transforms technical notification messages into user-friendly language
  * that basic users can easily understand
  */
@@ -21,9 +28,21 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   }
   
   if (titleLower.includes('deposit failed')) {
+    const titles = [
+      "Bank Said Nope 💸",
+      "Deposit Rejected 🚫",
+      "Your Money Got Lost 😬",
+      "Bank Machine Broke 🔨"
+    ];
+    const descriptions = [
+      "The bank looked at your coins and said 'nah'",
+      "Your deposit ghosted harder than your ex",
+      "The vault door slammed in your face",
+      "Even the ATM is laughing at you right now"
+    ];
     return {
-      title: "Couldn't Save Money 😕",
-      description: "Something went wrong while trying to save your coins. Please try again!"
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
@@ -35,9 +54,21 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   }
   
   if (titleLower.includes('withdrawal failed')) {
+    const titles = [
+      "Withdrawal Denied 🚨",
+      "Bank Said No 🙅",
+      "Money Machine Broke 💔",
+      "Access Denied 🔐"
+    ];
+    const descriptions = [
+      "The vault laughed and slammed shut",
+      "You're broke, what did you expect?",
+      "The bank is keeping your coins hostage",
+      "Nice try, but the money's staying put"
+    ];
     return {
-      title: "Couldn't Get Money 😕",
-      description: "Something went wrong while trying to get your coins. Please try again!"
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
@@ -49,9 +80,21 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   }
   
   if (titleLower.includes('transfer failed')) {
+    const titles = [
+      "Transfer Rejected 🚫",
+      "Money Vanished 👻",
+      "Payment Blocked 🛑",
+      "Transaction Denied ❌"
+    ];
+    const descriptions = [
+      "That username doesn't exist (unlike your problems)",
+      "Your coins got lost in the void",
+      "The recipient blocked you before you could send",
+      "Money doesn't grow on trees, and it doesn't travel either"
+    ];
     return {
-      title: "Couldn't Send Money 😕",
-      description: "Something went wrong while trying to send coins. Please check the username and try again!"
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
@@ -64,9 +107,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   }
   
   if (titleLower.includes('rob failed')) {
+    const titles = [
+      "Got Caught Red-Handed 👮",
+      "Heist Failed Miserably 🚔",
+      "You're a Terrible Thief 🤡",
+      "Busted! 🚨"
+    ];
+    const descriptions = [
+      "Smooth criminal you are NOT",
+      "They saw you coming from a mile away",
+      "Maybe crime isn't your calling",
+      "Get rekt, amateur hour is over",
+      "You couldn't steal candy from a baby"
+    ];
     return {
-      title: "Steal Failed 😔",
-      description: "Your attempt didn't work this time. Better luck next time!"
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
@@ -79,9 +135,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   }
   
   if (titleLower.includes('blackjack loss')) {
+    const titles = [
+      "Blackjack Said No 🃏",
+      "Dealer Destroyed You 💀",
+      "Cards Weren't in Your Favor 😬",
+      "L + Ratio 📉"
+    ];
+    const descriptions = [
+      "Get wrecked, the house always wins",
+      "Maybe stick to Uno?",
+      "That was embarrassing to watch",
+      "Skill issue detected",
+      "The cards literally hate you"
+    ];
     return {
-      title: "Card Game Loss 😔",
-      description: "You didn't win this time, but keep trying! Practice makes perfect!"
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
@@ -93,9 +162,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   }
   
   if (titleLower.includes('slots loss')) {
+    const titles = [
+      "Slots Said Nope 🎰",
+      "Machine Ate Your Coins 💸",
+      "Big Fat L 😂",
+      "Not Even Close 🙅"
+    ];
+    const descriptions = [
+      "The machine is literally mocking you",
+      "Your luck ran out faster than your wallet",
+      "Maybe gambling isn't your thing",
+      "That was painful to watch, not gonna lie",
+      "The slots just laughed at your bet"
+    ];
     return {
-      title: "Slot Machine Loss 😔",
-      description: "The slot machine didn't pay out this time. Try again!"
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
@@ -107,9 +189,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   }
   
   if (titleLower.includes('coinflip loss')) {
+    const titles = [
+      "Wrong Side 🪙",
+      "Coin Hates You 😤",
+      "50/50 and You Lost 💀",
+      "Flipped and Flopped 🤦"
+    ];
+    const descriptions = [
+      "It's literally a coin flip and you still lost",
+      "The coin said 'not today'",
+      "How do you lose a 50/50? Impressive",
+      "Maybe try rock-paper-scissors instead",
+      "That coin has beef with you personally"
+    ];
     return {
-      title: "Coin Toss Loss 😔",
-      description: description || "The coin didn't land your way this time. Try again!"
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
@@ -122,9 +217,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
   }
   
   if (titleLower.includes('wrong answer')) {
+    const titles = [
+      "Big Brain Moment... NOT 🧠",
+      "Wrong Answer 🚫",
+      "Intelligence -100 🤡",
+      "Not Even Close 😬"
+    ];
+    const descriptions = [
+      "That answer was wild, bro",
+      "Did you even read the question?",
+      "Your brain took a day off, huh?",
+      "Maybe Google it next time?",
+      "Not your best moment, chief"
+    ];
     return {
-      title: "Oops, Wrong Answer 😅",
-      description: description || "That wasn't quite right. You'll get it next time!"
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
@@ -208,19 +316,148 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
     };
   }
   
-  // Errors and Failures
-  if (titleLower.includes('error') || titleLower.includes('failed')) {
+  // Pet-specific failures
+  if (titleLower.includes('adoption') && titleLower.includes('fail')) {
+    const titles = [
+      "Pet Ghosted You 👻",
+      "Adoption Rejected 🚫",
+      "Pet Said No 🐾",
+      "You Got Rejected by a Pixel Pet 😭"
+    ];
+    const descriptions = [
+      "Not even pets want you right now",
+      "That pet took one look and ran",
+      "Maybe try adopting a rock instead?",
+      "The pet swiped left on you",
+      "Congratulations, you got rejected by pixels"
+    ];
     return {
-      title: "Something Went Wrong 😕",
-      description: "There was a problem, but don't worry! Please try again in a moment."
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+
+  if (titleLower.includes('room') && (titleLower.includes('fail') || titleLower.includes('error'))) {
+    const titles = [
+      "Room Rejected 🚪",
+      "No Room for You 🙅",
+      "Room Creation Failed 💥",
+      "Not Happening 🛑"
+    ];
+    const descriptions = [
+      "That room name is trash, pick another",
+      "Room rejected faster than your last relationship",
+      "The room builder quit on you",
+      "Nice try, but that ain't gonna work"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+
+  if (titleLower.includes('sitter') && (titleLower.includes('fail') || titleLower.includes('error'))) {
+    const titles = [
+      "Sitter Said Nope 👎",
+      "Hiring Failed 🚫",
+      "They're Too Good for You 😤",
+      "Sitter Rejected Your Offer 💀"
+    ];
+    const descriptions = [
+      "They're too expensive for your broke self",
+      "That sitter laughed at your offer",
+      "Maybe pay them better next time?",
+      "They saw your pets and ran away",
+      "Not even pet sitters want to work for you"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+
+  // Work/Economy failures  
+  if ((titleLower.includes('work') || titleLower.includes('fish') || titleLower.includes('hunt') || 
+       titleLower.includes('dig') || titleLower.includes('crime') || titleLower.includes('stream') || 
+       titleLower.includes('meme')) && titleLower.includes('fail')) {
+    const titles = [
+      "Mission Failed 💥",
+      "You Got Fired 🔥",
+      "Boss Said No 🙅",
+      "Work Rejected You 😬"
+    ];
+    const descriptions = [
+      "You're on break... permanently",
+      "That was the worst performance ever",
+      "Maybe unemployment is your calling?",
+      "Your boss is disappointed (again)",
+      "You tried, I guess?"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+
+  // General Errors and Failures
+  if (titleLower.includes('insufficient') || titleLower.includes('not enough')) {
+    const titles = [
+      "You're Broke 💸",
+      "Wallet Empty 🪫",
+      "Insufficient Funds 😭",
+      "Too Poor For This 💀"
+    ];
+    const descriptions = [
+      "Maybe get a job?",
+      "Your wallet is crying right now",
+      "That's embarrassing, not gonna lie",
+      "Time to start grinding, chief",
+      "Money doesn't grow on trees, unfortunately"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
+    };
+  }
+
+  if (titleLower.includes('error') || titleLower.includes('failed')) {
+    const titles = [
+      "Something Broke 💥",
+      "Yikes, That Failed 😬",
+      "Error Detected 🚨",
+      "Well That Didn't Work 🤷"
+    ];
+    const descriptions = [
+      "Something went wrong, but we're not telling you what",
+      "The code took a break, try again later",
+      "It's broken, deal with it",
+      "Technology said 'not today'",
+      "Try again, or don't, we don't care"
+    ];
+    return {
+      title: pickRandom(titles),
+      description: pickRandom(descriptions)
     };
   }
   
   // Cooldowns/Waiting
   if (titleLower.includes('cooldown') || titleLower.includes('wait')) {
+    const titles = [
+      "Slow Down There 🕒",
+      "Chill Out For a Sec ⏰",
+      "Patience, Young Grasshopper 🧘",
+      "Not So Fast 🛑"
+    ];
+    const descriptions = [
+      "Bro, you're doing too much. Take a break",
+      "The system needs a breather from you",
+      "Calm down, you're not that important",
+      "Wait your turn like everyone else",
+      "You're being too thirsty, relax"
+    ];
     return {
-      title: "Please Wait 🕒",
-      description: description?.replace(/cooldown/gi, 'waiting time') || "You need to wait a bit before trying again!"
+      title: pickRandom(titles),
+      description: description?.replace(/cooldown/gi, 'waiting time') || pickRandom(descriptions)
     };
   }
   
