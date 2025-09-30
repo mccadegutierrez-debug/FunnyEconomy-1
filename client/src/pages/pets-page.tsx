@@ -298,7 +298,12 @@ export default function PetsPage() {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-4xl">{petTypeData?.emoji || '🐾'}</span>
+                          <img 
+                            src={`/PetIcons/${petTypeData?.iconPath || 'futureupdate.png'}`} 
+                            alt={petTypeData?.name || 'Pet'} 
+                            className="w-16 h-16 object-contain"
+                            data-testid={`img-pet-icon-${pet.id}`}
+                          />
                           <div>
                             <CardTitle className="text-lg" data-testid={`text-pet-name-${pet.id}`}>{pet.name}</CardTitle>
                             <div className="flex items-center gap-2 mt-1">
@@ -561,7 +566,12 @@ export default function PetsPage() {
             {filteredPetTypes.map((petType) => (
               <Card key={petType.petId} className="cursor-pointer hover:shadow-lg transition-shadow" data-testid={`card-adopt-${petType.petId}`}>
                 <CardHeader className="text-center pb-3">
-                  <div className="text-5xl mb-2">{petType.emoji}</div>
+                  <img 
+                    src={`/PetIcons/${petType.iconPath}`} 
+                    alt={petType.name} 
+                    className="w-20 h-20 mx-auto mb-2 object-contain"
+                    data-testid={`img-adopt-icon-${petType.petId}`}
+                  />
                   <CardTitle className="text-lg">{petType.name}</CardTitle>
                   <Badge className={getRarityColor(petType.rarity)}>{petType.rarity}</Badge>
                 </CardHeader>
@@ -666,7 +676,15 @@ export default function PetsPage() {
                         <div className="pt-2 flex gap-2">
                           {roomPets.slice(0, 5).map(pet => {
                             const petTypeData = STATIC_PET_TYPES.find(pt => pt.petId === pet.petTypeId);
-                            return <span key={pet.id} className="text-2xl">{petTypeData?.emoji || '🐾'}</span>;
+                            return (
+                              <img 
+                                key={pet.id} 
+                                src={`/PetIcons/${petTypeData?.iconPath || 'futureupdate.png'}`} 
+                                alt={petTypeData?.name || 'Pet'} 
+                                className="w-8 h-8 object-contain"
+                                data-testid={`img-room-pet-${pet.id}`}
+                              />
+                            );
                           })}
                         </div>
                       </div>
@@ -810,7 +828,12 @@ export default function PetsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="text-center text-6xl">{selectedPetType?.emoji}</div>
+            <img 
+              src={`/PetIcons/${selectedPetType?.iconPath || 'futureupdate.png'}`} 
+              alt={selectedPetType?.name || 'Pet'} 
+              className="w-24 h-24 mx-auto object-contain"
+              data-testid="img-adopt-dialog-icon"
+            />
             <Input
               placeholder={`Enter custom name or leave blank for "${selectedPetType?.name}"`}
               value={customPetName}
