@@ -8,9 +8,12 @@ export class FreemiumService {
     const now = Date.now();
     const freemiumCooldown = 10 * 1000; // 10 seconds
 
-    if (user.lastFreemiumClaim && (now - user.lastFreemiumClaim) < freemiumCooldown) {
-      const remaining = freemiumCooldown - (now - user.lastFreemiumClaim);
-      throw new Error(`Freemium cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`);
+    if (user.lastFreemiumClaim) {
+      const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
+      if ((now - lastClaimTime) < freemiumCooldown) {
+        const remaining = freemiumCooldown - (now - lastClaimTime);
+        throw new Error(`Freemium cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`);
+      }
     }
 
     // Get loot table
@@ -44,7 +47,7 @@ export class FreemiumService {
       
       await storage.updateUser(user.id, {
         coins: user.coins + amount,
-        lastFreemiumClaim: now
+        lastFreemiumClaim: new Date(now)
       });
 
       await storage.createTransaction({
@@ -70,7 +73,7 @@ export class FreemiumService {
         const amount = 250;
         await storage.updateUser(user.id, {
           coins: user.coins + amount,
-          lastFreemiumClaim: now
+          lastFreemiumClaim: new Date(now)
         });
 
         result = {
@@ -88,7 +91,7 @@ export class FreemiumService {
           
           await storage.updateUser(user.id, {
             inventory: user.inventory,
-            lastFreemiumClaim: now
+            lastFreemiumClaim: new Date(now)
           });
 
           result = {
@@ -112,7 +115,7 @@ export class FreemiumService {
 
           await storage.updateUser(user.id, {
             inventory: user.inventory,
-            lastFreemiumClaim: now
+            lastFreemiumClaim: new Date(now)
           });
 
           result = {
@@ -183,7 +186,8 @@ export class FreemiumService {
     if (!user.lastFreemiumClaim) return 0; // Can claim now
 
     const freemiumCooldown = 10 * 1000; // 10 seconds
-    const nextClaimTime = user.lastFreemiumClaim + freemiumCooldown;
+    const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
+    const nextClaimTime = lastClaimTime + freemiumCooldown;
     const now = Date.now();
 
     return Math.max(0, nextClaimTime - now);
