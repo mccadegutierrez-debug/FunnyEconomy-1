@@ -351,9 +351,31 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Freemium routes
+  app.get('/api/freemium/generate', requireAuth, async (req, res) => {
+    try {
+      const rewards = await FreemiumService.generateRewards(req.user!.username);
+      res.json({ rewards });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get('/api/freemium/pending', requireAuth, async (req, res) => {
+    try {
+      const rewards = await FreemiumService.getPendingRewards(req.user!.username);
+      res.json({ rewards });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   app.post('/api/freemium/claim', requireAuth, async (req, res) => {
     try {
-      const result = await FreemiumService.claimFreemium(req.user!.username);
+      const { rewardIndex } = req.body;
+      if (typeof rewardIndex !== 'number') {
+        throw new Error("rewardIndex is required");
+      }
+      const result = await FreemiumService.claimReward(req.user!.username, rewardIndex);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });

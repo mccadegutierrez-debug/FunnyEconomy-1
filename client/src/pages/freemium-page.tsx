@@ -1,56 +1,78 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Gift } from "lucide-react";
 import excitedImage from "/excited.png";
 
 export default function FreemiumPage() {
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
-  const [selectedCard, setSelectedCard] = useState<number | null>(null);
-  const [reward, setReward] = useState<any>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [selectedRewardIndex, setSelectedRewardIndex] = useState<number | null>(null);
+  const [claimed, setClaimed] = useState(false);
   const { toast } = useToast();
 
+  // Fetch or generate rewards
+  const { data: rewardsData, isLoading, refetch } = useQuery({
+    queryKey: ["/api/freemium/pending"],
+    queryFn: async () => {
+      // First check for pending rewards
+      const pendingRes = await apiRequest("GET", "/api/freemium/pending");
+      const pendingData = await pendingRes.json();
+      
+      if (pendingData.rewards) {
+        return pendingData.rewards;
+      }
+      
+      // If no pending rewards, generate new ones
+      const generateRes = await apiRequest("GET", "/api/freemium/generate");
+      const generateData = await generateRes.json();
+      return generateData.rewards;
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+  });
+
+  const rewards = rewardsData || [];
+
   const claimMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/freemium/claim");
+    mutationFn: async (rewardIndex: number) => {
+      const res = await apiRequest("POST", "/api/freemium/claim", { rewardIndex });
       return res.json();
     },
     onSuccess: (data) => {
-      setReward(data);
+      setClaimed(true);
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/freemium/next"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/freemium/pending"] });
       
-      // Show success with confetti
       createConfetti();
       
       let title = "Reward Claimed! 🎁";
       let description = "";
       
-      switch (data.type) {
-        case 'coins':
-          title = "Coin Reward! 💰";
-          description = `You received ${data.amount} coins!`;
-          break;
-        case 'item':
-          title = `${data.rarity.charAt(0).toUpperCase() + data.rarity.slice(1)} Item! ✨`;
-          description = `You received a ${data.item.name}!`;
-          break;
-        case 'lootbox':
-          title = "Lootbox Reward! 📦";
-          description = `You received a ${data.item.name} with ${data.lootboxContents.length} items inside!`;
-          break;
+      if (data.type === 'coins') {
+        title = "Coin Reward! 💰";
+        description = `You received ${data.amount} coins!`;
+      } else if (data.type === 'item') {
+        title = `${data.rarity.charAt(0).toUpperCase() + data.rarity.slice(1)} Item! ✨`;
+        description = `You received ${data.name}!`;
       }
       
       toast({
         title,
         description,
       });
+
+      // Reset after 3 seconds
+      setTimeout(() => {
+        setFlippedCards([]);
+        setSelectedRewardIndex(null);
+        setClaimed(false);
+        refetch();
+      }, 3000);
     },
     onError: (error: Error) => {
       toast({
@@ -62,25 +84,26 @@ export default function FreemiumPage() {
   });
 
   const handleCardClick = (cardIndex: number) => {
-    if (isAnimating || flippedCards.includes(cardIndex)) return;
+    if (flippedCards.includes(cardIndex) || claimed) return;
     
-    setIsAnimating(true);
-    setSelectedCard(cardIndex);
-    
-    // Flip the card
-    setTimeout(() => {
-      setFlippedCards([...flippedCards, cardIndex]);
-      setIsAnimating(false);
-      
-      // Claim the reward
-      claimMutation.mutate();
-    }, 600);
+    setFlippedCards([...flippedCards, cardIndex]);
   };
 
-  const resetCards = () => {
-    setFlippedCards([]);
-    setSelectedCard(null);
-    setReward(null);
+  const handleSelectReward = (cardIndex: number) => {
+    if (claimed || selectedRewardIndex !== null) return;
+    
+    // Can only select if all 3 cards are flipped
+    if (flippedCards.length < 3) {
+      toast({
+        title: "Flip all cards first",
+        description: "You must flip all 3 cards before selecting a reward",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setSelectedRewardIndex(cardIndex);
+    claimMutation.mutate(cardIndex);
   };
 
   const createConfetti = () => {
@@ -98,50 +121,53 @@ export default function FreemiumPage() {
     }
   };
 
-  const renderReward = () => {
-    if (!reward) return null;
-    
-    switch (reward.type) {
-      case 'coins':
-        return (
-          <div className="text-center py-8" data-testid="reward-coins">
-            <div className="text-6xl mb-4 animate-bounce">💰</div>
-            <h3 className="text-3xl font-bold text-accent mb-2">
-              {reward.amount} Coins!
-            </h3>
-            <p className="text-muted-foreground">
-              Added to your balance
-            </p>
-          </div>
-        );
-      case 'item':
-        return (
-          <div className="text-center py-8" data-testid="reward-item">
-            <div className="text-6xl mb-4 animate-bounce">{reward.item.icon || '✨'}</div>
-            <h3 className="text-3xl font-bold text-primary mb-2">
-              {reward.item.name}
-            </h3>
-            <p className="text-muted-foreground capitalize">
-              Rarity: {reward.rarity}
-            </p>
-          </div>
-        );
-      case 'lootbox':
-        return (
-          <div className="text-center py-8" data-testid="reward-lootbox">
-            <div className="text-6xl mb-4 animate-bounce">{reward.item.icon || '📦'}</div>
-            <h3 className="text-3xl font-bold text-secondary mb-2">
-              {reward.item.name}
-            </h3>
-            <p className="text-muted-foreground">
-              Contains {reward.lootboxContents.length} items!
-            </p>
-          </div>
-        );
+  const getRarityGlow = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary':
+        return 'glow-legendary';
+      case 'epic':
+        return 'glow-epic';
+      case 'rare':
+        return 'glow-rare';
+      case 'uncommon':
+        return 'glow-uncommon';
+      case 'common':
+        return 'glow-common';
       default:
-        return null;
+        return 'glow-primary';
     }
   };
+
+  const getRarityBorder = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary':
+        return 'border-yellow-500';
+      case 'epic':
+        return 'border-purple-500';
+      case 'rare':
+        return 'border-blue-500';
+      case 'uncommon':
+        return 'border-green-500';
+      case 'common':
+        return 'border-gray-400';
+      default:
+        return 'border-accent';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="text-2xl">Loading rewards...</div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,51 +181,90 @@ export default function FreemiumPage() {
               Freemium Rewards
             </h1>
             <p className="text-xl text-muted-foreground mb-2">
-              This page helps fund free content. Pick one card to claim your reward!
+              Flip all 3 cards to see your rewards, then select one to claim!
             </p>
             <div className="flex items-center justify-center gap-2 text-lg">
-              <span>The first <span className="text-primary font-bold">3</span> cards are guaranteed</span>
+              {flippedCards.length < 3 ? (
+                <span>Flip all cards to reveal your rewards</span>
+              ) : (
+                <span className="text-primary font-bold animate-pulse">
+                  Now select the reward you want!
+                </span>
+              )}
             </div>
           </div>
 
           {/* Cards Section */}
           <div className="relative mb-12">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              {[0, 1, 2].map((cardIndex) => (
-                <div key={cardIndex} className="perspective-1000">
-                  <div
-                    className={`card-flip-container ${flippedCards.includes(cardIndex) ? 'flipped' : ''}`}
-                    onClick={() => handleCardClick(cardIndex)}
-                    data-testid={`card-${cardIndex}`}
-                  >
-                    {/* Card Front (Back side with image) */}
-                    <div className="card-face card-front">
-                      <Card className="h-80 cursor-pointer hover:scale-105 transition-transform border-4 border-primary glow-primary">
-                        <CardContent className="h-full flex flex-col items-center justify-center p-6">
-                          <img 
-                            src={excitedImage} 
-                            alt="Card back" 
-                            className="w-full h-full object-contain"
-                          />
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    {/* Card Back (Reward side) */}
-                    <div className="card-face card-back">
-                      <Card className="h-80 border-4 border-accent glow-accent bg-gradient-to-br from-primary/20 to-accent/20">
-                        <CardContent className="h-full flex items-center justify-center">
-                          {flippedCards.includes(cardIndex) && reward ? (
-                            renderReward()
-                          ) : (
-                            <Gift className="w-24 h-24 text-primary" />
-                          )}
-                        </CardContent>
-                      </Card>
+              {[0, 1, 2].map((cardIndex) => {
+                const reward = rewards[cardIndex];
+                const isFlipped = flippedCards.includes(cardIndex);
+                const isSelected = selectedRewardIndex === cardIndex;
+                
+                return (
+                  <div key={cardIndex} className="perspective-1000">
+                    <div
+                      className={`card-flip-container ${isFlipped ? 'flipped' : ''}`}
+                      data-testid={`card-${cardIndex}`}
+                    >
+                      {/* Card Front (Back side with image) */}
+                      <div 
+                        className="card-face card-front"
+                        onClick={() => !isFlipped && handleCardClick(cardIndex)}
+                      >
+                        <Card className="h-80 cursor-pointer hover:scale-105 transition-transform border-4 border-primary glow-primary">
+                          <CardContent className="h-full flex flex-col items-center justify-center p-6">
+                            <img 
+                              src={excitedImage} 
+                              alt="Card back" 
+                              className="w-full h-full object-contain"
+                            />
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      {/* Card Back (Reward side) */}
+                      <div 
+                        className="card-face card-back"
+                        onClick={() => isFlipped && !claimed && handleSelectReward(cardIndex)}
+                      >
+                        <Card className={`h-80 border-4 ${reward && isFlipped ? getRarityBorder(reward.rarity) : 'border-accent'} ${reward && isFlipped ? getRarityGlow(reward.rarity) : 'glow-accent'} bg-gradient-to-br from-primary/20 to-accent/20 ${isFlipped && flippedCards.length === 3 && !claimed ? 'cursor-pointer hover:scale-105' : ''} transition-all ${isSelected ? 'ring-4 ring-yellow-500' : ''}`}>
+                          <CardContent className="h-full flex flex-col items-center justify-center p-4">
+                            {reward && isFlipped ? (
+                              <div className="text-center" data-testid={`reward-${cardIndex}`}>
+                                <div className="text-6xl mb-3 animate-bounce">{reward.icon}</div>
+                                <h3 className="text-2xl font-bold mb-2">
+                                  {reward.name}
+                                </h3>
+                                <p className="text-sm text-muted-foreground capitalize mb-2">
+                                  {reward.rarity}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {reward.description}
+                                </p>
+                                {flippedCards.length === 3 && !claimed && (
+                                  <Button 
+                                    className="mt-4"
+                                    size="sm"
+                                    data-testid={`button-select-${cardIndex}`}
+                                  >
+                                    Select This Reward
+                                  </Button>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-center">
+                                <div className="text-6xl animate-pulse">🎁</div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -211,15 +276,19 @@ export default function FreemiumPage() {
                 <ul className="space-y-2 text-left max-w-2xl mx-auto">
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">1.</span>
-                    <span>Pick any of the 3 cards to reveal your reward</span>
+                    <span>Click each card to flip and reveal all 3 rewards</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">2.</span>
-                    <span>You can claim free rewards every 10 seconds</span>
+                    <span>After flipping all cards, select the reward you want</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">3.</span>
-                    <span>Rewards include coins, items, and special lootboxes!</span>
+                    <span>You can claim free rewards every 11 seconds</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">4.</span>
+                    <span>Your rewards persist even if you refresh the page!</span>
                   </li>
                 </ul>
               </CardContent>
@@ -231,7 +300,7 @@ export default function FreemiumPage() {
             <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-2">
               <CardContent className="p-6">
                 <h3 className="text-xl font-bold mb-4">Reward Chances</h3>
-                <p className="text-sm text-muted-foreground mb-4">Each card has the same odds of containing these rewards</p>
+                <p className="text-sm text-muted-foreground mb-4">Each card has these odds of containing different reward types</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
                   <div className="bg-background/50 rounded-lg p-3" data-testid="chance-coins">
                     <div className="text-3xl mb-2">💰</div>
@@ -304,6 +373,27 @@ export default function FreemiumPage() {
         
         .card-back {
           transform: rotateY(180deg);
+        }
+        
+        /* Rarity-based glows */
+        .glow-legendary {
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.4);
+        }
+        
+        .glow-epic {
+          box-shadow: 0 0 20px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.6), 0 0 60px rgba(168, 85, 247, 0.4);
+        }
+        
+        .glow-rare {
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.4);
+        }
+        
+        .glow-uncommon {
+          box-shadow: 0 0 20px rgba(34, 197, 94, 0.8), 0 0 40px rgba(34, 197, 94, 0.6), 0 0 60px rgba(34, 197, 94, 0.4);
+        }
+        
+        .glow-common {
+          box-shadow: 0 0 20px rgba(156, 163, 175, 0.6), 0 0 40px rgba(156, 163, 175, 0.4);
         }
         
         @keyframes confetti-fall {

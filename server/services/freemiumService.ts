@@ -1,19 +1,29 @@
 import { storage } from "../storage";
 
+// In-memory storage for pending freemium rewards
+const pendingRewards = new Map<string, { rewards: any[], expiresAt: number }>();
+
 export class FreemiumService {
-  static async claimFreemium(username: string) {
+  // Generate 3 different rewards for the user to choose from
+  static async generateRewards(username: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
     const now = Date.now();
-    const freemiumCooldown = 10 * 1000; // 10 seconds
+    const freemiumCooldown = 11 * 1000; // 11 seconds
 
     if (user.lastFreemiumClaim) {
       const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
       if ((now - lastClaimTime) < freemiumCooldown) {
         const remaining = freemiumCooldown - (now - lastClaimTime);
-        throw new Error(`Freemium cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`);
+        throw new Error(`Freemium cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
       }
+    }
+
+    // Check if user already has pending rewards
+    const existing = pendingRewards.get(username);
+    if (existing && existing.expiresAt > now) {
+      return existing.rewards;
     }
 
     // Get loot table
@@ -26,6 +36,27 @@ export class FreemiumService {
       legendary: { weight: 5 }
     };
 
+    // Generate 3 different rewards
+    const rewards = [];
+    const usedRewardTypes = new Set<string>();
+
+    for (let i = 0; i < 3; i++) {
+      let reward = await this.generateSingleReward(lootTable, usedRewardTypes);
+      rewards.push(reward);
+    }
+
+    // Store rewards with 5 minute expiration
+    pendingRewards.set(username, {
+      rewards,
+      expiresAt: now + (5 * 60 * 1000)
+    });
+
+    return rewards;
+  }
+
+  private static async generateSingleReward(lootTable: any, usedTypes: Set<string>) {
+    const items = await storage.getAllItems();
+    
     // Weighted random selection
     const totalWeight = Object.values(lootTable).reduce((sum: number, item: any) => sum + item.weight, 0);
     let random = Math.random() * totalWeight;
@@ -45,97 +76,110 @@ export class FreemiumService {
       const coinData = lootTable.coins as any;
       const amount = coinData.min + Math.floor(Math.random() * (coinData.max - coinData.min + 1));
       
+      result = {
+        type: 'coins',
+        amount,
+        rarity: 'coins',
+        icon: '💰',
+        name: `${amount} Coins`,
+        description: `Receive ${amount} coins`
+      };
+    } else {
+      // Item reward
+      const rarityItems = items.filter(item => item.rarity === selectedReward);
+      
+      if (rarityItems.length === 0) {
+        // Fallback to coins if no items of that rarity
+        const amount = 250;
+        result = {
+          type: 'coins',
+          amount,
+          rarity: 'coins',
+          icon: '💰',
+          name: `${amount} Coins`,
+          description: `Receive ${amount} coins`
+        };
+      } else {
+        const selectedItem = rarityItems[Math.floor(Math.random() * rarityItems.length)];
+        
+        result = {
+          type: 'item',
+          item: selectedItem,
+          rarity: selectedReward,
+          icon: selectedItem.icon || '✨',
+          name: selectedItem.name,
+          description: selectedItem.description
+        };
+      }
+    }
+
+    usedTypes.add(`${result.type}-${result.rarity}`);
+    return result;
+  }
+
+  // Claim a specific reward by index
+  static async claimReward(username: string, rewardIndex: number) {
+    const user = await storage.getUserByUsername(username);
+    if (!user) throw new Error("User not found");
+
+    // Get pending rewards
+    const pending = pendingRewards.get(username);
+    if (!pending || pending.expiresAt < Date.now()) {
+      throw new Error("No pending rewards found. Please generate new rewards.");
+    }
+
+    if (rewardIndex < 0 || rewardIndex >= pending.rewards.length) {
+      throw new Error("Invalid reward index");
+    }
+
+    const selectedReward = pending.rewards[rewardIndex];
+    const now = Date.now();
+
+    // Apply the reward
+    if (selectedReward.type === 'coins') {
       await storage.updateUser(user.id, {
-        coins: user.coins + amount,
+        coins: user.coins + selectedReward.amount,
         lastFreemiumClaim: new Date(now)
       });
 
       await storage.createTransaction({
         user: username,
         type: 'freemium',
-        amount,
-        description: `Freemium daily reward: ${amount} coins`
+        amount: selectedReward.amount,
+        description: `Freemium reward: ${selectedReward.amount} coins`
       });
 
-      result = {
-        type: 'coins',
-        amount,
-        newBalance: user.coins + amount,
-        message: `You received ${amount} coins! 💰`
-      };
+      selectedReward.newBalance = user.coins + selectedReward.amount;
     } else {
       // Item reward
-      const items = await storage.getAllItems();
-      const rarityItems = items.filter(item => item.rarity === selectedReward);
-      
-      if (rarityItems.length === 0) {
-        // Fallback to coins if no items of that rarity
-        const amount = 250;
-        await storage.updateUser(user.id, {
-          coins: user.coins + amount,
-          lastFreemiumClaim: new Date(now)
-        });
-
-        result = {
-          type: 'coins',
-          amount,
-          newBalance: user.coins + amount,
-          message: `You received ${amount} coins! 💰 (backup reward)`
-        };
+      const existingItem = user.inventory.find(item => item.itemId === selectedReward.item.id);
+      if (existingItem) {
+        existingItem.quantity += 1;
       } else {
-        const selectedItem = rarityItems[Math.floor(Math.random() * rarityItems.length)];
-        
-        // Handle lootbox special case
-        if (selectedItem.type === 'lootbox') {
-          const lootboxResult = await this.openLootbox(user, selectedItem);
-          
-          await storage.updateUser(user.id, {
-            inventory: user.inventory,
-            lastFreemiumClaim: new Date(now)
-          });
-
-          result = {
-            type: 'lootbox',
-            item: selectedItem,
-            lootboxContents: lootboxResult,
-            message: `You received a ${selectedItem.name}! It contained: ${lootboxResult.map((item: any) => item.name).join(', ')}`
-          };
-        } else {
-          // Regular item
-          const existingItem = user.inventory.find(item => item.itemId === selectedItem.id);
-          if (existingItem) {
-            existingItem.quantity += 1;
-          } else {
-            user.inventory.push({
-              itemId: selectedItem.id,
-              quantity: 1,
-              equipped: false
-            });
-          }
-
-          await storage.updateUser(user.id, {
-            inventory: user.inventory,
-            lastFreemiumClaim: new Date(now)
-          });
-
-          result = {
-            type: 'item',
-            item: selectedItem,
-            rarity: selectedReward,
-            message: `You received a ${selectedItem.name}! ✨`
-          };
-        }
-
-        await storage.createTransaction({
-          user: username,
-          type: 'freemium',
-          amount: 0,
-          description: `Freemium daily reward: ${selectedItem.name} (${selectedReward})`
+        user.inventory.push({
+          itemId: selectedReward.item.id,
+          quantity: 1,
+          equipped: false
         });
       }
+
+      await storage.updateUser(user.id, {
+        inventory: user.inventory,
+        lastFreemiumClaim: new Date(now)
+      });
+
+      await storage.createTransaction({
+        user: username,
+        type: 'freemium',
+        amount: 0,
+        description: `Freemium reward: ${selectedReward.item.name} (${selectedReward.rarity})`
+      });
     }
 
-    return result;
+    // Clear pending rewards
+    pendingRewards.delete(username);
+
+    return selectedReward;
   }
 
   private static async openLootbox(user: any, lootbox: any) {
@@ -185,11 +229,20 @@ export class FreemiumService {
 
     if (!user.lastFreemiumClaim) return 0; // Can claim now
 
-    const freemiumCooldown = 10 * 1000; // 10 seconds
+    const freemiumCooldown = 11 * 1000; // 11 seconds
     const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
     const nextClaimTime = lastClaimTime + freemiumCooldown;
     const now = Date.now();
 
     return Math.max(0, nextClaimTime - now);
+  }
+
+  // Get pending rewards for a user
+  static async getPendingRewards(username: string) {
+    const pending = pendingRewards.get(username);
+    if (!pending || pending.expiresAt < Date.now()) {
+      return null;
+    }
+    return pending.rewards;
   }
 }
