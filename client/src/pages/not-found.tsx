@@ -11,7 +11,7 @@ export default function NotFound() {
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
         {/* 404 Image */}
         <img 
-          src="/Random/404.png" 
+          src="/Pepes/404.png" 
           alt="404 Error" 
           className="w-32 h-32 mb-6 object-contain"
         />
@@ -23,7 +23,7 @@ export default function NotFound() {
         
         {/* Error Message */}
         <p className="text-gray-400 text-lg mb-8">
-          Sorry, this page was not here.
+          WELL, WHAT ARE YOU STILL DOING HERE, SCRAM!
         </p>
         
         {/* Action Buttons */}
