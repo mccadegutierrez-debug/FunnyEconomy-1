@@ -40,6 +40,7 @@ export function registerRoutes(app: Express): Server {
 
   // Initialize data on startup
   storage.initializeData().catch(console.error);
+  storage.initializeFeatureFlags().catch(console.error);
 
   // Economy routes
   app.post("/api/economy/deposit", requireAuth, async (req, res) => {
@@ -2146,6 +2147,73 @@ export function registerRoutes(app: Express): Server {
       res.json({ success: true, petType });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/admin/feature-flags", requireAdmin, async (req, res) => {
+    try {
+      const flags = await storage.getAllFeatureFlags();
+      res.json(flags);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  app.put(
+    "/api/admin/feature-flags/:featureKey",
+    requireAdmin,
+    async (req, res) => {
+      try {
+        const { featureKey } = req.params;
+        
+        const bodySchema = z.object({
+          enabled: z.boolean(),
+        });
+        
+        const { enabled } = bodySchema.parse(req.body);
+
+        const previousFlag = await storage.getFeatureFlag(featureKey);
+        if (!previousFlag) {
+          return res.status(404).json({ error: "Feature flag not found" });
+        }
+
+        const updatedFlag = await storage.updateFeatureFlag(
+          featureKey,
+          enabled,
+          req.user!.username,
+        );
+
+        await logAdminAction(
+          req,
+          "update_feature_flag",
+          "feature_flag",
+          featureKey,
+          updatedFlag.featureName,
+          {
+            enabled,
+            previousEnabled: previousFlag.enabled,
+          },
+        );
+
+        res.json({ success: true, flag: updatedFlag });
+      } catch (error) {
+        res.status(400).json({ error: (error as Error).message });
+      }
+    },
+  );
+
+  app.get("/api/feature-flags/:featureKey", async (req, res) => {
+    try {
+      const { featureKey } = req.params;
+      const flag = await storage.getFeatureFlag(featureKey);
+      
+      if (!flag) {
+        return res.status(404).json({ error: "Feature flag not found" });
+      }
+      
+      res.json(flag);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 

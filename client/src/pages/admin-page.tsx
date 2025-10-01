@@ -215,6 +215,16 @@ export default function AdminPage() {
     enabled: isAuthenticated,
   });
 
+  // Fetch feature flags
+  const { data: featureFlags = [], isFetching: isFetchingFlags } = useQuery({
+    queryKey: ["/api/admin/feature-flags"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/feature-flags");
+      return res.json();
+    },
+    enabled: isAuthenticated,
+  });
+
   const executeCommandMutation = useMutation({
     mutationFn: async (cmd: string) => {
       const res = await apiRequest("POST", "/api/admin/command", {
@@ -474,6 +484,37 @@ export default function AdminPage() {
       toast({
         title: "Create Pet Failed",
         description: error.message || "Unknown error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleFeatureFlagMutation = useMutation({
+    mutationFn: async ({
+      featureKey,
+      enabled,
+    }: {
+      featureKey: string;
+      enabled: boolean;
+    }) => {
+      const res = await apiRequest(
+        "PUT",
+        `/api/admin/feature-flags/${featureKey}`,
+        { enabled },
+      );
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Feature Flag Updated! ⚙️",
+        description: `${data.flag.featureName} has been ${data.flag.enabled ? "enabled" : "disabled"}.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/feature-flags"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -845,11 +886,19 @@ export default function AdminPage() {
                 Pets
               </TabsTrigger>
               <TabsTrigger
+                value="feature-flags"
+                data-testid="tab-feature-flags"
+                className="flex-shrink-0"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Feature Flags
+              </TabsTrigger>
+              <TabsTrigger
                 value="system"
                 data-testid="tab-system"
                 className="flex-shrink-0"
               >
-                <Settings className="w-4 h-4 mr-2" />
+                <Command className="w-4 h-4 mr-2" />
                 System
               </TabsTrigger>
             </TabsList>
@@ -2069,6 +2118,74 @@ export default function AdminPage() {
                   Total available pets: {STATIC_PET_TYPES.length}
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="feature-flags" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-impact text-2xl text-primary">
+                    🚩 FEATURE FLAGS MANAGEMENT
+                  </CardTitle>
+                  <CardDescription>
+                    Control which features are enabled or disabled across the
+                    platform. Disabled features will show a maintenance screen
+                    to users.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isFetchingFlags ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="w-6 h-6 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {featureFlags.map((flag: any) => (
+                        <div
+                          key={flag.featureKey}
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                          data-testid={`flag-${flag.featureKey}`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-lg">
+                                {flag.featureName}
+                              </h3>
+                              <Badge
+                                variant={flag.enabled ? "default" : "secondary"}
+                                data-testid={`badge-${flag.featureKey}`}
+                              >
+                                {flag.enabled ? "Enabled" : "Disabled"}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {flag.description}
+                            </p>
+                            {flag.updatedBy && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Last updated by: {flag.updatedBy} at{" "}
+                                {new Date(flag.updatedAt).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            variant={flag.enabled ? "destructive" : "default"}
+                            onClick={() =>
+                              toggleFeatureFlagMutation.mutate({
+                                featureKey: flag.featureKey,
+                                enabled: !flag.enabled,
+                              })
+                            }
+                            disabled={toggleFeatureFlagMutation.isPending}
+                            data-testid={`button-toggle-${flag.featureKey}`}
+                          >
+                            {flag.enabled ? "Disable" : "Enable"}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="system" className="space-y-4">
