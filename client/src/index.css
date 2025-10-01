@@ -23,9 +23,9 @@
   --input: hsl(215, 20%, 18%);
   --ring: hsl(217, 91%, 60%);
   --radius: 0.75rem;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-impact: 'Impact', 'Arial Black', sans-serif;
-  --font-comic: 'Comic Sans MS', cursive;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-impact: "Impact", "Arial Black", sans-serif;
+  --font-comic: "Comic Sans MS", cursive;
 }
 
 .dark {
@@ -68,69 +68,75 @@
   .font-impact {
     font-family: var(--font-impact);
   }
-  
+
   .font-comic {
     font-family: var(--font-comic);
   }
-  
+
   .glow-primary {
     box-shadow: 0 0 20px hsl(217 91% 60% / 0.4);
   }
-  
+
   .glow-secondary {
     box-shadow: 0 0 20px hsl(217 91% 70% / 0.3);
   }
-  
+
   .glow-accent {
     box-shadow: 0 0 20px hsl(38 92% 50% / 0.3);
   }
-  
+
   .animate-bounce-slow {
     animation: bounce 2s infinite;
   }
-  
+
   .animate-pulse-glow {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  
+
   .dm-title {
-    background: linear-gradient(90deg, hsl(217,91%,70%), hsl(38,92%,50%), hsl(317,90%,60%));
+    background: linear-gradient(
+      90deg,
+      hsl(217, 91%, 70%),
+      hsl(38, 92%, 50%),
+      hsl(317, 90%, 60%)
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    text-shadow: 
-      0 0 6px hsl(217 91% 60% / 0.8), 
-      0 0 12px hsl(217 91% 60% / 0.6), 
+    text-shadow:
+      0 0 6px hsl(217 91% 60% / 0.8),
+      0 0 12px hsl(217 91% 60% / 0.6),
       0 0 18px hsl(38 92% 50% / 0.5);
-    -webkit-text-stroke: 1px hsl(215,25%,6%);
+    -webkit-text-stroke: 1px hsl(215, 25%, 6%);
     animation: glowPulse 3s ease-in-out infinite;
   }
 }
 
 @keyframes glowPulse {
-  0%, 100% {
-    text-shadow: 
-      0 0 6px hsl(217 91% 60% / 0.8), 
-      0 0 12px hsl(217 91% 60% / 0.6), 
+  0%,
+  100% {
+    text-shadow:
+      0 0 6px hsl(217 91% 60% / 0.8),
+      0 0 12px hsl(217 91% 60% / 0.6),
       0 0 18px hsl(38 92% 50% / 0.5);
   }
   50% {
-    text-shadow: 
-      0 0 12px hsl(217 91% 60% / 1), 
-      0 0 24px hsl(217 91% 60% / 0.8), 
+    text-shadow:
+      0 0 12px hsl(217 91% 60% / 1),
+      0 0 24px hsl(217 91% 60% / 0.8),
       0 0 36px hsl(38 92% 50% / 0.7),
       0 0 48px hsl(317 90% 60% / 0.5);
   }
 }
 
 @keyframes confetti {
-  0% { 
-    transform: translateY(-100vh) rotate(0deg); 
-    opacity: 1; 
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
   }
-  100% { 
-    transform: translateY(100vh) rotate(720deg); 
-    opacity: 0; 
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
   }
 }
 
@@ -172,7 +178,10 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
-

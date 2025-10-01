@@ -1,12 +1,22 @@
 import { z } from "zod";
-import { pgTable, varchar, integer, boolean, timestamp, jsonb, text, serial } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  varchar,
+  integer,
+  boolean,
+  timestamp,
+  jsonb,
+  text,
+  serial,
+} from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-
 // Drizzle table definitions
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   username: varchar("username", { length: 20 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   coins: integer("coins").default(500).notNull(),
@@ -19,8 +29,12 @@ export const users = pgTable("users", {
   bio: varchar("bio", { length: 200 }).default("").notNull(),
   avatarUrl: text("avatar_url").default("").notNull(),
   onlineStatus: boolean("online_status").default(false).notNull(),
-  createdAt: timestamp("created_at").default(sql`now()`).notNull(),
-  lastActive: timestamp("last_active").default(sql`now()`).notNull(),
+  createdAt: timestamp("created_at")
+    .default(sql`now()`)
+    .notNull(),
+  lastActive: timestamp("last_active")
+    .default(sql`now()`)
+    .notNull(),
   banned: boolean("banned").default(false).notNull(),
   banReason: text("ban_reason").default("").notNull(),
   tempBanUntil: timestamp("temp_ban_until"),
@@ -46,78 +60,147 @@ export const users = pgTable("users", {
   dailyEarn: integer("daily_earn").default(0).notNull(),
   lastIP: varchar("last_ip").default("").notNull(),
   achievements: jsonb("achievements").default([]).notNull(),
-  gameStats: jsonb("game_stats").default(sql`'{}'`).notNull(),
-  adminRole: varchar("admin_role", { enum: ['none', 'junior_admin', 'admin', 'senior_admin', 'lead_admin', 'owner'] }).default('none').notNull(),
+  gameStats: jsonb("game_stats")
+    .default(sql`'{}'`)
+    .notNull(),
+  adminRole: varchar("admin_role", {
+    enum: [
+      "none",
+      "junior_admin",
+      "admin",
+      "senior_admin",
+      "lead_admin",
+      "owner",
+    ],
+  })
+    .default("none")
+    .notNull(),
 });
 
 export const items = pgTable("items", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   name: varchar("name").notNull(),
   description: text("description").notNull(),
   price: integer("price").notNull(),
-  type: varchar("type", { enum: ['tool', 'collectible', 'powerup', 'consumable', 'lootbox'] }).notNull(),
-  rarity: varchar("rarity", { enum: ['common', 'uncommon', 'rare', 'epic', 'legendary'] }).notNull(),
-  effects: jsonb("effects").default(sql`'{}'`).notNull(),
-  stock: integer("stock").default(sql`2147483647`).notNull(), // Max int for "infinity"
+  type: varchar("type", {
+    enum: ["tool", "collectible", "powerup", "consumable", "lootbox"],
+  }).notNull(),
+  rarity: varchar("rarity", {
+    enum: ["common", "uncommon", "rare", "epic", "legendary"],
+  }).notNull(),
+  effects: jsonb("effects")
+    .default(sql`'{}'`)
+    .notNull(),
+  stock: integer("stock")
+    .default(sql`2147483647`)
+    .notNull(), // Max int for "infinity"
   currentPrice: integer("current_price"),
 });
 
 export const transactions = pgTable("transactions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   user: varchar("user").notNull(),
-  type: varchar("type", { enum: ['earn', 'spend', 'transfer', 'rob', 'fine', 'freemium', 'fish', 'mine', 'vote', 'adventure', 'crime', 'postmeme', 'stream', 'highlow', 'scratch'] }).notNull(),
+  type: varchar("type", {
+    enum: [
+      "earn",
+      "spend",
+      "transfer",
+      "rob",
+      "fine",
+      "freemium",
+      "fish",
+      "mine",
+      "vote",
+      "adventure",
+      "crime",
+      "postmeme",
+      "stream",
+      "highlow",
+      "scratch",
+    ],
+  }).notNull(),
   amount: integer("amount").notNull(),
   targetUser: varchar("target_user"),
   description: text("description").notNull(),
-  timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
+  timestamp: timestamp("timestamp")
+    .default(sql`now()`)
+    .notNull(),
 });
 
 export const notifications = pgTable("notifications", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   user: varchar("user").notNull(),
   message: text("message").notNull(),
-  type: varchar("type", { enum: ['trade', 'friend', 'event', 'system', 'rob'] }).notNull(),
+  type: varchar("type", {
+    enum: ["trade", "friend", "event", "system", "rob"],
+  }).notNull(),
   read: boolean("read").default(false).notNull(),
-  timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
+  timestamp: timestamp("timestamp")
+    .default(sql`now()`)
+    .notNull(),
 });
 
 export const events = pgTable("events", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   name: varchar("name").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
-  multipliers: jsonb("multipliers").default(sql`'{}'`).notNull(),
+  multipliers: jsonb("multipliers")
+    .default(sql`'{}'`)
+    .notNull(),
 });
 
 export const chatMessages = pgTable("chat_messages", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   username: varchar("username").notNull(),
   message: text("message").notNull(),
-  timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
+  timestamp: timestamp("timestamp")
+    .default(sql`now()`)
+    .notNull(),
 });
 
 export const auditLogs = pgTable("audit_logs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   adminUsername: varchar("admin_username").notNull(),
   adminRole: varchar("admin_role").notNull(),
   action: varchar("action").notNull(), // e.g., "ban_user", "give_coins", "create_item"
   targetType: varchar("target_type"), // e.g., "user", "item", "system"
   targetId: varchar("target_id"), // ID of the affected entity
   targetName: varchar("target_name"), // Name/username of affected entity
-  details: jsonb("details").default(sql`'{}'`).notNull(), // Additional action details
+  details: jsonb("details")
+    .default(sql`'{}'`)
+    .notNull(), // Additional action details
   ipAddress: varchar("ip_address"),
   userAgent: text("user_agent"),
-  timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
+  timestamp: timestamp("timestamp")
+    .default(sql`now()`)
+    .notNull(),
 });
 
 // Pet System Tables
 export const petTypes = pgTable("pet_types", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   petId: varchar("pet_id").notNull().unique(),
   name: varchar("name").notNull(),
   description: text("description").notNull(),
   emoji: varchar("emoji").notNull(),
-  rarity: varchar("rarity", { enum: ['common', 'uncommon', 'rare', 'epic', 'legendary'] }).notNull(),
+  rarity: varchar("rarity", {
+    enum: ["common", "uncommon", "rare", "epic", "legendary"],
+  }).notNull(),
   hungerDecay: integer("hunger_decay").notNull(),
   hygieneDecay: integer("hygiene_decay").notNull(),
   energyDecay: integer("energy_decay").notNull(),
@@ -127,7 +210,9 @@ export const petTypes = pgTable("pet_types", {
 });
 
 export const pets = pgTable("pets", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
   petTypeId: varchar("pet_type_id").notNull(),
   name: varchar("name").notNull(),
@@ -149,38 +234,50 @@ export const pets = pgTable("pets", {
   lastPlayed: timestamp("last_played"),
   lastSlept: timestamp("last_slept"),
   roomId: varchar("room_id"),
-  adoptedAt: timestamp("adopted_at").default(sql`now()`).notNull(),
+  adoptedAt: timestamp("adopted_at")
+    .default(sql`now()`)
+    .notNull(),
   isSick: boolean("is_sick").default(false).notNull(),
   sicknessType: varchar("sickness_type"),
 });
 
 export const petRooms = pgTable("pet_rooms", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
   name: varchar("name").notNull(),
-  floorStyle: varchar("floor_style").default('wooden').notNull(),
-  wallStyle: varchar("wall_style").default('plain').notNull(),
-  doorStyle: varchar("door_style").default('wooden').notNull(),
+  floorStyle: varchar("floor_style").default("wooden").notNull(),
+  wallStyle: varchar("wall_style").default("plain").notNull(),
+  doorStyle: varchar("door_style").default("wooden").notNull(),
   windowStyle: varchar("window_style"),
   floorDecorations: jsonb("floor_decorations").default([]).notNull(),
   wallDecorations: jsonb("wall_decorations").default([]).notNull(),
   sitterId: varchar("sitter_id"),
   sitterUntil: timestamp("sitter_until"),
-  createdAt: timestamp("created_at").default(sql`now()`).notNull(),
+  createdAt: timestamp("created_at")
+    .default(sql`now()`)
+    .notNull(),
 });
 
 export const petSkills = pgTable("pet_skills", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   skillId: varchar("skill_id").notNull().unique(),
   name: varchar("name").notNull(),
   description: text("description").notNull(),
-  effect: jsonb("effect").default(sql`'{}'`).notNull(),
+  effect: jsonb("effect")
+    .default(sql`'{}'`)
+    .notNull(),
   trainingCost: integer("training_cost").notNull(),
   category: varchar("category").notNull(),
 });
 
 export const petSitters = pgTable("pet_sitters", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   sitterId: varchar("sitter_id").notNull().unique(),
   name: varchar("name").notNull(),
   description: text("description").notNull(),
@@ -190,34 +287,49 @@ export const petSitters = pgTable("pet_sitters", {
 });
 
 export const petBreeding = pgTable("pet_breeding", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   petId1: varchar("pet_id_1").notNull(),
   petId2: varchar("pet_id_2").notNull(),
-  startedAt: timestamp("started_at").default(sql`now()`).notNull(),
+  startedAt: timestamp("started_at")
+    .default(sql`now()`)
+    .notNull(),
   completesAt: timestamp("completes_at").notNull(),
   isSuccessful: boolean("is_successful"),
   offspringId: varchar("offspring_id"),
 });
 
 export const petActivities = pgTable("pet_activities", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   petId: varchar("pet_id").notNull(),
   activityType: varchar("activity_type").notNull(),
   description: text("description").notNull(),
-  rewards: jsonb("rewards").default(sql`'{}'`).notNull(),
-  timestamp: timestamp("timestamp").default(sql`now()`).notNull(),
+  rewards: jsonb("rewards")
+    .default(sql`'{}'`)
+    .notNull(),
+  timestamp: timestamp("timestamp")
+    .default(sql`now()`)
+    .notNull(),
 });
 
 export const petHunts = pgTable("pet_hunts", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   petId: varchar("pet_id").notNull(),
-  startedAt: timestamp("started_at").default(sql`now()`).notNull(),
+  startedAt: timestamp("started_at")
+    .default(sql`now()`)
+    .notNull(),
   completesAt: timestamp("completes_at").notNull(),
   huntType: varchar("hunt_type").notNull(),
   isCompleted: boolean("is_completed").default(false).notNull(),
-  rewards: jsonb("rewards").default(sql`'{}'`).notNull(),
+  rewards: jsonb("rewards")
+    .default(sql`'{}'`)
+    .notNull(),
 });
-
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -312,33 +424,67 @@ export const petHuntsRelations = relations(petHunts, ({ one }) => ({
 }));
 
 // Create insert and select schemas from tables
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, lastActive: true });
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  lastActive: true,
+});
 export const selectUserSchema = createSelectSchema(users);
 export const insertItemSchema = createInsertSchema(items).omit({ id: true });
 export const selectItemSchema = createSelectSchema(items);
-export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, timestamp: true });
+export const insertTransactionSchema = createInsertSchema(transactions).omit({
+  id: true,
+  timestamp: true,
+});
 export const selectTransactionSchema = createSelectSchema(transactions);
-export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, timestamp: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  timestamp: true,
+});
 export const selectNotificationSchema = createSelectSchema(notifications);
-export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, timestamp: true });
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  timestamp: true,
+});
 export const selectAuditLogSchema = createSelectSchema(auditLogs);
 
 // Pet schemas
-export const insertPetTypeSchema = createInsertSchema(petTypes).omit({ id: true });
+export const insertPetTypeSchema = createInsertSchema(petTypes).omit({
+  id: true,
+});
 export const selectPetTypeSchema = createSelectSchema(petTypes);
-export const insertPetSchema = createInsertSchema(pets).omit({ id: true, adoptedAt: true });
+export const insertPetSchema = createInsertSchema(pets).omit({
+  id: true,
+  adoptedAt: true,
+});
 export const selectPetSchema = createSelectSchema(pets);
-export const insertPetRoomSchema = createInsertSchema(petRooms).omit({ id: true, createdAt: true });
+export const insertPetRoomSchema = createInsertSchema(petRooms).omit({
+  id: true,
+  createdAt: true,
+});
 export const selectPetRoomSchema = createSelectSchema(petRooms);
-export const insertPetSkillSchema = createInsertSchema(petSkills).omit({ id: true });
+export const insertPetSkillSchema = createInsertSchema(petSkills).omit({
+  id: true,
+});
 export const selectPetSkillSchema = createSelectSchema(petSkills);
-export const insertPetSitterSchema = createInsertSchema(petSitters).omit({ id: true });
+export const insertPetSitterSchema = createInsertSchema(petSitters).omit({
+  id: true,
+});
 export const selectPetSitterSchema = createSelectSchema(petSitters);
-export const insertPetBreedingSchema = createInsertSchema(petBreeding).omit({ id: true, startedAt: true });
+export const insertPetBreedingSchema = createInsertSchema(petBreeding).omit({
+  id: true,
+  startedAt: true,
+});
 export const selectPetBreedingSchema = createSelectSchema(petBreeding);
-export const insertPetActivitySchema = createInsertSchema(petActivities).omit({ id: true, timestamp: true });
+export const insertPetActivitySchema = createInsertSchema(petActivities).omit({
+  id: true,
+  timestamp: true,
+});
 export const selectPetActivitySchema = createSelectSchema(petActivities);
-export const insertPetHuntSchema = createInsertSchema(petHunts).omit({ id: true, startedAt: true });
+export const insertPetHuntSchema = createInsertSchema(petHunts).omit({
+  id: true,
+  startedAt: true,
+});
 export const selectPetHuntSchema = createSelectSchema(petHunts);
 
 // Type exports

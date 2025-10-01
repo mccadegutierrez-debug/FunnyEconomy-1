@@ -3,7 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,15 +17,24 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Plinko() {
   const [bet, setBet] = useState(100);
-  const [risk, setRisk] = useState<'low' | 'medium' | 'high'>('medium');
+  const [risk, setRisk] = useState<"low" | "medium" | "high">("medium");
   const [gameResult, setGameResult] = useState<any>(null);
   const [isDropping, setIsDropping] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
   const playMutation = useMutation({
-    mutationFn: async ({ betAmount, riskLevel }: { betAmount: number; riskLevel: 'low' | 'medium' | 'high' }) => {
-      const res = await apiRequest("POST", "/api/games/plinko", { bet: betAmount, risk: riskLevel });
+    mutationFn: async ({
+      betAmount,
+      riskLevel,
+    }: {
+      betAmount: number;
+      riskLevel: "low" | "medium" | "high";
+    }) => {
+      const res = await apiRequest("POST", "/api/games/plinko", {
+        bet: betAmount,
+        risk: riskLevel,
+      });
       return res.json();
     },
     onSuccess: (data) => {
@@ -33,7 +48,7 @@ export default function Plinko() {
           variant: data.win ? "default" : "destructive",
         });
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        
+
         if (data.win && data.multiplier >= 2) {
           createConfetti();
         }
@@ -51,13 +66,13 @@ export default function Plinko() {
 
   const createConfetti = () => {
     for (let i = 0; i < 50; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -73,7 +88,7 @@ export default function Plinko() {
       });
       return;
     }
-    
+
     if (!user || user.coins < bet) {
       toast({
         title: "Insufficient Funds",
@@ -92,14 +107,14 @@ export default function Plinko() {
   const multipliers = {
     low: [1.5, 1.3, 1.1, 1.0, 0.9, 1.0, 1.1, 1.3, 1.5],
     medium: [3.0, 2.0, 1.5, 1.0, 0.5, 1.0, 1.5, 2.0, 3.0],
-    high: [10.0, 5.0, 2.0, 1.0, 0.5, 1.0, 2.0, 5.0, 10.0]
+    high: [10.0, 5.0, 2.0, 1.0, 0.5, 1.0, 2.0, 5.0, 10.0],
   };
 
   const getSlotColor = (mult: number) => {
-    if (mult >= 5) return 'bg-yellow-500 text-black';
-    if (mult >= 2) return 'bg-green-500';
-    if (mult >= 1) return 'bg-blue-500';
-    return 'bg-red-500';
+    if (mult >= 5) return "bg-yellow-500 text-black";
+    if (mult >= 2) return "bg-green-500";
+    if (mult >= 1) return "bg-blue-500";
+    return "bg-red-500";
   };
 
   return (
@@ -107,7 +122,9 @@ export default function Plinko() {
       <Card className="glow-accent border-accent/20">
         <CardHeader className="text-center">
           <div className="text-6xl mb-4">🎯</div>
-          <CardTitle className="font-impact text-3xl text-accent">PLINKO</CardTitle>
+          <CardTitle className="font-impact text-3xl text-accent">
+            PLINKO
+          </CardTitle>
           <CardDescription>Drop the ball and watch it bounce!</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -116,7 +133,9 @@ export default function Plinko() {
               {isDropping && (
                 <div className="text-center mb-4">
                   <div className="text-6xl animate-bounce">🎱</div>
-                  <p className="text-lg font-semibold mt-2">Ball is dropping...</p>
+                  <p className="text-lg font-semibold mt-2">
+                    Ball is dropping...
+                  </p>
                 </div>
               )}
 
@@ -124,7 +143,7 @@ export default function Plinko() {
                 <div className="flex justify-center mb-4">
                   <div className="text-4xl">🎱</div>
                 </div>
-                
+
                 <div className="grid grid-cols-7 gap-2 mb-4">
                   {Array.from({ length: 21 }, (_, i) => (
                     <div key={i} className="text-center text-2xl">
@@ -137,9 +156,9 @@ export default function Plinko() {
                   {multipliers[risk].map((mult, index) => (
                     <div
                       key={index}
-                      className={`p-2 rounded text-center font-bold text-sm ${
-                        getSlotColor(mult)
-                      } ${gameResult && gameResult.slotIndex === index ? 'ring-4 ring-white animate-pulse' : ''}`}
+                      className={`p-2 rounded text-center font-bold text-sm ${getSlotColor(
+                        mult,
+                      )} ${gameResult && gameResult.slotIndex === index ? "ring-4 ring-white animate-pulse" : ""}`}
                       data-testid={`slot-${index}`}
                     >
                       {mult}x
@@ -155,8 +174,8 @@ export default function Plinko() {
               <Label className="text-lg font-semibold">Risk Level</Label>
               <div className="grid grid-cols-3 gap-2">
                 <Button
-                  variant={risk === 'low' ? 'default' : 'outline'}
-                  onClick={() => setRisk('low')}
+                  variant={risk === "low" ? "default" : "outline"}
+                  onClick={() => setRisk("low")}
                   disabled={isDropping || playMutation.isPending}
                   className="font-comic"
                   data-testid="button-risk-low"
@@ -168,8 +187,8 @@ export default function Plinko() {
                   </div>
                 </Button>
                 <Button
-                  variant={risk === 'medium' ? 'default' : 'outline'}
-                  onClick={() => setRisk('medium')}
+                  variant={risk === "medium" ? "default" : "outline"}
+                  onClick={() => setRisk("medium")}
                   disabled={isDropping || playMutation.isPending}
                   className="font-comic"
                   data-testid="button-risk-medium"
@@ -181,8 +200,8 @@ export default function Plinko() {
                   </div>
                 </Button>
                 <Button
-                  variant={risk === 'high' ? 'default' : 'outline'}
-                  onClick={() => setRisk('high')}
+                  variant={risk === "high" ? "default" : "outline"}
+                  onClick={() => setRisk("high")}
                   disabled={isDropping || playMutation.isPending}
                   className="font-comic"
                   data-testid="button-risk-high"
@@ -227,22 +246,43 @@ export default function Plinko() {
 
             <Button
               onClick={handlePlay}
-              disabled={isDropping || playMutation.isPending || !user || user.coins < bet}
+              disabled={
+                isDropping ||
+                playMutation.isPending ||
+                !user ||
+                user.coins < bet
+              }
               className="w-full font-comic text-lg bg-accent hover:bg-accent/80 glow-accent"
               data-testid="button-drop-ball"
             >
-              {isDropping ? "DROPPING..." : playMutation.isPending ? "Loading..." : `DROP BALL! (${bet} coins)`}
+              {isDropping
+                ? "DROPPING..."
+                : playMutation.isPending
+                  ? "Loading..."
+                  : `DROP BALL! (${bet} coins)`}
             </Button>
           </div>
 
           {gameResult && !isDropping && (
-            <Card className={`${gameResult.win ? 'border-green-500 glow-accent' : 'border-destructive'}`}>
+            <Card
+              className={`${gameResult.win ? "border-green-500 glow-accent" : "border-destructive"}`}
+            >
               <CardContent className="p-6 text-center">
                 <div className="text-4xl mb-4">
-                  {gameResult.multiplier >= 5 ? "🎉" : gameResult.win ? "✅" : "😔"}
+                  {gameResult.multiplier >= 5
+                    ? "🎉"
+                    : gameResult.win
+                      ? "✅"
+                      : "😔"}
                 </div>
-                <h3 className={`text-2xl font-bold mb-2 ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
-                  {gameResult.multiplier >= 5 ? "BIG WIN!" : gameResult.win ? "YOU WIN!" : "YOU LOSE!"}
+                <h3
+                  className={`text-2xl font-bold mb-2 ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
+                  {gameResult.multiplier >= 5
+                    ? "BIG WIN!"
+                    : gameResult.win
+                      ? "YOU WIN!"
+                      : "YOU LOSE!"}
                 </h3>
                 <div className="mb-4">
                   <Badge variant="secondary" className="text-lg px-4 py-2">
@@ -252,8 +292,11 @@ export default function Plinko() {
                 <Badge variant="default" className="text-lg px-4 py-2 mb-2">
                   {gameResult.multiplier}x Multiplier!
                 </Badge>
-                <p className={`text-lg font-semibold ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
-                  {gameResult.win ? '+' : ''}{gameResult.amount} coins
+                <p
+                  className={`text-lg font-semibold ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
+                  {gameResult.win ? "+" : ""}
+                  {gameResult.amount} coins
                 </p>
                 <p className="text-muted-foreground">
                   New Balance: {gameResult.newBalance.toLocaleString()} coins

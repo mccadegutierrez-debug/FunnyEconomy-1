@@ -14,7 +14,7 @@ export async function seedPetData(): Promise<void> {
     let seededCount = 0;
 
     if (existingPetTypes.length === 0) {
-      console.log('Seeding pet types...');
+      console.log("Seeding pet types...");
       for (const petType of STATIC_PET_TYPES) {
         await db.insert(petTypes).values({
           petId: petType.petId,
@@ -35,7 +35,7 @@ export async function seedPetData(): Promise<void> {
     }
 
     if (existingPetSkills.length === 0) {
-      console.log('Seeding pet skills...');
+      console.log("Seeding pet skills...");
       for (const skill of AVAILABLE_SKILLS) {
         await db.insert(petSkills).values({
           skillId: skill.skillId,
@@ -51,7 +51,7 @@ export async function seedPetData(): Promise<void> {
     }
 
     if (existingPetSitters.length === 0) {
-      console.log('Seeding pet sitters...');
+      console.log("Seeding pet sitters...");
       for (const sitter of AVAILABLE_SITTERS) {
         await db.insert(petSitters).values({
           sitterId: sitter.sitterId,
@@ -67,10 +67,12 @@ export async function seedPetData(): Promise<void> {
     }
 
     if (seededCount > 0) {
-      console.log(`Pet data seeding complete: ${seededCount} total items seeded`);
+      console.log(
+        `Pet data seeding complete: ${seededCount} total items seeded`,
+      );
     }
   } catch (error) {
-    console.error('Error seeding pet data:', error);
+    console.error("Error seeding pet data:", error);
     throw error;
   }
 }

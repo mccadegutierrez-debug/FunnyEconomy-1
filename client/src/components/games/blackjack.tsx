@@ -3,7 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,18 +23,20 @@ export default function Blackjack() {
 
   const playMutation = useMutation({
     mutationFn: async (betAmount: number) => {
-      const res = await apiRequest("POST", "/api/games/blackjack", { bet: betAmount });
+      const res = await apiRequest("POST", "/api/games/blackjack", {
+        bet: betAmount,
+      });
       return res.json();
     },
     onSuccess: (data) => {
       setGameResult(data);
       toast({
         title: data.win ? "Blackjack Win! 🃏" : "Blackjack Loss 😔",
-        description: `You ${data.win ? 'won' : 'lost'} ${Math.abs(data.amount)} coins!`,
+        description: `You ${data.win ? "won" : "lost"} ${Math.abs(data.amount)} coins!`,
         variant: data.win ? "default" : "destructive",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
+
       // Confetti effect for wins
       if (data.win) {
         createConfetti();
@@ -45,13 +53,13 @@ export default function Blackjack() {
 
   const createConfetti = () => {
     for (let i = 0; i < 50; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -68,7 +76,7 @@ export default function Blackjack() {
       });
       return;
     }
-    
+
     if (!user || user.coins < bet) {
       toast({
         title: "Insufficient Funds",
@@ -88,7 +96,9 @@ export default function Blackjack() {
       <Card className="glow-primary border-primary/20">
         <CardHeader className="text-center">
           <div className="text-6xl mb-4">🃏</div>
-          <CardTitle className="font-impact text-3xl text-primary">BLACKJACK</CardTitle>
+          <CardTitle className="font-impact text-3xl text-primary">
+            BLACKJACK
+          </CardTitle>
           <CardDescription>Beat the dealer and win big!</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -135,12 +145,16 @@ export default function Blackjack() {
 
           {/* Game Result */}
           {gameResult && (
-            <Card className={`${gameResult.win ? 'border-green-500 glow-accent' : 'border-destructive'}`}>
+            <Card
+              className={`${gameResult.win ? "border-green-500 glow-accent" : "border-destructive"}`}
+            >
               <CardContent className="p-6 text-center">
                 <div className="text-4xl mb-4">
                   {gameResult.win ? "🎉" : "😔"}
                 </div>
-                <h3 className={`text-2xl font-bold mb-2 ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
+                <h3
+                  className={`text-2xl font-bold mb-2 ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
                   {gameResult.win ? "YOU WIN!" : "YOU LOSE!"}
                 </h3>
                 <div className="space-y-2 mb-4">
@@ -157,8 +171,11 @@ export default function Blackjack() {
                     </Badge>
                   </div>
                 </div>
-                <p className={`text-lg font-semibold ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
-                  {gameResult.win ? '+' : ''}{gameResult.amount} coins
+                <p
+                  className={`text-lg font-semibold ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
+                  {gameResult.win ? "+" : ""}
+                  {gameResult.amount} coins
                 </p>
                 <p className="text-muted-foreground">
                   New Balance: {gameResult.newBalance.toLocaleString()} coins

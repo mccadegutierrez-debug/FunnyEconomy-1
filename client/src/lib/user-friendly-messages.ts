@@ -16,11 +16,14 @@ function pickRandom<T>(arr: T[]): T {
  * Transforms technical notification messages into user-friendly language
  * that basic users can easily understand
  */
-export function makeMessageUserFriendly(title: string, description?: string): FriendlyMessage {
+export function makeMessageUserFriendly(
+  title: string,
+  description?: string,
+): FriendlyMessage {
   const titleLower = title.toLowerCase();
-  
+
   // Banking/Money Operations
-  if (titleLower.includes('deposit successful')) {
+  if (titleLower.includes("deposit successful")) {
     const titles = [
       "Money Saved! 💰",
       "Deposit Hit Different 🤑",
@@ -29,22 +32,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "W Deposit Fr 🔥",
       "Coins In The Vault 🏦",
       "Aura Points +100 📈",
-      "Stacking Chips Rn 🎰"
+      "Stacking Chips Rn 🎰",
     ];
     const descriptions = [
       "Your money is safely stored, we're so back 💯",
       "Deposit went through smoother than a mewing streak",
       "The bank said 'let him cook' and took your coins",
       "Money in the bank hits different, aura restored ✨",
-      "Your wallet looking absolutely maxxed rn"
+      "Your wallet looking absolutely maxxed rn",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('deposit failed')) {
+
+  if (titleLower.includes("deposit failed")) {
     const titles = [
       "Bank Said Nah Bro 💸",
       "It's So Over 🚫",
@@ -61,7 +64,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Deposit Got Ratio'd Hard 🍔",
       "Mid Deposit Energy 😒",
       "Bank Said Absolutely Not ✌️",
-      "Caught Lacking By The Bank 🎭"
+      "Caught Lacking By The Bank 🎭",
     ];
     const descriptions = [
       "The bank took one look and said 'it's so over' lmao",
@@ -83,15 +86,15 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "You're down catastrophically bad with this one chief",
       "The deposit absolutely cooked your reputation 🍳",
       "Bro this deposit is absolutely cooked",
-      "Bank said 'touch grass' and rejected you"
+      "Bank said 'touch grass' and rejected you",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('withdrawal successful')) {
+
+  if (titleLower.includes("withdrawal successful")) {
     const titles = [
       "Money Retrieved! 💸",
       "We're So Back 🤑",
@@ -99,22 +102,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Bank Compliance Achieved ✅",
       "Coins Extracted Successfully 🏦",
       "Cash Out Hit Different 💯",
-      "Aura Points Restored 🔥"
+      "Aura Points Restored 🔥",
     ];
     const descriptions = [
       "You successfully got your money, we're so back",
       "Withdrawal went harder than expected, let him cook",
       "The bank said 'based' and gave you your coins",
       "Your withdrawal is giving main character energy ✨",
-      "Money retrieved with maximum sigma grindset"
+      "Money retrieved with maximum sigma grindset",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('withdrawal failed')) {
+
+  if (titleLower.includes("withdrawal failed")) {
     const titles = [
       "Withdrawal Denied LMAO 🚨",
       "It's So Over 🙅",
@@ -131,7 +134,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Skill Issue At The Bank 🚫",
       "Withdrawal Ate Zero Crumbs 😬",
       "Bank Left You On Read 📱",
-      "Withdrawal Fumbled Hard 🎪"
+      "Withdrawal Fumbled Hard 🎪",
     ];
     const descriptions = [
       "The vault literally laughed and slammed shut lmao",
@@ -153,36 +156,36 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Not the withdrawal getting ratio'd before it started",
       "Your account balance said 'it's so over'",
       "The ATM really said 'that's an L bozo' 💀",
-      "Withdrawal has zero rizz with the bank system"
+      "Withdrawal has zero rizz with the bank system",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('transfer successful')) {
+
+  if (titleLower.includes("transfer successful")) {
     const titles = [
       "Money Sent! 📤",
       "We're So Back 💸",
       "W Transfer 🔥 ✅",
       "Coins Delivered Successfully 🚀",
       "Transfer Slaying 🤑",
-      "Aura Transfer Complete 💯"
+      "Aura Transfer Complete 💯",
     ];
     const descriptions = [
       "Your coins were sent successfully, based move",
       "Transfer went through smoother than a mewing streak",
       "Payment delivered with sigma grindset energy",
-      "The transfer is giving main character vibes ✨"
+      "The transfer is giving main character vibes ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('transfer failed')) {
+
+  if (titleLower.includes("transfer failed")) {
     const titles = [
       "Transfer Rejected LMAO 🚫",
       "It's So Over 👻",
@@ -198,7 +201,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Transfer Said No Diddy ✌️",
       "Skill Issue Transaction 🚨",
       "Transfer Fumbled The Bag 🎒",
-      "Payment Has Zero Rizz 😬"
+      "Payment Has Zero Rizz 😬",
     ];
     const descriptions = [
       "That username doesn't exist lmao (unlike your problems)",
@@ -220,16 +223,16 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "The recipient's wallet living rent free without your coins",
       "Not the transfer getting ratio'd into oblivion",
       "Transaction has zero rizz with the system",
-      "Bank said 'that's cap' and blocked the whole thing 🧢"
+      "Bank said 'that's cap' and blocked the whole thing 🧢",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Rob Operations
-  if (titleLower.includes('rob successful')) {
+  if (titleLower.includes("rob successful")) {
     const titles = [
       "Steal Successful! 💰",
       "Rob Went Crazy 🔥",
@@ -237,22 +240,22 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Heist Mode: Enabled 🎭",
       "W Rob, Let Him Cook 💯",
       "Stealth 100 Achieved 🥷",
-      "Caught Them Lacking 📸"
+      "Caught Them Lacking 📸",
     ];
     const descriptions = [
       "You successfully took some coins, sigma grindset energy",
       "Bro really pulled off the heist of the century, we're so back",
       "They never saw it coming lmao absolutely cooked them",
       "Rob went harder than expected, aura points restored 🔥",
-      "You're giving main villain energy and it's working ✨"
+      "You're giving main villain energy and it's working ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('rob failed')) {
+
+  if (titleLower.includes("rob failed")) {
     const titles = [
       "Got Caught LMAO 👮",
       "It's So Over 🚔",
@@ -269,7 +272,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Criminal Has Zero Rizz 😬",
       "Fumbled The Heist 🎪",
       "Caught Tweaking So Hard 🎭",
-      "Robbery Ate Zero Crumbs 😒"
+      "Robbery Ate Zero Crumbs 😒",
     ];
     const descriptions = [
       "Smooth criminal you are NOT, it's so over 💀",
@@ -291,37 +294,37 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "They really said 'cope' and handcuffed you",
       "That robbery killed your mewing streak 💀",
       "Criminal career ate dust and left no crumbs 😭",
-      "The victim said 'skill issue' and called the cops"
+      "The victim said 'skill issue' and called the cops",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Game Results
-  if (titleLower.includes('blackjack win')) {
+  if (titleLower.includes("blackjack win")) {
     const titles = [
       "Card Game Win! 🎉",
       "Blackjack W Hit Different 🃏",
       "We're So Back 🙏",
       "Dealer Got Ratio'd 💯",
       "Gambling Arc Activated 🎰",
-      "Based Blackjack Win 🔥"
+      "Based Blackjack Win 🔥",
     ];
     const descriptions = [
       "You won the card game, absolute legend, let him cook",
       "Blackjack said 'you're valid' and paid out 🤑",
       "Dealer got absolutely demolished, aura points restored",
-      "The cards are giving main character energy for you ✨"
+      "The cards are giving main character energy for you ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('blackjack loss')) {
+
+  if (titleLower.includes("blackjack loss")) {
     const titles = [
       "Blackjack Said Nah LMAO 🃏",
       "It's So Over 💀",
@@ -337,7 +340,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Blackjack Fumbled You 🎪",
       "Zero Rizz With Cards 😒",
       "Dealer Living Rent Free 🏠",
-      "Cards Ate And Left Nothing 🍽️"
+      "Cards Ate And Left Nothing 🍽️",
     ];
     const descriptions = [
       "Get absolutely demolished, the house always wins, it's so over",
@@ -359,36 +362,36 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "That game killed your mewing streak 💀",
       "Cards ate your coins and left zero crumbs 😭",
       "The table said 'skill issue' and cleaned you out",
-      "Bro's gambling arc ended before it even started 💀"
+      "Bro's gambling arc ended before it even started 💀",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('slots win')) {
+
+  if (titleLower.includes("slots win")) {
     const titles = [
       "Slot Machine Win! 🎰",
       "We're So Back 🤑",
       "W Spin 💯",
       "Jackpot Energy Achieved ✨",
       "Slots Said Yessir 🔥",
-      "Machine Blessed You 🙏"
+      "Machine Blessed You 🙏",
     ];
     const descriptions = [
       "The slot machine paid out, you're valid, we're so back",
       "Slots hit different when they actually pay 🎊",
       "The machine said 'let him cook' and paid out",
-      "Your luck is giving main character vibes rn ✨"
+      "Your luck is giving main character vibes rn ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('slots loss')) {
+
+  if (titleLower.includes("slots loss")) {
     const titles = [
       "Slots Said Nah LMAO 🎰",
       "It's So Over 💸",
@@ -404,7 +407,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Zero Rizz With Spins 😬",
       "Machine Living Rent Free 🏠",
       "Slots Ratio'd Your Wallet 📉",
-      "Spin Fumbled The Bag 🎒"
+      "Spin Fumbled The Bag 🎒",
     ];
     const descriptions = [
       "The machine is literally mocking you rn lmao",
@@ -426,35 +429,35 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "That spin killed your mewing streak 💀",
       "Slots ate your money and left zero crumbs 😭",
       "The reels said 'skill issue' and took everything",
-      "Bro's slot career ended in one spin 💀"
+      "Bro's slot career ended in one spin 💀",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('coinflip win')) {
+
+  if (titleLower.includes("coinflip win")) {
     const titles = [
       "Coin Toss Win! 🪙",
       "We're So Back 💯",
       "Coin Blessed You 🙏",
       "50/50 Victory Achieved ✅",
-      "Flip Game Strong 🔥"
+      "Flip Game Strong 🔥",
     ];
     const descriptions = [
       "You guessed correctly, absolute legend, we're so back",
       "Coin said 'you're valid' and landed your way 🪙",
       "The flip gods blessed you, aura points restored",
-      "50/50 and you actually won, rare moment ✨"
+      "50/50 and you actually won, rare moment ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('coinflip loss')) {
+
+  if (titleLower.includes("coinflip loss")) {
     const titles = [
       "Wrong Side LMAO 🪙",
       "It's So Over 😤",
@@ -469,7 +472,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Skill Issue On 50/50 🚨",
       "Zero Rizz With Flips 😬",
       "Coin Living Rent Free 🏠",
-      "Flip Ate Zero Crumbs 😒"
+      "Flip Ate Zero Crumbs 😒",
     ];
     const descriptions = [
       "It's literally a coin flip and you STILL lost, chat is this real?",
@@ -491,37 +494,37 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "That flip killed your mewing streak 💀",
       "Flip ate your bet and left zero crumbs 😭",
       "The coin said 'skill issue' even on 50/50",
-      "Bro lost a coin toss, that's actually wild 💀"
+      "Bro lost a coin toss, that's actually wild 💀",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Trivia/Quiz
-  if (titleLower.includes('correct answer')) {
+  if (titleLower.includes("correct answer")) {
     const titles = [
       "Right Answer! 🧠",
       "Brain Cells Activated 💡",
       "W Intelligence 🎓",
       "Based Answer 📚",
       "Big Brain Energy ✨",
-      "Looksmaxxing IQ 💯"
+      "Looksmaxxing IQ 💯",
     ];
     const descriptions = [
       "You got it right, absolute genius, let him cook",
       "Brain really said 'I got you', we're so back",
       "That answer hit different, pure intelligence ✨",
-      "Your IQ is giving main character vibes 🧠"
+      "Your IQ is giving main character vibes 🧠",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('wrong answer')) {
+
+  if (titleLower.includes("wrong answer")) {
     const titles = [
       "Big Brain Moment... NOT 🧠",
       "Wrong Answer LMAO 🚫",
@@ -537,7 +540,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Skill Issue On Quiz 🚨",
       "Zero Rizz With Knowledge 😒",
       "Answer Fumbled Hard 🎪",
-      "Brain Has Left The Chat 👋"
+      "Brain Has Left The Chat 👋",
     ];
     const descriptions = [
       "That answer was wild af, chat is this real? 💀",
@@ -559,223 +562,232 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "That answer killed your mewing streak 💀",
       "Knowledge ate dust and left zero crumbs 😭",
       "The quiz said 'skill issue' and marked you wrong",
-      "Bro's brain really said 'absolutely not' today 💀"
+      "Bro's brain really said 'absolutely not' today 💀",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Daily Rewards
-  if (titleLower.includes('daily reward') || titleLower.includes('coin reward')) {
+  if (
+    titleLower.includes("daily reward") ||
+    titleLower.includes("coin reward")
+  ) {
     const titles = [
       "Daily Gift Claimed! 🎁",
       "Freebies Secured 💰",
       "We're So Back 🔥",
       "Free Coins Slaying 🤑",
       "Daily Blessing Received 🙏",
-      "Gooning Session Reward 💯"
+      "Gooning Session Reward 💯",
     ];
     const descriptions = [
       "You got your daily free coins, we're so back",
       "Daily reward hit different, sigma grindset paying off",
       "Free money is always valid, aura points restored 💸",
-      "The system blessed you today ✨"
+      "The system blessed you today ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('item reward')) {
+
+  if (titleLower.includes("item reward")) {
     const titles = [
       "Free Item! ✨",
       "Item Drop Secured 🎁",
       "W Loot 💯",
-      "Reward Slaying 🔥"
+      "Reward Slaying 🔥",
     ];
     const descriptions = [
       "You received a free item, that's valid",
       "Free loot is always a W, we're so back",
-      "The item drop blessed you today ✨"
+      "The item drop blessed you today ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('lootbox reward')) {
+
+  if (titleLower.includes("lootbox reward")) {
     const titles = [
       "Mystery Box! 📦",
       "Lootbox W Secured 🎁",
       "RNG Blessed You 🎰",
-      "Box Drop Hit Different 🔥"
+      "Box Drop Hit Different 🔥",
     ];
     const descriptions = [
       "You got a mystery box, open it for surprises",
       "Lootbox RNG is on your side, let him cook 🎲",
-      "The box gods blessed you today ✨"
+      "The box gods blessed you today ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Work/Economy Actions
-  if (titleLower.includes('work') && (titleLower.includes('success') || titleLower.includes('earn'))) {
+  if (
+    titleLower.includes("work") &&
+    (titleLower.includes("success") || titleLower.includes("earn"))
+  ) {
     const titles = [
       "Work Complete! 💼",
       "Grind Paid Off 💰",
       "W Work Ethic 🔥",
       "Sigma Grindset Activated 💯",
-      "Money Earned Slaying 🤑"
+      "Money Earned Slaying 🤑",
     ];
     const descriptions = [
       "You finished your work and earned coins, sigma grindset",
       "Work hit different when it pays, we're so back",
-      "The grind is real and it's paying off, aura points up 💸"
+      "The grind is real and it's paying off, aura points up 💸",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('fish') && titleLower.includes('success')) {
+
+  if (titleLower.includes("fish") && titleLower.includes("success")) {
     const titles = [
       "Fishing Success! 🎣",
       "Caught A Big One 🐟",
       "W Fishing Skills 🔥",
-      "Fisherman Arc Activated 🌊"
+      "Fisherman Arc Activated 🌊",
     ];
     const descriptions = [
       "You caught something valuable, fishing W",
       "The fish really said 'take my money', we're so back",
-      "Fishing skills are giving main character energy ✨"
+      "Fishing skills are giving main character energy ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('hunt') && titleLower.includes('success')) {
+
+  if (titleLower.includes("hunt") && titleLower.includes("success")) {
     const titles = [
       "Hunting Success! 🏹",
       "Hunt Went Crazy 🦌",
       "W Hunter Skills 🔥",
-      "Predator Mode Enabled 💯"
+      "Predator Mode Enabled 💯",
     ];
     const descriptions = [
       "Your hunt was successful, apex predator energy",
       "Hunt hit different when you actually catch something",
-      "The wilderness blessed you today, sigma grindset 🌲"
+      "The wilderness blessed you today, sigma grindset 🌲",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('dig') && titleLower.includes('success')) {
+
+  if (titleLower.includes("dig") && titleLower.includes("success")) {
     const titles = [
       "Digging Success! ⛏️",
       "Found Treasure 💎",
       "W Mining Skills 🔥",
-      "Excavation Complete 💯"
+      "Excavation Complete 💯",
     ];
     const descriptions = [
       "You found something valuable while digging, W move",
       "Digging really paid off this time, we're so back",
-      "The ground blessed you with treasure ✨"
+      "The ground blessed you with treasure ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('crime') && titleLower.includes('success')) {
+
+  if (titleLower.includes("crime") && titleLower.includes("success")) {
     const titles = [
       "Mission Complete! 🕵️",
       "Crime Spree Activated 😈",
       "W Criminal Arc 🔥",
-      "Heist Successful 💰"
+      "Heist Successful 💰",
     ];
     const descriptions = [
       "Your mission was successful, villain energy",
       "Crime really does pay sometimes, sigma grindset 💸",
-      "The criminal arc is giving main antagonist vibes ✨"
+      "The criminal arc is giving main antagonist vibes ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('stream') && titleLower.includes('success')) {
+
+  if (titleLower.includes("stream") && titleLower.includes("success")) {
     const titles = [
       "Streaming Success! 📺",
       "Stream Popped Off 🎮",
       "W Content Creator 🔥",
-      "Viewers Blessed You 👑"
+      "Viewers Blessed You 👑",
     ];
     const descriptions = [
       "Your stream went well and you earned coins, content king",
       "Stream hit different when the viewers show up",
-      "The algorithm blessed you today, we're so back 📈"
+      "The algorithm blessed you today, we're so back 📈",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('meme') && titleLower.includes('success')) {
+
+  if (titleLower.includes("meme") && titleLower.includes("success")) {
     const titles = [
       "Meme Posted! 😂",
       "Meme Went Viral 🔥",
       "W Meme Game 💯",
-      "Based Content Creator ✨"
+      "Based Content Creator ✨",
     ];
     const descriptions = [
       "Your meme was popular and you earned coins, based",
       "Meme really popped off, we're so back 📈",
-      "The meme lords blessed you today, let him cook"
+      "The meme lords blessed you today, let him cook",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Level/Progress
-  if (titleLower.includes('level') && (titleLower.includes('up') || titleLower.includes('gain'))) {
+  if (
+    titleLower.includes("level") &&
+    (titleLower.includes("up") || titleLower.includes("gain"))
+  ) {
     const titles = [
       "Level Up! 🆙",
       "We're So Back 📈",
       "W Progress 🔥",
       "XP Grind Paid Off 💯",
-      "Looksmaxxing Progress ✨"
+      "Looksmaxxing Progress ✨",
     ];
     const descriptions = [
       "Congratulations! You reached a new level, sigma grindset",
       "Level up hit different, we're so back 🎊",
       "The XP gods blessed you, aura points up",
-      "Your progress is giving main character energy ✨"
+      "Your progress is giving main character energy ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Pet-specific failures
-  if (titleLower.includes('adoption') && titleLower.includes('fail')) {
+  if (titleLower.includes("adoption") && titleLower.includes("fail")) {
     const titles = [
       "Pet Ghosted You 👻",
       "It's So Over 🚫",
@@ -788,7 +800,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Aura Points Deleted 🌽",
       "Delulu Pet Parent 🤖",
       "Pet Has Zero Rizz For You 😬",
-      "Adoption Fumbled Hard 🎪"
+      "Adoption Fumbled Hard 🎪",
     ];
     const descriptions = [
       "Not even pets want you rn, it's so over lmao",
@@ -805,166 +817,172 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "The adoption absolutely tanked your aura points",
       "Pet living rent free in someone else's home",
       "Not the adoption getting ratio'd by rejection",
-      "Your pet owner aura has zero rizz"
+      "Your pet owner aura has zero rizz",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('pet') && titleLower.includes('feed')) {
+
+  if (titleLower.includes("pet") && titleLower.includes("feed")) {
     const titles = [
       "Pet Fed! 🍖",
       "Feeding Success 🐾",
       "W Pet Owner 💯",
-      "Pet Care Activated 🔥"
+      "Pet Care Activated 🔥",
     ];
     const descriptions = [
       "Your pet is now fed and happy, based owner",
       "Pet said 'thank you' with maximum cuteness ✨",
-      "Feeding went smoothly, we're so back"
+      "Feeding went smoothly, we're so back",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('pet') && titleLower.includes('hungry')) {
+
+  if (titleLower.includes("pet") && titleLower.includes("hungry")) {
     const titles = [
       "Pet Is Starving 🍽️",
       "Feed Your Pet ASAP 🐾",
       "Hunger Alert! 🚨",
-      "Pet Needs Food 💀"
+      "Pet Needs Food 💀",
     ];
     const descriptions = [
       "Your pet is getting hangry, feed them before it's too late",
       "The pet is giving 'I'm about to ghost you' energy 😭",
-      "Feed the poor thing, what are you doing? 💀"
+      "Feed the poor thing, what are you doing? 💀",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('pet') && titleLower.includes('died')) {
+
+  if (titleLower.includes("pet") && titleLower.includes("died")) {
     const titles = [
       "Pet Died 💀",
       "It's So Over 😭",
       "You Monster 🪦",
       "L Pet Owner 💔",
-      "Down Catastrophically Bad 😢"
+      "Down Catastrophically Bad 😢",
     ];
     const descriptions = [
       "Your pet died from neglect, you absolute monster, it's so over",
       "RIP to your pet, maybe try harder next time? 💀",
       "The pet said 'goodbye cruel world' and dipped",
-      "You really let your pet die, chat is this real? 😭"
+      "You really let your pet die, chat is this real? 😭",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('pet') && titleLower.includes('level')) {
+
+  if (titleLower.includes("pet") && titleLower.includes("level")) {
     const titles = [
       "Pet Leveled Up! 🆙",
       "Pet Growth Complete 🐾",
       "W Pet Training 💯",
-      "Pet Looksmaxxing ✨"
+      "Pet Looksmaxxing ✨",
     ];
     const descriptions = [
       "Your pet gained a level, sigma pet owner grindset",
       "Pet said 'I'm getting stronger', we're so back 🔥",
-      "Training paying off, your pet is evolving ✨"
+      "Training paying off, your pet is evolving ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Inventory/Items
-  if (titleLower.includes('item added') || titleLower.includes('item received')) {
+  if (
+    titleLower.includes("item added") ||
+    titleLower.includes("item received")
+  ) {
     const titles = [
       "Item Acquired! ✨",
       "Loot Secured 🎁",
       "W Item Get 💯",
-      "Inventory Update 🔥"
+      "Inventory Update 🔥",
     ];
     const descriptions = [
       "New item added to your inventory, we're so back",
       "Item secured successfully, sigma grindset ✨",
-      "Your collection is growing nicely"
+      "Your collection is growing nicely",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('item sold')) {
+
+  if (titleLower.includes("item sold")) {
     const titles = [
       "Item Sold! 💰",
       "Sale Complete ✅",
       "W Merchant Skills 🔥",
-      "Coins Secured 🤑"
+      "Coins Secured 🤑",
     ];
     const descriptions = [
       "You successfully sold the item, we're so back 💸",
       "Sale went through smoothly, sigma grindset",
-      "Money acquired, your trading skills are elite ✨"
+      "Money acquired, your trading skills are elite ✨",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
-  if (titleLower.includes('inventory full')) {
+
+  if (titleLower.includes("inventory full")) {
     const titles = [
       "Inventory Full! 🎒",
       "No Space Left 💀",
       "Clean Your Inventory 🧹",
-      "Hoarding Problem Detected 😭"
+      "Hoarding Problem Detected 😭",
     ];
     const descriptions = [
       "Your inventory is completely full, clean it out bro",
       "You're hoarding like crazy, sell some stuff",
-      "No more space available, it's so over until you clean up"
+      "No more space available, it's so over until you clean up",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Errors/Failures
-  if (titleLower.includes('insufficient') || titleLower.includes('not enough')) {
+  if (
+    titleLower.includes("insufficient") ||
+    titleLower.includes("not enough")
+  ) {
     const titles = [
       "Broke AF 💸",
       "It's So Over 💀",
       "Not Enough Coins 😭",
       "Wallet Empty LMAO 🤡",
-      "Down Bad Financially 📉"
+      "Down Bad Financially 📉",
     ];
     const descriptions = [
       "You don't have enough money for that, chat is this real? 💀",
       "Your wallet is crying rn, go earn some coins",
       "Insufficient funds detected, sigma grindset needed 💸",
-      "You're broke, it's so over until you grind"
+      "You're broke, it's so over until you grind",
     ];
     return {
       title: pickRandom(titles),
-      description: pickRandom(descriptions)
+      description: pickRandom(descriptions),
     };
   }
-  
+
   // Cooldowns/Waiting
-  if (titleLower.includes('cooldown') || titleLower.includes('wait')) {
+  if (titleLower.includes("cooldown") || titleLower.includes("wait")) {
     const titles = [
       "Slow Down Bro 🕒",
       "Chill Out ⏰",
@@ -977,7 +995,7 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "Aura Points -100 🌽",
       "Delulu Spam Behavior 🤖",
       "Zero Rizz With Timing 😬",
-      "Patience Fumbled 🎪"
+      "Patience Fumbled 🎪",
     ];
     const descriptions = [
       "Bro you're doing way too much rn, take a break",
@@ -993,60 +1011,72 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
       "You're down catastrophically with the spam chief",
       "The timer absolutely nuked your aura points 💀",
       "Patience living rent free... but not in your brain",
-      "Not you getting ratio'd by the cooldown system"
+      "Not you getting ratio'd by the cooldown system",
     ];
     return {
       title: pickRandom(titles),
-      description: description?.replace(/cooldown/gi, 'waiting time') || pickRandom(descriptions)
+      description:
+        description?.replace(/cooldown/gi, "waiting time") ||
+        pickRandom(descriptions),
     };
   }
-  
+
   // Authentication
-  if (titleLower.includes('welcome back')) {
+  if (titleLower.includes("welcome back")) {
     return {
       title: "Welcome Back! 👋",
-      description: description || "Great to see you again, we're so back!"
+      description: description || "Great to see you again, we're so back!",
     };
   }
-  
-  if (titleLower.includes('login failed') || titleLower.includes('registration failed')) {
+
+  if (
+    titleLower.includes("login failed") ||
+    titleLower.includes("registration failed")
+  ) {
     return {
       title: "Sign In Problem 😕",
-      description: "There was an issue signing you in. Please check your details and try again!"
+      description:
+        "There was an issue signing you in. Please check your details and try again!",
     };
   }
-  
+
   // Shop/Buying
-  if (titleLower.includes('purchase') || titleLower.includes('bought') || titleLower.includes('buy')) {
+  if (
+    titleLower.includes("purchase") ||
+    titleLower.includes("bought") ||
+    titleLower.includes("buy")
+  ) {
     return {
       title: "Item Purchased! 🛒",
-      description: description?.replace(/bought/gi, 'purchased') || "You successfully bought the item, we're so back!"
+      description:
+        description?.replace(/bought/gi, "purchased") ||
+        "You successfully bought the item, we're so back!",
     };
   }
-  
+
   // Default: if no specific transformation matches, make it friendlier
   return {
     title: title
-      .replace(/API/gi, 'System')
-      .replace(/Database/gi, 'System')
-      .replace(/Server/gi, 'System')
-      .replace(/Error/gi, 'Problem')
-      .replace(/Failed/gi, 'Didn\'t Work')
-      .replace(/Success/gi, 'Success')
-      .replace(/XP/gi, 'Experience'),
+      .replace(/API/gi, "System")
+      .replace(/Database/gi, "System")
+      .replace(/Server/gi, "System")
+      .replace(/Error/gi, "Problem")
+      .replace(/Failed/gi, "Didn't Work")
+      .replace(/Success/gi, "Success")
+      .replace(/XP/gi, "Experience"),
     description: description
-      ?.replace(/API/gi, 'system')
-      .replace(/database/gi, 'system')
-      .replace(/server/gi, 'system')
-      .replace(/error/gi, 'problem')
-      .replace(/failed/gi, 'didn\'t work')
-      .replace(/XP/gi, 'experience')
-      .replace(/cooldown/gi, 'waiting time')
-      .replace(/multiplier/gi, 'bonus')
-      .replace(/lootbox/gi, 'mystery box')
-      .replace(/withdraw/gi, 'take out')
-      .replace(/deposit/gi, 'save')
-      .replace(/bank/gi, 'savings')
+      ?.replace(/API/gi, "system")
+      .replace(/database/gi, "system")
+      .replace(/server/gi, "system")
+      .replace(/error/gi, "problem")
+      .replace(/failed/gi, "didn't work")
+      .replace(/XP/gi, "experience")
+      .replace(/cooldown/gi, "waiting time")
+      .replace(/multiplier/gi, "bonus")
+      .replace(/lootbox/gi, "mystery box")
+      .replace(/withdraw/gi, "take out")
+      .replace(/deposit/gi, "save")
+      .replace(/bank/gi, "savings"),
   };
 }
 
@@ -1054,16 +1084,20 @@ export function makeMessageUserFriendly(title: string, description?: string): Fr
  * Enhanced toast function that automatically makes messages user-friendly
  */
 export function userFriendlyToast(
-  toast: (options: { title: string; description?: string; variant?: string }) => void,
+  toast: (options: {
+    title: string;
+    description?: string;
+    variant?: string;
+  }) => void,
   title: string,
   description?: string,
-  variant?: string
+  variant?: string,
 ) {
   const friendly = makeMessageUserFriendly(title, description);
-  
+
   toast({
     title: friendly.title,
     description: friendly.description,
-    variant
+    variant,
   });
 }

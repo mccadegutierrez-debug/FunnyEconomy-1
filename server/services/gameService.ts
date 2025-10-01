@@ -18,30 +18,33 @@ export class GameService {
     // Simple blackjack simulation
     const dealerScore = this.getRandomCardValue();
     const playerScore = this.getRandomCardValue();
-    
+
     const win = playerScore > dealerScore && playerScore <= 21;
     const amount = win ? Math.floor(bet * 1.95) : -bet; // House edge
-    
+
     // Parse gameStats
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
-    
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
+
     // Update user coins and stats
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
         ...gameStats,
         blackjackWins: (gameStats.blackjackWins || 0) + (win ? 1 : 0),
-        blackjackLosses: (gameStats.blackjackLosses || 0) + (win ? 0 : 1)
-      }
+        blackjackLosses: (gameStats.blackjackLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     // Create transaction
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Blackjack ${win ? 'win' : 'loss'}: ${playerScore} vs ${dealerScore}`
+      description: `Blackjack ${win ? "win" : "loss"}: ${playerScore} vs ${dealerScore}`,
     });
 
     return {
@@ -49,7 +52,7 @@ export class GameService {
       amount,
       playerScore,
       dealerScore,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 
@@ -67,24 +70,28 @@ export class GameService {
     }
 
     // Slot symbols and their payouts
-    const symbols = ['🐸', '💎', '🚀', '💰', '🔥'];
+    const symbols = ["🐸", "💎", "🚀", "💰", "🔥"];
     const reels = [
       symbols[this.getSecureRandom() % symbols.length],
       symbols[this.getSecureRandom() % symbols.length],
-      symbols[this.getSecureRandom() % symbols.length]
+      symbols[this.getSecureRandom() % symbols.length],
     ];
 
     let multiplier = 0;
-    
+
     // Check for matches
     if (reels[0] === reels[1] && reels[1] === reels[2]) {
       // All three match
-      if (reels[0] === '💰') multiplier = 50;
-      else if (reels[0] === '💎') multiplier = 25;
-      else if (reels[0] === '🚀') multiplier = 15;
-      else if (reels[0] === '🔥') multiplier = 10;
+      if (reels[0] === "💰") multiplier = 50;
+      else if (reels[0] === "💎") multiplier = 25;
+      else if (reels[0] === "🚀") multiplier = 15;
+      else if (reels[0] === "🔥") multiplier = 10;
       else multiplier = 5;
-    } else if (reels[0] === reels[1] || reels[1] === reels[2] || reels[0] === reels[2]) {
+    } else if (
+      reels[0] === reels[1] ||
+      reels[1] === reels[2] ||
+      reels[0] === reels[2]
+    ) {
       // Two match
       multiplier = 2;
     }
@@ -93,7 +100,10 @@ export class GameService {
     const amount = win ? bet * multiplier - bet : -bet;
 
     // Parse gameStats
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     // Update user
     await storage.updateUser(user.id, {
@@ -101,16 +111,16 @@ export class GameService {
       gameStats: {
         ...gameStats,
         slotsWins: (gameStats.slotsWins || 0) + (win ? 1 : 0),
-        slotsLosses: (gameStats.slotsLosses || 0) + (win ? 0 : 1)
-      }
+        slotsLosses: (gameStats.slotsLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Slots ${win ? 'win' : 'loss'}: ${reels.join(' ')} (${multiplier}x)`
+      description: `Slots ${win ? "win" : "loss"}: ${reels.join(" ")} (${multiplier}x)`,
     });
 
     return {
@@ -118,12 +128,16 @@ export class GameService {
       amount,
       reels,
       multiplier,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 
   // Coinflip implementation
-  static async playCoinflip(username: string, bet: number, choice: 'heads' | 'tails') {
+  static async playCoinflip(
+    username: string,
+    bet: number,
+    choice: "heads" | "tails",
+  ) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -135,28 +149,31 @@ export class GameService {
       throw new Error("Insufficient coins");
     }
 
-    const result = this.getSecureRandom() % 2 === 0 ? 'heads' : 'tails';
+    const result = this.getSecureRandom() % 2 === 0 ? "heads" : "tails";
     const win = choice === result;
     const amount = win ? Math.floor(bet * 0.95) : -bet; // 1.95x payout with house edge
 
     // Parse gameStats
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
         ...gameStats,
         coinflipWins: (gameStats.coinflipWins || 0) + (win ? 1 : 0),
-        coinflipLosses: (gameStats.coinflipLosses || 0) + (win ? 0 : 1)
-      }
+        coinflipLosses: (gameStats.coinflipLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Coinflip ${win ? 'win' : 'loss'}: ${choice} vs ${result}`
+      description: `Coinflip ${win ? "win" : "loss"}: ${choice} vs ${result}`,
     });
 
     return {
@@ -164,7 +181,7 @@ export class GameService {
       amount,
       result,
       choice,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 
@@ -174,31 +191,51 @@ export class GameService {
     if (!user) throw new Error("User not found");
 
     const questions = [
-      { question: "What is the capital of France?", options: ["London", "Paris", "Berlin", "Madrid"], correct: 1 },
-      { question: "Who painted the Mona Lisa?", options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"], correct: 2 },
+      {
+        question: "What is the capital of France?",
+        options: ["London", "Paris", "Berlin", "Madrid"],
+        correct: 1,
+      },
+      {
+        question: "Who painted the Mona Lisa?",
+        options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"],
+        correct: 2,
+      },
       { question: "What is 2 + 2?", options: ["3", "4", "5", "6"], correct: 1 },
     ];
 
     const question = questions[this.getSecureRandom() % questions.length];
-    
+
     return {
       question: question.question,
       options: question.options,
-      questionId: questions.indexOf(question)
+      questionId: questions.indexOf(question),
     };
   }
 
-  static async submitTriviaAnswer(username: string, questionId: number, answer: number) {
+  static async submitTriviaAnswer(
+    username: string,
+    questionId: number,
+    answer: number,
+  ) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
     const questions = [
-      { question: "What is the capital of France?", options: ["London", "Paris", "Berlin", "Madrid"], correct: 1 },
-      { question: "Who painted the Mona Lisa?", options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"], correct: 2 },
+      {
+        question: "What is the capital of France?",
+        options: ["London", "Paris", "Berlin", "Madrid"],
+        correct: 1,
+      },
+      {
+        question: "Who painted the Mona Lisa?",
+        options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"],
+        correct: 2,
+      },
       { question: "What is 2 + 2?", options: ["3", "4", "5", "6"], correct: 1 },
     ];
     const question = questions[questionId];
-    
+
     if (!question) {
       throw new Error("Invalid question");
     }
@@ -207,7 +244,10 @@ export class GameService {
     const amount = win ? 100 : 0; // Fixed reward for trivia
 
     // Parse gameStats
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     if (win) {
       await storage.updateUser(user.id, {
@@ -215,23 +255,23 @@ export class GameService {
         xp: user.xp + 20,
         gameStats: {
           ...gameStats,
-          triviaWins: (gameStats.triviaWins || 0) + 1
-        }
+          triviaWins: (gameStats.triviaWins || 0) + 1,
+        },
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'earn',
+        type: "earn",
         amount,
         targetUser: null,
-        description: `Trivia correct answer: +${amount} coins, +20 XP`
+        description: `Trivia correct answer: +${amount} coins, +20 XP`,
       });
     } else {
       await storage.updateUser(user.id, {
         gameStats: {
           ...gameStats,
-          triviaLosses: (gameStats.triviaLosses || 0) + 1
-        }
+          triviaLosses: (gameStats.triviaLosses || 0) + 1,
+        },
       });
     }
 
@@ -240,12 +280,16 @@ export class GameService {
       amount,
       correctAnswer: question.options[question.correct],
       newBalance: user.coins + amount,
-      newXP: user.xp + (win ? 20 : 0)
+      newXP: user.xp + (win ? 20 : 0),
     };
   }
 
   // Dice game - roll two dice, predict over/under 7
-  static async playDice(username: string, bet: number, prediction: 'over' | 'under' | 'seven') {
+  static async playDice(
+    username: string,
+    bet: number,
+    prediction: "over" | "under" | "seven",
+  ) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -260,40 +304,43 @@ export class GameService {
     const dice1 = (this.getSecureRandom() % 6) + 1;
     const dice2 = (this.getSecureRandom() % 6) + 1;
     const total = dice1 + dice2;
-    
+
     let win = false;
     let multiplier = 0;
-    
-    if (prediction === 'seven' && total === 7) {
+
+    if (prediction === "seven" && total === 7) {
       win = true;
       multiplier = 5; // 5x for exact seven
-    } else if (prediction === 'over' && total > 7) {
+    } else if (prediction === "over" && total > 7) {
       win = true;
       multiplier = 1.9; // 1.9x for over
-    } else if (prediction === 'under' && total < 7) {
+    } else if (prediction === "under" && total < 7) {
       win = true;
       multiplier = 1.9; // 1.9x for under
     }
 
     const amount = win ? Math.floor(bet * multiplier) - bet : -bet;
 
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
         ...gameStats,
         diceWins: (gameStats.diceWins || 0) + (win ? 1 : 0),
-        diceLosses: (gameStats.diceLosses || 0) + (win ? 0 : 1)
-      }
+        diceLosses: (gameStats.diceLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Dice ${win ? 'win' : 'loss'}: ${dice1}+${dice2}=${total} (${prediction})`
+      description: `Dice ${win ? "win" : "loss"}: ${dice1}+${dice2}=${total} (${prediction})`,
     });
 
     return {
@@ -304,12 +351,16 @@ export class GameService {
       total,
       prediction,
       multiplier,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 
   // Roulette game - spin the wheel
-  static async playRoulette(username: string, bet: number, betType: 'red' | 'black' | 'green' | 'odd' | 'even' | 'high' | 'low') {
+  static async playRoulette(
+    username: string,
+    bet: number,
+    betType: "red" | "black" | "green" | "odd" | "even" | "high" | "low",
+  ) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -323,7 +374,11 @@ export class GameService {
 
     const number = this.getSecureRandom() % 37; // 0-36
     const isGreen = number === 0;
-    const isRed = !isGreen && [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(number);
+    const isRed =
+      !isGreen &&
+      [
+        1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36,
+      ].includes(number);
     const isBlack = !isGreen && !isRed;
     const isOdd = number > 0 && number % 2 === 1;
     const isEven = number > 0 && number % 2 === 0;
@@ -333,58 +388,61 @@ export class GameService {
     let win = false;
     let multiplier = 0;
 
-    if (betType === 'green' && isGreen) {
+    if (betType === "green" && isGreen) {
       win = true;
       multiplier = 35; // 35x for green
-    } else if (betType === 'red' && isRed) {
+    } else if (betType === "red" && isRed) {
       win = true;
       multiplier = 1.9; // 1.9x for red/black
-    } else if (betType === 'black' && isBlack) {
+    } else if (betType === "black" && isBlack) {
       win = true;
       multiplier = 1.9;
-    } else if (betType === 'odd' && isOdd) {
+    } else if (betType === "odd" && isOdd) {
       win = true;
       multiplier = 1.9;
-    } else if (betType === 'even' && isEven) {
+    } else if (betType === "even" && isEven) {
       win = true;
       multiplier = 1.9;
-    } else if (betType === 'high' && isHigh) {
+    } else if (betType === "high" && isHigh) {
       win = true;
       multiplier = 1.9;
-    } else if (betType === 'low' && isLow) {
+    } else if (betType === "low" && isLow) {
       win = true;
       multiplier = 1.9;
     }
 
     const amount = win ? Math.floor(bet * multiplier) - bet : -bet;
 
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
         ...gameStats,
         rouletteWins: (gameStats.rouletteWins || 0) + (win ? 1 : 0),
-        rouletteLosses: (gameStats.rouletteLosses || 0) + (win ? 0 : 1)
-      }
+        rouletteLosses: (gameStats.rouletteLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Roulette ${win ? 'win' : 'loss'}: ${number} (${betType})`
+      description: `Roulette ${win ? "win" : "loss"}: ${number} (${betType})`,
     });
 
     return {
       win,
       amount,
       number,
-      color: isGreen ? 'green' : isRed ? 'red' : 'black',
+      color: isGreen ? "green" : isRed ? "red" : "black",
       betType,
       multiplier,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 
@@ -408,32 +466,38 @@ export class GameService {
     // Generate crash point (weighted towards lower values)
     const random = this.getSecureRandom() % 10000;
     let crashPoint: number;
-    
-    if (random < 5000) crashPoint = 1 + (random / 5000) * 0.5; // 50% chance of 1.0-1.5x
-    else if (random < 8000) crashPoint = 1.5 + ((random - 5000) / 3000) * 1.5; // 30% chance of 1.5-3x
-    else if (random < 9500) crashPoint = 3 + ((random - 8000) / 1500) * 7; // 15% chance of 3-10x
+
+    if (random < 5000)
+      crashPoint = 1 + (random / 5000) * 0.5; // 50% chance of 1.0-1.5x
+    else if (random < 8000)
+      crashPoint = 1.5 + ((random - 5000) / 3000) * 1.5; // 30% chance of 1.5-3x
+    else if (random < 9500)
+      crashPoint = 3 + ((random - 8000) / 1500) * 7; // 15% chance of 3-10x
     else crashPoint = 10 + ((random - 9500) / 500) * 90; // 5% chance of 10-100x
 
     const win = cashoutAt <= crashPoint;
     const amount = win ? Math.floor(bet * cashoutAt) - bet : -bet;
 
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
         ...gameStats,
         crashWins: (gameStats.crashWins || 0) + (win ? 1 : 0),
-        crashLosses: (gameStats.crashLosses || 0) + (win ? 0 : 1)
-      }
+        crashLosses: (gameStats.crashLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Crash ${win ? 'win' : 'loss'}: ${cashoutAt.toFixed(2)}x (crashed at ${crashPoint.toFixed(2)}x)`
+      description: `Crash ${win ? "win" : "loss"}: ${cashoutAt.toFixed(2)}x (crashed at ${crashPoint.toFixed(2)}x)`,
     });
 
     return {
@@ -441,7 +505,7 @@ export class GameService {
       amount,
       crashPoint: parseFloat(crashPoint.toFixed(2)),
       cashoutAt,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 
@@ -463,7 +527,7 @@ export class GameService {
     }
 
     // Validate numbers are between 1-50 and unique
-    if (numbers.some(n => n < 1 || n > 50)) {
+    if (numbers.some((n) => n < 1 || n > 50)) {
       throw new Error("Numbers must be between 1 and 50");
     }
 
@@ -481,11 +545,11 @@ export class GameService {
     }
 
     // Count matches
-    const matches = numbers.filter(n => winningNumbers.includes(n)).length;
-    
+    const matches = numbers.filter((n) => winningNumbers.includes(n)).length;
+
     let multiplier = 0;
     let win = false;
-    
+
     if (matches === 5) {
       multiplier = 100; // 100x for all 5 matches
       win = true;
@@ -498,23 +562,26 @@ export class GameService {
     }
 
     const amount = win ? bet * multiplier - bet : -bet;
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
         ...gameStats,
         lotteryWins: (gameStats.lotteryWins || 0) + (win ? 1 : 0),
-        lotteryLosses: (gameStats.lotteryLosses || 0) + (win ? 0 : 1)
-      }
+        lotteryLosses: (gameStats.lotteryLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Lottery ${win ? 'win' : 'loss'}: ${matches} matches (${multiplier}x)`
+      description: `Lottery ${win ? "win" : "loss"}: ${matches} matches (${multiplier}x)`,
     });
 
     return {
@@ -524,7 +591,7 @@ export class GameService {
       multiplier,
       playerNumbers: numbers,
       winningNumbers,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 
@@ -557,19 +624,19 @@ export class GameService {
     // Simulate revealing tiles
     const revealedPositions: number[] = [];
     let hitMine = false;
-    
+
     for (let i = 0; i < tilesRevealed; i++) {
       let pos = this.getSecureRandom() % 25;
       let attempts = 0;
-      
+
       // Find an unrevealed position
       while (revealedPositions.includes(pos) && attempts < 100) {
         pos = this.getSecureRandom() % 25;
         attempts++;
       }
-      
+
       revealedPositions.push(pos);
-      
+
       // Check if hit a mine
       if (minePositions.includes(pos)) {
         hitMine = true;
@@ -582,23 +649,26 @@ export class GameService {
     const multiplier = win ? Math.pow(1.2, revealedPositions.length) : 0;
     const amount = win ? Math.floor(bet * multiplier) - bet : -bet;
 
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
         ...gameStats,
         minesWins: (gameStats.minesWins || 0) + (win ? 1 : 0),
-        minesLosses: (gameStats.minesLosses || 0) + (win ? 0 : 1)
-      }
+        minesLosses: (gameStats.minesLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Mines ${win ? 'win' : 'loss'}: ${revealedPositions.length} tiles (${multiplier.toFixed(2)}x)`
+      description: `Mines ${win ? "win" : "loss"}: ${revealedPositions.length} tiles (${multiplier.toFixed(2)}x)`,
     });
 
     return {
@@ -609,12 +679,16 @@ export class GameService {
       minePositions,
       revealedPositions,
       hitMine,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 
   // Plinko game - ball drops through pegs with different risk levels
-  static async playPlinko(username: string, bet: number, risk: 'low' | 'medium' | 'high') {
+  static async playPlinko(
+    username: string,
+    bet: number,
+    risk: "low" | "medium" | "high",
+  ) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -626,7 +700,7 @@ export class GameService {
       throw new Error("Insufficient coins");
     }
 
-    if (!['low', 'medium', 'high'].includes(risk)) {
+    if (!["low", "medium", "high"].includes(risk)) {
       throw new Error("Risk must be low, medium, or high");
     }
 
@@ -635,44 +709,55 @@ export class GameService {
     const multipliers = {
       low: [1.5, 1.3, 1.1, 1.0, 0.9, 1.0, 1.1, 1.3, 1.5],
       medium: [3.0, 2.0, 1.5, 1.0, 0.5, 1.0, 1.5, 2.0, 3.0],
-      high: [10.0, 5.0, 2.0, 1.0, 0.5, 1.0, 2.0, 5.0, 10.0]
+      high: [10.0, 5.0, 2.0, 1.0, 0.5, 1.0, 2.0, 5.0, 10.0],
     };
 
     // Simulate ball drop (weighted towards center)
     const random = this.getSecureRandom() % 10000;
     let slotIndex: number;
-    
-    if (random < 1000) slotIndex = 0; // 10%
-    else if (random < 2500) slotIndex = 1; // 15%
-    else if (random < 4500) slotIndex = 2; // 20%
-    else if (random < 6500) slotIndex = 3; // 20%
-    else if (random < 7500) slotIndex = 4; // 10%
-    else if (random < 8500) slotIndex = 5; // 10%
-    else if (random < 9000) slotIndex = 6; // 5%
-    else if (random < 9500) slotIndex = 7; // 5%
+
+    if (random < 1000)
+      slotIndex = 0; // 10%
+    else if (random < 2500)
+      slotIndex = 1; // 15%
+    else if (random < 4500)
+      slotIndex = 2; // 20%
+    else if (random < 6500)
+      slotIndex = 3; // 20%
+    else if (random < 7500)
+      slotIndex = 4; // 10%
+    else if (random < 8500)
+      slotIndex = 5; // 10%
+    else if (random < 9000)
+      slotIndex = 6; // 5%
+    else if (random < 9500)
+      slotIndex = 7; // 5%
     else slotIndex = 8; // 5%
 
     const multiplier = multipliers[risk][slotIndex];
     const win = multiplier >= 1.0;
     const amount = Math.floor(bet * multiplier) - bet;
 
-    const gameStats = typeof user.gameStats === 'object' && user.gameStats !== null ? user.gameStats as any : {};
+    const gameStats =
+      typeof user.gameStats === "object" && user.gameStats !== null
+        ? (user.gameStats as any)
+        : {};
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       gameStats: {
         ...gameStats,
         plinkoWins: (gameStats.plinkoWins || 0) + (win ? 1 : 0),
-        plinkoLosses: (gameStats.plinkoLosses || 0) + (win ? 0 : 1)
-      }
+        plinkoLosses: (gameStats.plinkoLosses || 0) + (win ? 0 : 1),
+      },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? 'earn' : 'spend',
+      type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Plinko ${win ? 'win' : 'loss'}: ${risk} risk, slot ${slotIndex} (${multiplier}x)`
+      description: `Plinko ${win ? "win" : "loss"}: ${risk} risk, slot ${slotIndex} (${multiplier}x)`,
     });
 
     return {
@@ -681,7 +766,7 @@ export class GameService {
       multiplier,
       slotIndex,
       risk,
-      newBalance: user.coins + amount
+      newBalance: user.coins + amount,
     };
   }
 

@@ -15,25 +15,29 @@ export default function Transfer() {
   const [transferData, setTransferData] = useState({
     username: "",
     amount: "",
-    message: ""
+    message: "",
   });
   const [robData, setRobData] = useState({
     username: "",
-    amount: ""
+    amount: "",
   });
 
   const { user } = useAuth();
   const { toast } = useToast();
 
   const transferMutation = useMutation({
-    mutationFn: async (data: { targetUsername: string; amount: number; message?: string }) => {
+    mutationFn: async (data: {
+      targetUsername: string;
+      amount: number;
+      message?: string;
+    }) => {
       const res = await apiRequest("POST", "/api/economy/transfer", data);
       return res.json();
     },
     onSuccess: (data) => {
       toast({
         title: "Transfer Successful! 💸",
-        description: `Sent ${data.sent} coins to ${transferData.username}${data.fee > 0 ? ` (Fee: ${data.fee} coins)` : ''}`,
+        description: `Sent ${data.sent} coins to ${transferData.username}${data.fee > 0 ? ` (Fee: ${data.fee} coins)` : ""}`,
       });
       setTransferData({ username: "", amount: "", message: "" });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -60,7 +64,7 @@ export default function Transfer() {
       });
       setRobData({ username: "", amount: "" });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
+
       // Confetti for successful robs
       if (data.success) {
         createConfetti();
@@ -77,13 +81,13 @@ export default function Transfer() {
 
   const createConfetti = () => {
     for (let i = 0; i < 30; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -93,11 +97,12 @@ export default function Transfer() {
   const handleTransfer = (e: React.FormEvent) => {
     e.preventDefault();
     const amount = parseInt(transferData.amount);
-    
+
     if (!transferData.username || !amount || amount < 10) {
       toast({
         title: "Invalid Transfer",
-        description: "Please enter a valid username and amount (minimum 10 coins)",
+        description:
+          "Please enter a valid username and amount (minimum 10 coins)",
         variant: "destructive",
       });
       return;
@@ -106,14 +111,14 @@ export default function Transfer() {
     transferMutation.mutate({
       targetUsername: transferData.username,
       amount,
-      message: transferData.message || undefined
+      message: transferData.message || undefined,
     });
   };
 
   const handleRob = (e: React.FormEvent) => {
     e.preventDefault();
     const betAmount = parseInt(robData.amount);
-    
+
     if (!robData.username || !betAmount || betAmount <= 0) {
       toast({
         title: "Invalid Rob",
@@ -135,7 +140,7 @@ export default function Transfer() {
 
     robMutation.mutate({
       targetUsername: robData.username,
-      betAmount
+      betAmount,
     });
   };
 
@@ -164,12 +169,17 @@ export default function Transfer() {
               <Input
                 id="transfer-username"
                 value={transferData.username}
-                onChange={(e) => setTransferData(prev => ({ ...prev, username: e.target.value }))}
+                onChange={(e) =>
+                  setTransferData((prev) => ({
+                    ...prev,
+                    username: e.target.value,
+                  }))
+                }
                 placeholder="Enter recipient's username"
                 data-testid="input-transfer-username"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="transfer-amount">Amount</Label>
               <Input
@@ -177,41 +187,55 @@ export default function Transfer() {
                 type="number"
                 min="10"
                 value={transferData.amount}
-                onChange={(e) => setTransferData(prev => ({ ...prev, amount: e.target.value }))}
+                onChange={(e) =>
+                  setTransferData((prev) => ({
+                    ...prev,
+                    amount: e.target.value,
+                  }))
+                }
                 placeholder="Minimum 10 coins"
                 data-testid="input-transfer-amount"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="transfer-message">Message (Optional)</Label>
               <Textarea
                 id="transfer-message"
                 value={transferData.message}
-                onChange={(e) => setTransferData(prev => ({ ...prev, message: e.target.value }))}
+                onChange={(e) =>
+                  setTransferData((prev) => ({
+                    ...prev,
+                    message: e.target.value,
+                  }))
+                }
                 placeholder="Add a message with your transfer"
                 rows={2}
                 data-testid="input-transfer-message"
               />
             </div>
-            
+
             <Button
               type="submit"
-              disabled={transferMutation.isPending || !transferData.username || parseInt(transferData.amount) < 10}
+              disabled={
+                transferMutation.isPending ||
+                !transferData.username ||
+                parseInt(transferData.amount) < 10
+              }
               className="w-full font-comic bg-accent text-accent-foreground hover:bg-accent/80"
               data-testid="button-send-transfer"
             >
               {transferMutation.isPending ? "Sending..." : "SEND COINS"}
             </Button>
           </form>
-          
+
           <div className="text-xs text-muted-foreground text-center">
             💡 Fee: 5% for transfers over 1,000 coins
           </div>
         </div>
-        
+
         <Separator />
-        
+
         {/* Rob Section */}
         <div className="space-y-4">
           <h4 className="font-bold text-destructive flex items-center">
@@ -224,12 +248,14 @@ export default function Transfer() {
               <Input
                 id="rob-username"
                 value={robData.username}
-                onChange={(e) => setRobData(prev => ({ ...prev, username: e.target.value }))}
+                onChange={(e) =>
+                  setRobData((prev) => ({ ...prev, username: e.target.value }))
+                }
                 placeholder="Enter target username"
                 data-testid="input-rob-username"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="rob-amount">Bet Amount</Label>
               <Input
@@ -238,22 +264,28 @@ export default function Transfer() {
                 min="1"
                 max={maxRobBet}
                 value={robData.amount}
-                onChange={(e) => setRobData(prev => ({ ...prev, amount: e.target.value }))}
+                onChange={(e) =>
+                  setRobData((prev) => ({ ...prev, amount: e.target.value }))
+                }
                 placeholder={`Max: ${maxRobBet.toLocaleString()} coins (20%)`}
                 data-testid="input-rob-amount"
               />
             </div>
-            
+
             <Button
               type="submit"
-              disabled={robMutation.isPending || !robData.username || parseInt(robData.amount) <= 0}
+              disabled={
+                robMutation.isPending ||
+                !robData.username ||
+                parseInt(robData.amount) <= 0
+              }
               className="w-full font-comic bg-destructive text-destructive-foreground hover:bg-destructive/80"
               data-testid="button-rob-user"
             >
               {robMutation.isPending ? "Robbing..." : "ROB USER! 💀"}
             </Button>
           </form>
-          
+
           <div className="text-xs text-muted-foreground space-y-1">
             <p>⚠️ Rob success based on level difference and items</p>
             <p>💀 Failed robs result in fines</p>

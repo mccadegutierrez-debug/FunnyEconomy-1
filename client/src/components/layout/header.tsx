@@ -35,7 +35,10 @@ export default function Header() {
   // Mutation for deleting a single notification
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      const res = await apiRequest("DELETE", `/api/user/notifications/${notificationId}`);
+      const res = await apiRequest(
+        "DELETE",
+        `/api/user/notifications/${notificationId}`,
+      );
       return res.json();
     },
     onSuccess: () => {
@@ -79,14 +82,19 @@ export default function Header() {
   if (!user) return null;
 
   const unreadCount = notifications.filter((n: any) => !n.read).length;
-  const levelProgress = (user.xp % (user.level * 1000)) / (user.level * 1000) * 100;
+  const levelProgress =
+    ((user.xp % (user.level * 1000)) / (user.level * 1000)) * 100;
 
   const navItems = [
     { href: "/", label: "Dashboard", active: location === "/" },
     { href: "/games", label: "Games", active: location === "/games" },
     { href: "/freemium", label: "Freemium", active: location === "/freemium" },
     { href: "/shop", label: "Shop", active: location === "/shop" },
-    { href: "/inventory", label: "Inventory", active: location === "/inventory" },
+    {
+      href: "/inventory",
+      label: "Inventory",
+      active: location === "/inventory",
+    },
     { href: "/pets", label: "Pets", active: location === "/pets" },
   ];
 
@@ -96,14 +104,22 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-3" data-testid="logo-link">
-              <img src="/memer.png" alt="Memer Logo" className="h-10 w-auto glow-accent" />
+            <Link
+              href="/"
+              className="flex items-center space-x-3"
+              data-testid="logo-link"
+            >
+              <img
+                src="/memer.png"
+                alt="Memer Logo"
+                className="h-10 w-auto glow-accent"
+              />
               <span className="text-3xl font-impact dm-title">
                 Funny Economy
               </span>
             </Link>
           </div>
-          
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
@@ -111,7 +127,7 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 className={`text-foreground hover:text-primary transition-colors ${
-                  item.active ? 'text-primary font-bold' : ''
+                  item.active ? "text-primary font-bold" : ""
                 }`}
                 data-testid={`nav-${item.label.toLowerCase()}`}
               >
@@ -119,39 +135,50 @@ export default function Header() {
               </Link>
             ))}
           </nav>
-          
+
           {/* User Stats and Controls */}
           <div className="flex items-center space-x-4">
             {/* User Stats Display */}
             <div className="hidden lg:flex items-center space-x-4 bg-muted px-4 py-2 rounded-lg">
               <div className="text-center" data-testid="header-coins">
-                <div className="text-accent font-bold">💰 {user.coins.toLocaleString()}</div>
+                <div className="text-accent font-bold">
+                  💰 {user.coins.toLocaleString()}
+                </div>
                 <div className="text-xs text-muted-foreground">Coins</div>
               </div>
               <div className="text-center" data-testid="header-level">
-                <div className="text-secondary font-bold">⭐ Level {user.level}</div>
+                <div className="text-secondary font-bold">
+                  ⭐ Level {user.level}
+                </div>
                 <div className="text-xs text-muted-foreground">
                   <Progress value={levelProgress} className="w-16 h-1" />
                 </div>
               </div>
               <div className="text-center" data-testid="header-bank">
-                <div className="text-primary font-bold">🏦 {user.bank?.toLocaleString() || 0}</div>
+                <div className="text-primary font-bold">
+                  🏦 {user.bank?.toLocaleString() || 0}
+                </div>
                 <div className="text-xs text-muted-foreground">Bank</div>
               </div>
             </div>
-            
+
             {/* Notifications */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative" data-testid="button-notifications">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="relative"
+                  data-testid="button-notifications"
+                >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
+                    <Badge
+                      variant="destructive"
                       className="absolute -top-1 -right-1 h-5 w-5 text-xs rounded-full flex items-center justify-center"
                       data-testid="notification-count"
                     >
-                      {unreadCount > 99 ? '99+' : unreadCount}
+                      {unreadCount > 99 ? "99+" : unreadCount}
                     </Badge>
                   )}
                 </Button>
@@ -159,7 +186,9 @@ export default function Header() {
               <DropdownMenuContent align="end" className="w-80">
                 <div className="p-2">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-sm text-foreground">Notifications</h3>
+                    <h3 className="font-bold text-sm text-foreground">
+                      Notifications
+                    </h3>
                     {notifications.length > 0 && (
                       <Button
                         variant="ghost"
@@ -179,20 +208,29 @@ export default function Header() {
                       No notifications yet
                     </p>
                   ) : (
-                    <div className="space-y-2 max-h-64 overflow-y-auto" data-testid="notifications-list">
+                    <div
+                      className="space-y-2 max-h-64 overflow-y-auto"
+                      data-testid="notifications-list"
+                    >
                       {notifications.slice(0, 5).map((notification: any) => (
                         <div
                           key={notification.id}
                           className={`p-2 rounded text-sm group relative ${
-                            notification.read ? 'bg-muted/50' : 'bg-primary/10 border border-primary/20'
+                            notification.read
+                              ? "bg-muted/50"
+                              : "bg-primary/10 border border-primary/20"
                           }`}
                           data-testid={`notification-${notification.id}`}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                              <p className="text-foreground">{notification.message}</p>
+                              <p className="text-foreground">
+                                {notification.message}
+                              </p>
                               <p className="text-xs text-muted-foreground">
-                                {new Date(notification.timestamp).toLocaleString()}
+                                {new Date(
+                                  notification.timestamp,
+                                ).toLocaleString()}
                               </p>
                             </div>
                             <Button
@@ -200,7 +238,9 @@ export default function Header() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                deleteNotificationMutation.mutate(notification.id);
+                                deleteNotificationMutation.mutate(
+                                  notification.id,
+                                );
                               }}
                               className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 flex-shrink-0"
                               data-testid={`button-clear-notification-${notification.id}`}
@@ -216,11 +256,15 @@ export default function Header() {
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full" data-testid="button-user-menu">
+                <Button
+                  variant="ghost"
+                  className="relative h-10 w-10 rounded-full"
+                  data-testid="button-user-menu"
+                >
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                       {user.username[0].toUpperCase()}
@@ -236,7 +280,9 @@ export default function Header() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.username}</p>
+                    <p className="text-sm font-medium leading-none">
+                      {user.username}
+                    </p>
                     <p className="text-xs leading-none text-muted-foreground">
                       Level {user.level} • {user.coins.toLocaleString()} coins
                     </p>
@@ -274,7 +320,7 @@ export default function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
@@ -283,11 +329,15 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               data-testid="button-mobile-menu"
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </div>
-        
+
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 pb-4 border-t border-border pt-4">
@@ -297,7 +347,7 @@ export default function Header() {
                   key={item.href}
                   href={item.href}
                   className={`text-foreground hover:text-primary transition-colors py-2 px-4 rounded ${
-                    item.active ? 'bg-primary/10 text-primary font-bold' : ''
+                    item.active ? "bg-primary/10 text-primary font-bold" : ""
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid={`mobile-nav-${item.label.toLowerCase()}`}
@@ -306,22 +356,31 @@ export default function Header() {
                 </Link>
               ))}
             </nav>
-            
+
             {/* Mobile User Stats */}
             <div className="mt-4 p-4 bg-muted rounded-lg">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-accent font-bold">💰 {user.coins.toLocaleString()}</div>
+                  <div className="text-accent font-bold">
+                    💰 {user.coins.toLocaleString()}
+                  </div>
                   <div className="text-xs text-muted-foreground">Coins</div>
                 </div>
                 <div>
-                  <div className="text-secondary font-bold">⭐ Level {user.level}</div>
+                  <div className="text-secondary font-bold">
+                    ⭐ Level {user.level}
+                  </div>
                   <div className="text-xs text-muted-foreground">
-                    <Progress value={levelProgress} className="w-full h-1 mt-1" />
+                    <Progress
+                      value={levelProgress}
+                      className="w-full h-1 mt-1"
+                    />
                   </div>
                 </div>
                 <div>
-                  <div className="text-primary font-bold">🏦 {user.bank?.toLocaleString() || 0}</div>
+                  <div className="text-primary font-bold">
+                    🏦 {user.bank?.toLocaleString() || 0}
+                  </div>
                   <div className="text-xs text-muted-foreground">Bank</div>
                 </div>
               </div>

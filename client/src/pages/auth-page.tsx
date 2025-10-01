@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +22,10 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters").max(20, "Username must be 20 characters or less"),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be 20 characters or less"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -62,16 +71,31 @@ export default function AuthPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="font-impact text-4xl text-primary mb-2" data-testid="auth-title">Funny Economy</h1>
-            <p className="text-muted-foreground">Join the ultimate meme economy!</p>
+            <h1
+              className="font-impact text-4xl text-primary mb-2"
+              data-testid="auth-title"
+            >
+              Funny Economy
+            </h1>
+            <p className="text-muted-foreground">
+              Join the ultimate meme economy!
+            </p>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
-              <TabsTrigger value="register" data-testid="tab-register">Register</TabsTrigger>
+              <TabsTrigger value="login" data-testid="tab-login">
+                Login
+              </TabsTrigger>
+              <TabsTrigger value="register" data-testid="tab-register">
+                Register
+              </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <Card>
                 <CardHeader>
@@ -79,7 +103,10 @@ export default function AuthPage() {
                   <CardDescription>Sign in to your meme empire</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                  <form
+                    onSubmit={loginForm.handleSubmit(onLogin)}
+                    className="space-y-4"
+                  >
                     <div>
                       <Label htmlFor="login-username">Username</Label>
                       <Input
@@ -94,7 +121,7 @@ export default function AuthPage() {
                         </p>
                       )}
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="login-password">Password</Label>
                       <Input
@@ -110,7 +137,7 @@ export default function AuthPage() {
                         </p>
                       )}
                     </div>
-                    
+
                     <Button
                       type="submit"
                       className="w-full font-comic"
@@ -123,15 +150,20 @@ export default function AuthPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="register">
               <Card>
                 <CardHeader>
                   <CardTitle>Join the Fun!</CardTitle>
-                  <CardDescription>Create your account and get 500 welcome coins!</CardDescription>
+                  <CardDescription>
+                    Create your account and get 500 welcome coins!
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                  <form
+                    onSubmit={registerForm.handleSubmit(onRegister)}
+                    className="space-y-4"
+                  >
                     <div>
                       <Label htmlFor="register-username">Username</Label>
                       <Input
@@ -146,7 +178,7 @@ export default function AuthPage() {
                         </p>
                       )}
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="register-password">Password</Label>
                       <Input
@@ -162,14 +194,16 @@ export default function AuthPage() {
                         </p>
                       )}
                     </div>
-                    
+
                     <Button
                       type="submit"
                       className="w-full font-comic"
                       disabled={registerMutation.isPending}
                       data-testid="button-register"
                     >
-                      {registerMutation.isPending ? "Creating account..." : "Join Funny Economy! 🎉"}
+                      {registerMutation.isPending
+                        ? "Creating account..."
+                        : "Join Funny Economy! 🎉"}
                     </Button>
                   </form>
                 </CardContent>
@@ -178,7 +212,7 @@ export default function AuthPage() {
           </Tabs>
         </div>
       </div>
-      
+
       {/* Right Column - Hero */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-secondary to-accent items-center justify-center p-8">
         <div className="text-center text-primary-foreground max-w-md">

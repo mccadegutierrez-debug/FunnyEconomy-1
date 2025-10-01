@@ -17,13 +17,13 @@ class ReplitDatabase {
     try {
       // Use in-memory store for server-side persistence
       const value = this.store.get(key);
-      
+
       // Cache the result
       if (value !== undefined) {
         this.cache.set(key, value);
         this.cacheExpiry.set(key, Date.now() + this.CACHE_TTL);
       }
-      
+
       return value;
     } catch (error) {
       console.error(`Database get error for key ${key}:`, error);
@@ -35,7 +35,7 @@ class ReplitDatabase {
     try {
       // Store in memory
       this.store.set(key, value);
-      
+
       // Update cache
       this.cache.set(key, value);
       this.cacheExpiry.set(key, Date.now() + this.CACHE_TTL);

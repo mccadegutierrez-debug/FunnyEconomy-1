@@ -3,7 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +24,17 @@ export default function Lottery() {
   const { toast } = useToast();
 
   const playMutation = useMutation({
-    mutationFn: async ({ betAmount, numbers }: { betAmount: number; numbers: number[] }) => {
-      const res = await apiRequest("POST", "/api/games/lottery", { bet: betAmount, numbers });
+    mutationFn: async ({
+      betAmount,
+      numbers,
+    }: {
+      betAmount: number;
+      numbers: number[];
+    }) => {
+      const res = await apiRequest("POST", "/api/games/lottery", {
+        bet: betAmount,
+        numbers,
+      });
       return res.json();
     },
     onSuccess: (data) => {
@@ -29,11 +44,11 @@ export default function Lottery() {
         setGameResult(data);
         toast({
           title: data.win ? "Lottery Win! 🎟️" : "Lottery Loss 😔",
-          description: `${data.matches} matches! ${data.win ? `${data.multiplier}x multiplier!` : 'Better luck next time!'}`,
+          description: `${data.matches} matches! ${data.win ? `${data.multiplier}x multiplier!` : "Better luck next time!"}`,
           variant: data.win ? "default" : "destructive",
         });
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        
+
         if (data.win) {
           createConfetti();
         }
@@ -51,13 +66,13 @@ export default function Lottery() {
 
   const createConfetti = () => {
     for (let i = 0; i < 50; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -66,7 +81,7 @@ export default function Lottery() {
 
   const toggleNumber = (num: number) => {
     if (selectedNumbers.includes(num)) {
-      setSelectedNumbers(selectedNumbers.filter(n => n !== num));
+      setSelectedNumbers(selectedNumbers.filter((n) => n !== num));
     } else if (selectedNumbers.length < 5) {
       setSelectedNumbers([...selectedNumbers, num].sort((a, b) => a - b));
     }
@@ -90,7 +105,7 @@ export default function Lottery() {
       });
       return;
     }
-    
+
     if (!user || user.coins < bet) {
       toast({
         title: "Insufficient Funds",
@@ -121,17 +136,21 @@ export default function Lottery() {
       <Card className="glow-primary border-primary/20">
         <CardHeader className="text-center">
           <div className="text-6xl mb-4">🎟️</div>
-          <CardTitle className="font-impact text-3xl text-primary">LOTTERY</CardTitle>
+          <CardTitle className="font-impact text-3xl text-primary">
+            LOTTERY
+          </CardTitle>
           <CardDescription>Pick 5 lucky numbers and win big!</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <Card className="bg-muted p-6">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <Label className="text-lg font-semibold">Pick 5 Numbers (1-50)</Label>
-                <Button 
-                  onClick={quickPick} 
-                  size="sm" 
+                <Label className="text-lg font-semibold">
+                  Pick 5 Numbers (1-50)
+                </Label>
+                <Button
+                  onClick={quickPick}
+                  size="sm"
                   variant="outline"
                   disabled={isDrawing || playMutation.isPending}
                   data-testid="button-quick-pick"
@@ -139,15 +158,22 @@ export default function Lottery() {
                   Quick Pick
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-10 gap-2">
                 {Array.from({ length: 50 }, (_, i) => i + 1).map((num) => (
                   <Button
                     key={num}
-                    variant={selectedNumbers.includes(num) ? "default" : "outline"}
-                    className={`w-full h-10 text-sm ${selectedNumbers.includes(num) ? 'bg-primary' : ''}`}
+                    variant={
+                      selectedNumbers.includes(num) ? "default" : "outline"
+                    }
+                    className={`w-full h-10 text-sm ${selectedNumbers.includes(num) ? "bg-primary" : ""}`}
                     onClick={() => toggleNumber(num)}
-                    disabled={isDrawing || playMutation.isPending || (selectedNumbers.length >= 5 && !selectedNumbers.includes(num))}
+                    disabled={
+                      isDrawing ||
+                      playMutation.isPending ||
+                      (selectedNumbers.length >= 5 &&
+                        !selectedNumbers.includes(num))
+                    }
                     data-testid={`button-number-${num}`}
                   >
                     {num}
@@ -158,7 +184,11 @@ export default function Lottery() {
               <div className="flex justify-center space-x-2 mt-4">
                 {selectedNumbers.length > 0 ? (
                   selectedNumbers.map((num, index) => (
-                    <Badge key={index} variant="default" className="text-lg px-4 py-2">
+                    <Badge
+                      key={index}
+                      variant="default"
+                      className="text-lg px-4 py-2"
+                    >
                       {num}
                     </Badge>
                   ))
@@ -170,23 +200,33 @@ export default function Lottery() {
               {isDrawing && (
                 <div className="text-center">
                   <div className="text-4xl animate-bounce">🎱</div>
-                  <p className="text-lg font-semibold mt-2">Drawing numbers...</p>
+                  <p className="text-lg font-semibold mt-2">
+                    Drawing numbers...
+                  </p>
                 </div>
               )}
 
               {gameResult && !isDrawing && (
                 <div className="mt-4">
-                  <p className="text-center text-lg font-semibold mb-2">Winning Numbers:</p>
+                  <p className="text-center text-lg font-semibold mb-2">
+                    Winning Numbers:
+                  </p>
                   <div className="flex justify-center space-x-2">
-                    {gameResult.winningNumbers.map((num: number, index: number) => (
-                      <Badge 
-                        key={index} 
-                        variant={gameResult.playerNumbers.includes(num) ? "default" : "secondary"}
-                        className="text-lg px-4 py-2"
-                      >
-                        {num}
-                      </Badge>
-                    ))}
+                    {gameResult.winningNumbers.map(
+                      (num: number, index: number) => (
+                        <Badge
+                          key={index}
+                          variant={
+                            gameResult.playerNumbers.includes(num)
+                              ? "default"
+                              : "secondary"
+                          }
+                          className="text-lg px-4 py-2"
+                        >
+                          {num}
+                        </Badge>
+                      ),
+                    )}
                   </div>
                 </div>
               )}
@@ -225,21 +265,35 @@ export default function Lottery() {
 
             <Button
               onClick={handlePlay}
-              disabled={selectedNumbers.length !== 5 || isDrawing || playMutation.isPending || !user || user.coins < bet}
+              disabled={
+                selectedNumbers.length !== 5 ||
+                isDrawing ||
+                playMutation.isPending ||
+                !user ||
+                user.coins < bet
+              }
               className="w-full font-comic text-lg bg-primary hover:bg-primary/80 glow-primary"
               data-testid="button-play-lottery"
             >
-              {isDrawing ? "DRAWING..." : playMutation.isPending ? "Loading..." : `PLAY LOTTERY! (${bet} coins)`}
+              {isDrawing
+                ? "DRAWING..."
+                : playMutation.isPending
+                  ? "Loading..."
+                  : `PLAY LOTTERY! (${bet} coins)`}
             </Button>
           </div>
 
           {gameResult && !isDrawing && (
-            <Card className={`${gameResult.win ? 'border-green-500 glow-accent' : 'border-destructive'}`}>
+            <Card
+              className={`${gameResult.win ? "border-green-500 glow-accent" : "border-destructive"}`}
+            >
               <CardContent className="p-6 text-center">
                 <div className="text-4xl mb-4">
                   {gameResult.win ? "🎉" : "😔"}
                 </div>
-                <h3 className={`text-2xl font-bold mb-2 ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
+                <h3
+                  className={`text-2xl font-bold mb-2 ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
                   {gameResult.win ? "YOU WIN!" : "NO MATCH!"}
                 </h3>
                 <div className="mb-4">
@@ -252,8 +306,11 @@ export default function Lottery() {
                     {gameResult.multiplier}x Multiplier!
                   </Badge>
                 )}
-                <p className={`text-lg font-semibold ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
-                  {gameResult.win ? '+' : ''}{gameResult.amount} coins
+                <p
+                  className={`text-lg font-semibold ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
+                  {gameResult.win ? "+" : ""}
+                  {gameResult.amount} coins
                 </p>
                 <p className="text-muted-foreground">
                   New Balance: {gameResult.newBalance.toLocaleString()} coins

@@ -21,18 +21,22 @@ export class EconomyService {
 
     await storage.updateUser(user.id, {
       coins: user.coins - amount,
-      bank: newBankAmount
+      bank: newBankAmount,
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'transfer',
+      type: "transfer",
       amount,
       targetUser: null,
-      description: `Deposited ${amount} coins to bank`
+      description: `Deposited ${amount} coins to bank`,
     });
 
-    return { success: true, newCoins: user.coins - amount, newBank: newBankAmount };
+    return {
+      success: true,
+      newCoins: user.coins - amount,
+      newBank: newBankAmount,
+    };
   }
 
   static async withdraw(username: string, amount: number) {
@@ -52,27 +56,32 @@ export class EconomyService {
 
     await storage.updateUser(user.id, {
       coins: user.coins + netAmount,
-      bank: user.bank - amount
+      bank: user.bank - amount,
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'transfer',
+      type: "transfer",
       amount: netAmount,
       targetUser: null,
-      description: `Withdrew ${amount} coins from bank (${fee} fee)`
+      description: `Withdrew ${amount} coins from bank (${fee} fee)`,
     });
 
-    return { 
-      success: true, 
-      newCoins: user.coins + netAmount, 
+    return {
+      success: true,
+      newCoins: user.coins + netAmount,
       newBank: user.bank - amount,
-      fee 
+      fee,
     };
   }
 
   // Transfer coins
-  static async transfer(username: string, targetUsername: string, amount: number, message?: string) {
+  static async transfer(
+    username: string,
+    targetUsername: string,
+    amount: number,
+    message?: string,
+  ) {
     const user = await storage.getUserByUsername(username);
     const targetUser = await storage.getUserByUsername(targetUsername);
 
@@ -95,48 +104,52 @@ export class EconomyService {
     }
 
     await storage.updateUser(user.id, {
-      coins: user.coins - totalCost
+      coins: user.coins - totalCost,
     });
 
     await storage.updateUser(targetUser.id, {
-      coins: targetUser.coins + amount
+      coins: targetUser.coins + amount,
     });
 
     // Create transactions
     await storage.createTransaction({
       user: username,
-      type: 'transfer',
+      type: "transfer",
       amount: totalCost,
       targetUser: targetUsername,
-      description: `Sent ${amount} coins to ${targetUsername}${fee > 0 ? ` (${fee} fee)` : ''}`
+      description: `Sent ${amount} coins to ${targetUsername}${fee > 0 ? ` (${fee} fee)` : ""}`,
     });
 
     await storage.createTransaction({
       user: targetUsername,
-      type: 'earn',
+      type: "earn",
       amount: amount,
       targetUser: username,
-      description: `Received ${amount} coins from ${username}`
+      description: `Received ${amount} coins from ${username}`,
     });
 
     // Create notification
     await storage.createNotification({
       user: targetUsername,
-      message: `${username} sent you ${amount} coins${message ? `: ${message}` : ''}`,
-      type: 'system',
-      read: false
+      message: `${username} sent you ${amount} coins${message ? `: ${message}` : ""}`,
+      type: "system",
+      read: false,
     });
 
-    return { 
-      success: true, 
-      sent: amount, 
-      fee, 
-      newBalance: user.coins - totalCost 
+    return {
+      success: true,
+      sent: amount,
+      fee,
+      newBalance: user.coins - totalCost,
     };
   }
 
   // Rob system
-  static async rob(username: string, targetUsername: string, betAmount: number) {
+  static async rob(
+    username: string,
+    targetUsername: string,
+    betAmount: number,
+  ) {
     const user = await storage.getUserByUsername(username);
     const targetUser = await storage.getUserByUsername(targetUsername);
 
@@ -150,10 +163,12 @@ export class EconomyService {
     // Check cooldown
     const now = Date.now();
     const robCooldown = 11 * 1000; // 11 seconds
-    
-    if (user.lastRob && (now - user.lastRob.getTime()) < robCooldown) {
+
+    if (user.lastRob && now - user.lastRob.getTime() < robCooldown) {
       const remaining = robCooldown - (now - user.lastRob.getTime());
-      throw new Error(`Rob cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`);
+      throw new Error(
+        `Rob cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+      );
     }
 
     const maxBet = Math.floor(user.coins * 0.2); // Max 20% of coins
@@ -171,21 +186,21 @@ export class EconomyService {
 
     // Calculate success chance based on level difference and items
     const levelDiff = user.level - targetUser.level;
-    let successChance = 0.3 + (levelDiff * 0.05); // Base 30% + 5% per level advantage
-    
+    let successChance = 0.3 + levelDiff * 0.05; // Base 30% + 5% per level advantage
+
     // Apply item effects (simplified)
-    const luckPotion = user.inventory.find(item => 
-      item.itemId.includes('luck') && item.equipped
+    const luckPotion = user.inventory.find(
+      (item) => item.itemId.includes("luck") && item.equipped,
     );
     if (luckPotion) successChance += 0.15;
 
     successChance = Math.max(0.1, Math.min(0.8, successChance)); // Clamp between 10% and 80%
 
     const success = Math.random() < successChance;
-    
+
     if (success) {
       const stolenAmount = Math.floor(betAmount * (0.2 + Math.random() * 0.3)); // 20-50% of bet
-      
+
       const successMessages = [
         "You snatched the coins like a meme lord! 💰",
         "They didn't even see you coming! 😎",
@@ -193,50 +208,51 @@ export class EconomyService {
         "You're a natural-born thief! 🎭",
         "Easy money! They should've protected it better! 🤑",
         "Heist successful! Time to celebrate! 🎉",
-        "Smooth criminal vibes! 🕺"
+        "Smooth criminal vibes! 🕺",
       ];
-      
+
       await storage.updateUser(user.id, {
         coins: user.coins + stolenAmount,
-        lastRob: new Date(now)
+        lastRob: new Date(now),
       });
 
       await storage.updateUser(targetUser.id, {
-        coins: Math.max(0, targetUser.coins - stolenAmount)
+        coins: Math.max(0, targetUser.coins - stolenAmount),
       });
 
       // Transactions
       await storage.createTransaction({
         user: username,
-        type: 'rob',
+        type: "rob",
         amount: stolenAmount,
         targetUser: targetUsername,
-        description: `Successfully robbed ${stolenAmount} coins from ${targetUsername}`
+        description: `Successfully robbed ${stolenAmount} coins from ${targetUsername}`,
       });
 
       await storage.createTransaction({
         user: targetUsername,
-        type: 'fine',
+        type: "fine",
         amount: stolenAmount,
         targetUser: username,
-        description: `Robbed by ${username} for ${stolenAmount} coins`
+        description: `Robbed by ${username} for ${stolenAmount} coins`,
       });
 
       // Notify target
       await storage.createNotification({
         user: targetUsername,
         message: `${username} robbed ${stolenAmount} coins from you! 💸`,
-        type: 'rob',
-        read: false
+        type: "rob",
+        read: false,
       });
 
-      const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+      const randomMessage =
+        successMessages[Math.floor(Math.random() * successMessages.length)];
 
       return {
         success: true,
         stolen: stolenAmount,
         newBalance: user.coins + stolenAmount,
-        message: `${randomMessage} You stole ${stolenAmount} coins!`
+        message: `${randomMessage} You stole ${stolenAmount} coins!`,
       };
     } else {
       // Failed rob - lose bet amount + fine
@@ -250,37 +266,38 @@ export class EconomyService {
         "They called the cops on you! 🚨",
         "You ran into a wall trying to escape! 🧱💥",
         "Epic fail! Better luck next time! 😅",
-        "They uno-reversed your robbery attempt! 🔄"
+        "They uno-reversed your robbery attempt! 🔄",
       ];
 
       await storage.updateUser(user.id, {
         coins: Math.max(0, user.coins - totalLoss),
-        lastRob: new Date(now)
+        lastRob: new Date(now),
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'fine',
+        type: "fine",
         amount: totalLoss,
         targetUser: targetUsername,
-        description: `Failed rob attempt on ${targetUsername} - lost ${totalLoss} coins`
+        description: `Failed rob attempt on ${targetUsername} - lost ${totalLoss} coins`,
       });
 
       // Notify target of failed attempt
       await storage.createNotification({
         user: targetUsername,
         message: `${username} tried to rob you but failed! They lost ${totalLoss} coins 😂`,
-        type: 'rob',
-        read: false
+        type: "rob",
+        read: false,
       });
 
-      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+      const randomMessage =
+        failureMessages[Math.floor(Math.random() * failureMessages.length)];
 
       return {
         success: false,
         lost: totalLoss,
         newBalance: Math.max(0, user.coins - totalLoss),
-        message: `${randomMessage} Lost ${totalLoss} coins (${betAmount} bet + ${fine} fine)!`
+        message: `${randomMessage} Lost ${totalLoss} coins (${betAmount} bet + ${fine} fine)!`,
       };
     }
   }
@@ -293,19 +310,24 @@ export class EconomyService {
     const now = Date.now();
     const dailyCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastDailyClaim && (now - user.lastDailyClaim.getTime()) < dailyCooldown) {
+    if (
+      user.lastDailyClaim &&
+      now - user.lastDailyClaim.getTime() < dailyCooldown
+    ) {
       const remaining = dailyCooldown - (now - user.lastDailyClaim.getTime());
-      throw new Error(`Daily cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`);
+      throw new Error(
+        `Daily cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`,
+      );
     }
 
     const amount = 200 + Math.floor(Math.random() * 801); // 200-1000 coins
     const xpGain = 50;
-    
+
     // 5% chance for bonus item
     let bonusItem = null;
     if (Math.random() < 0.05) {
       const items = await storage.getAllItems();
-      const rareItems = items.filter(item => item.rarity === 'rare');
+      const rareItems = items.filter((item) => item.rarity === "rare");
       if (rareItems.length > 0) {
         bonusItem = rareItems[Math.floor(Math.random() * rareItems.length)];
       }
@@ -314,18 +336,20 @@ export class EconomyService {
     const updates: any = {
       coins: user.coins + amount,
       xp: user.xp + xpGain,
-      lastDailyClaim: new Date(now)
+      lastDailyClaim: new Date(now),
     };
 
     if (bonusItem) {
-      const existingItem = user.inventory.find(item => item.itemId === bonusItem.id);
+      const existingItem = user.inventory.find(
+        (item) => item.itemId === bonusItem.id,
+      );
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
         user.inventory.push({
           itemId: bonusItem.id,
           quantity: 1,
-          equipped: false
+          equipped: false,
         });
       }
       updates.inventory = user.inventory;
@@ -335,10 +359,10 @@ export class EconomyService {
 
     await storage.createTransaction({
       user: username,
-      type: 'earn',
+      type: "earn",
       amount,
       targetUser: null,
-      description: `Daily reward: ${amount} coins, ${xpGain} XP${bonusItem ? ` + ${bonusItem.name}` : ''}`
+      description: `Daily reward: ${amount} coins, ${xpGain} XP${bonusItem ? ` + ${bonusItem.name}` : ""}`,
     });
 
     return {
@@ -347,7 +371,7 @@ export class EconomyService {
       xp: xpGain,
       bonusItem,
       newBalance: user.coins + amount,
-      newXP: user.xp + xpGain
+      newXP: user.xp + xpGain,
     };
   }
 
@@ -358,17 +382,19 @@ export class EconomyService {
     const now = Date.now();
     const workCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastWork && (now - user.lastWork.getTime()) < workCooldown) {
+    if (user.lastWork && now - user.lastWork.getTime() < workCooldown) {
       const remaining = workCooldown - (now - user.lastWork.getTime());
-      throw new Error(`Work cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`);
+      throw new Error(
+        `Work cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+      );
     }
 
     const jobs = {
-      'meme-farmer': { min: 100, max: 300, name: 'Meme Farmer', xp: 5 },
-      'doge-miner': { min: 50, max: 500, name: 'Doge Miner', xp: 8 },
-      'pepe-trader': { min: 150, max: 400, name: 'Pepe Trader', xp: 6 },
-      'nft-creator': { min: 200, max: 600, name: 'NFT Creator', xp: 10 },
-      'mod-botter': { min: 80, max: 350, name: 'Mod Botter', xp: 7 }
+      "meme-farmer": { min: 100, max: 300, name: "Meme Farmer", xp: 5 },
+      "doge-miner": { min: 50, max: 500, name: "Doge Miner", xp: 8 },
+      "pepe-trader": { min: 150, max: 400, name: "Pepe Trader", xp: 6 },
+      "nft-creator": { min: 200, max: 600, name: "NFT Creator", xp: 10 },
+      "mod-botter": { min: 80, max: 350, name: "Mod Botter", xp: 7 },
     };
 
     const job = jobs[jobType as keyof typeof jobs];
@@ -376,21 +402,22 @@ export class EconomyService {
       throw new Error("Invalid job type");
     }
 
-    const amount = job.min + Math.floor(Math.random() * (job.max - job.min + 1));
+    const amount =
+      job.min + Math.floor(Math.random() * (job.max - job.min + 1));
     const xpGain = job.xp;
 
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       xp: user.xp + xpGain,
-      lastWork: new Date(now)
+      lastWork: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'earn',
+      type: "earn",
       amount,
       targetUser: null,
-      description: `Work as ${job.name}: ${amount} coins, ${xpGain} XP`
+      description: `Work as ${job.name}: ${amount} coins, ${xpGain} XP`,
     });
 
     return {
@@ -399,7 +426,7 @@ export class EconomyService {
       coins: amount,
       xp: xpGain,
       newBalance: user.coins + amount,
-      newXP: user.xp + xpGain
+      newXP: user.xp + xpGain,
     };
   }
 
@@ -410,9 +437,11 @@ export class EconomyService {
     const now = Date.now();
     const begCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastBeg && (now - user.lastBeg.getTime()) < begCooldown) {
+    if (user.lastBeg && now - user.lastBeg.getTime() < begCooldown) {
       const remaining = begCooldown - (now - user.lastBeg.getTime());
-      throw new Error(`Beg cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`);
+      throw new Error(
+        `Beg cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+      );
     }
 
     const success = Math.random() > 0.3; // 70% success rate
@@ -421,16 +450,16 @@ export class EconomyService {
         "A wild Elon appears and ignores you! 😔",
         "The meme gods are not pleased today",
         "Someone threw a banana at you instead of coins",
-        "You got distracted by a cute doggo and forgot to beg"
+        "You got distracted by a cute doggo and forgot to beg",
       ];
-      
+
       await storage.updateUser(user.id, { lastBeg: new Date(now) });
-      
+
       return {
         success: false,
         message: failMessages[Math.floor(Math.random() * failMessages.length)],
         coins: 0,
-        newBalance: user.coins
+        newBalance: user.coins,
       };
     }
 
@@ -440,15 +469,15 @@ export class EconomyService {
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       xp: user.xp + xpGain,
-      lastBeg: new Date(now)
+      lastBeg: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'earn',
+      type: "earn",
       amount,
       targetUser: null,
-      description: `Begging: ${amount} coins, ${xpGain} XP`
+      description: `Begging: ${amount} coins, ${xpGain} XP`,
     });
 
     return {
@@ -457,7 +486,7 @@ export class EconomyService {
       xp: xpGain,
       newBalance: user.coins + amount,
       newXP: user.xp + xpGain,
-      message: `Someone took pity on you and gave ${amount} coins! 🥺`
+      message: `Someone took pity on you and gave ${amount} coins! 🥺`,
     };
   }
 
@@ -468,54 +497,91 @@ export class EconomyService {
     const now = Date.now();
     const searchCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastSearch && (now - user.lastSearch.getTime()) < searchCooldown) {
+    if (user.lastSearch && now - user.lastSearch.getTime() < searchCooldown) {
       const remaining = searchCooldown - (now - user.lastSearch.getTime());
-      throw new Error(`Search cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`);
+      throw new Error(
+        `Search cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+      );
     }
 
     const searchLocations = {
-      'couch': { name: "under the couch", coins: { min: 10, max: 50 }, itemChance: 0.05 },
-      'vault': { name: "in the meme vault", coins: { min: 30, max: 100 }, itemChance: 0.15 },
-      'dumpster': { name: "behind a dumpster", coins: { min: 5, max: 30 }, itemChance: 0.08 },
-      'pond': { name: "in Pepe's pond", coins: { min: 20, max: 80 }, itemChance: 0.12 },
-      'rock': { name: "under a rock", coins: { min: 10, max: 40 }, itemChance: 0.06 },
-      'purse': { name: "in your mom's purse", coins: { min: 40, max: 120 }, itemChance: 0.2 }
+      couch: {
+        name: "under the couch",
+        coins: { min: 10, max: 50 },
+        itemChance: 0.05,
+      },
+      vault: {
+        name: "in the meme vault",
+        coins: { min: 30, max: 100 },
+        itemChance: 0.15,
+      },
+      dumpster: {
+        name: "behind a dumpster",
+        coins: { min: 5, max: 30 },
+        itemChance: 0.08,
+      },
+      pond: {
+        name: "in Pepe's pond",
+        coins: { min: 20, max: 80 },
+        itemChance: 0.12,
+      },
+      rock: {
+        name: "under a rock",
+        coins: { min: 10, max: 40 },
+        itemChance: 0.06,
+      },
+      purse: {
+        name: "in your mom's purse",
+        coins: { min: 40, max: 120 },
+        itemChance: 0.2,
+      },
     };
 
-    const selectedLocationKey = location || Object.keys(searchLocations)[Math.floor(Math.random() * Object.keys(searchLocations).length)];
-    const searchLocation = searchLocations[selectedLocationKey] || searchLocations['couch'];
+    const selectedLocationKey =
+      location ||
+      Object.keys(searchLocations)[
+        Math.floor(Math.random() * Object.keys(searchLocations).length)
+      ];
+    const searchLocation =
+      searchLocations[selectedLocationKey] || searchLocations["couch"];
     const locationName = searchLocation.name;
-    
+
     // Special handling for 'purse' location - 70% success, 30% failure
-    if (selectedLocationKey === 'purse') {
+    if (selectedLocationKey === "purse") {
       const purseSuccess = Math.random() < 0.7;
-      
+
       if (purseSuccess) {
-        const amount = searchLocation.coins.min + Math.floor(Math.random() * (searchLocation.coins.max - searchLocation.coins.min + 1));
+        const amount =
+          searchLocation.coins.min +
+          Math.floor(
+            Math.random() *
+              (searchLocation.coins.max - searchLocation.coins.min + 1),
+          );
         const successMessages = [
           "Mom caught you but gave you the money anyway! 💸",
           "You found her secret stash! Shhh... 🤫",
           "She was in a good mood! Lucky you! 😊",
-          "You're her favorite child! 🥰"
+          "You're her favorite child! 🥰",
         ];
-        
+
         const updates: any = {
           coins: user.coins + amount,
           xp: user.xp + 2,
-          lastSearch: new Date(now)
+          lastSearch: new Date(now),
         };
 
         await storage.updateUser(user.id, updates);
 
         await storage.createTransaction({
           user: username,
-          type: 'earn',
+          type: "earn",
           amount,
           targetUser: null,
-          description: `Searched ${locationName}: ${amount} coins`
+          description: `Searched ${locationName}: ${amount} coins`,
         });
 
-        const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+        const randomMessage =
+          successMessages[Math.floor(Math.random() * successMessages.length)];
 
         return {
           success: true,
@@ -523,7 +589,7 @@ export class EconomyService {
           coins: amount,
           foundItem: null,
           newBalance: user.coins + amount,
-          message: `${randomMessage} Got ${amount} coins!`
+          message: `${randomMessage} Got ${amount} coins!`,
         };
       } else {
         // Failed - mom caught you and punishment
@@ -532,25 +598,26 @@ export class EconomyService {
           "Mom slapped you really hard! 😭",
           "She made you do ALL the chores! 🧹",
           "Grounded for a week! Worth it? 🚫",
-          "She gave you THE LOOK! Run! 😰"
+          "She gave you THE LOOK! Run! 😰",
         ];
 
         const updates: any = {
           coins: Math.max(0, user.coins - punishment),
-          lastSearch: new Date(now)
+          lastSearch: new Date(now),
         };
 
         await storage.updateUser(user.id, updates);
 
         await storage.createTransaction({
           user: username,
-          type: 'fine',
+          type: "fine",
           amount: punishment,
           targetUser: null,
-          description: `Caught searching mom's purse - fined ${punishment} coins`
+          description: `Caught searching mom's purse - fined ${punishment} coins`,
         });
 
-        const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+        const randomMessage =
+          failureMessages[Math.floor(Math.random() * failureMessages.length)];
 
         return {
           success: false,
@@ -558,19 +625,24 @@ export class EconomyService {
           coins: -punishment,
           foundItem: null,
           newBalance: Math.max(0, user.coins - punishment),
-          message: `${randomMessage} Lost ${punishment} coins as punishment!`
+          message: `${randomMessage} Lost ${punishment} coins as punishment!`,
         };
       }
     }
-    
+
     // Normal search for other locations
-    const amount = searchLocation.coins.min + Math.floor(Math.random() * (searchLocation.coins.max - searchLocation.coins.min + 1));
-    
+    const amount =
+      searchLocation.coins.min +
+      Math.floor(
+        Math.random() *
+          (searchLocation.coins.max - searchLocation.coins.min + 1),
+      );
+
     // Dynamic chance for item based on location
     let foundItem = null;
     if (Math.random() < searchLocation.itemChance) {
       const items = await storage.getAllItems();
-      const commonItems = items.filter(item => item.rarity === 'common');
+      const commonItems = items.filter((item) => item.rarity === "common");
       if (commonItems.length > 0) {
         foundItem = commonItems[Math.floor(Math.random() * commonItems.length)];
       }
@@ -579,18 +651,20 @@ export class EconomyService {
     const updates: any = {
       coins: user.coins + amount,
       xp: user.xp + 2,
-      lastSearch: new Date(now)
+      lastSearch: new Date(now),
     };
 
     if (foundItem) {
-      const existingItem = user.inventory.find(item => item.itemId === foundItem.id);
+      const existingItem = user.inventory.find(
+        (item) => item.itemId === foundItem.id,
+      );
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
         user.inventory.push({
           itemId: foundItem.id,
           quantity: 1,
-          equipped: false
+          equipped: false,
         });
       }
       updates.inventory = user.inventory;
@@ -600,10 +674,10 @@ export class EconomyService {
 
     await storage.createTransaction({
       user: username,
-      type: 'earn',
+      type: "earn",
       amount,
       targetUser: null,
-      description: `Searched ${locationName}: ${amount} coins${foundItem ? ` + ${foundItem.name}` : ''}`
+      description: `Searched ${locationName}: ${amount} coins${foundItem ? ` + ${foundItem.name}` : ""}`,
     });
 
     return {
@@ -612,7 +686,7 @@ export class EconomyService {
       coins: amount,
       foundItem,
       newBalance: user.coins + amount,
-      message: `You searched ${locationName} and found ${amount} coins!${foundItem ? ` You also found a ${foundItem.name}!` : ''}`
+      message: `You searched ${locationName} and found ${amount} coins!${foundItem ? ` You also found a ${foundItem.name}!` : ""}`,
     };
   }
 
@@ -621,7 +695,8 @@ export class EconomyService {
     const user = await storage.getUserByUsername(username);
     if (!user || user.bank <= 0) return;
 
-    const daysSinceLastActive = (Date.now() - user.lastActive.getTime()) / (24 * 60 * 60 * 1000);
+    const daysSinceLastActive =
+      (Date.now() - user.lastActive.getTime()) / (24 * 60 * 60 * 1000);
     if (daysSinceLastActive < 1) return; // Must be at least 1 day
 
     const dailyRate = 0.005; // 0.5% daily
@@ -630,15 +705,15 @@ export class EconomyService {
 
     if (interest > 0) {
       await storage.updateUser(user.id, {
-        bank: user.bank + interest
+        bank: user.bank + interest,
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'earn',
+        type: "earn",
         amount: interest,
         targetUser: null,
-        description: `Bank interest: ${daysToApply} day(s) at 0.5% daily`
+        description: `Bank interest: ${daysToApply} day(s) at 0.5% daily`,
       });
     }
 
@@ -652,44 +727,51 @@ export class EconomyService {
 
     // Check if user has Fishing Rod
     const allItems = await storage.getAllItems();
-    const fishingRod = allItems.find(item => item.name === "Fishing Rod");
+    const fishingRod = allItems.find((item) => item.name === "Fishing Rod");
     if (fishingRod) {
-      const hasFishingRod = user.inventory.some(item => item.itemId === fishingRod.id);
+      const hasFishingRod = user.inventory.some(
+        (item) => item.itemId === fishingRod.id,
+      );
       if (!hasFishingRod) {
-        throw new Error("You need a Fishing Rod to fish! Buy one from the shop.");
+        throw new Error(
+          "You need a Fishing Rod to fish! Buy one from the shop.",
+        );
       }
     }
 
     const now = Date.now();
     const fishCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastFish && (now - user.lastFish.getTime()) < fishCooldown) {
+    if (user.lastFish && now - user.lastFish.getTime() < fishCooldown) {
       const remaining = fishCooldown - (now - user.lastFish.getTime());
-      throw new Error(`Fishing cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`);
+      throw new Error(
+        `Fishing cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+      );
     }
 
     const fishingLocations = {
-      'pond': [
-        { name: 'Pepe Fish', coins: 50, chance: 0.5, xp: 8 },
-        { name: 'Doge Fish', coins: 100, chance: 0.35, xp: 12 },
-        { name: 'Diamond Fish', coins: 200, chance: 0.15, xp: 20 }
+      pond: [
+        { name: "Pepe Fish", coins: 50, chance: 0.5, xp: 8 },
+        { name: "Doge Fish", coins: 100, chance: 0.35, xp: 12 },
+        { name: "Diamond Fish", coins: 200, chance: 0.15, xp: 20 },
       ],
-      'lake': [
-        { name: 'Doge Fish', coins: 100, chance: 0.4, xp: 12 },
-        { name: 'Diamond Fish', coins: 200, chance: 0.3, xp: 20 },
-        { name: 'Golden Fish', coins: 500, chance: 0.25, xp: 30 },
-        { name: 'Legendary Fish', coins: 800, chance: 0.05, xp: 50 }
+      lake: [
+        { name: "Doge Fish", coins: 100, chance: 0.4, xp: 12 },
+        { name: "Diamond Fish", coins: 200, chance: 0.3, xp: 20 },
+        { name: "Golden Fish", coins: 500, chance: 0.25, xp: 30 },
+        { name: "Legendary Fish", coins: 800, chance: 0.05, xp: 50 },
       ],
-      'ocean': [
-        { name: 'Diamond Fish', coins: 200, chance: 0.35, xp: 20 },
-        { name: 'Golden Fish', coins: 500, chance: 0.3, xp: 30 },
-        { name: 'Legendary Fish', coins: 1000, chance: 0.2, xp: 50 },
-        { name: 'Mythical Kraken Fish', coins: 2000, chance: 0.15, xp: 100 }
-      ]
+      ocean: [
+        { name: "Diamond Fish", coins: 200, chance: 0.35, xp: 20 },
+        { name: "Golden Fish", coins: 500, chance: 0.3, xp: 30 },
+        { name: "Legendary Fish", coins: 1000, chance: 0.2, xp: 50 },
+        { name: "Mythical Kraken Fish", coins: 2000, chance: 0.15, xp: 100 },
+      ],
     };
 
-    const selectedLocation = location || 'pond';
-    const fishTypes = fishingLocations[selectedLocation] || fishingLocations['pond'];
+    const selectedLocation = location || "pond";
+    const fishTypes =
+      fishingLocations[selectedLocation] || fishingLocations["pond"];
 
     // 20% failure chance
     const fishingFailed = Math.random() < 0.2;
@@ -700,21 +782,22 @@ export class EconomyService {
         "You caught a boot instead! 👢",
         "The fish stole your bait! 🐟💨",
         "You fell in the water! 💦",
-        "The fish outsmarted you! 🧠🐟"
+        "The fish outsmarted you! 🧠🐟",
       ];
 
       await storage.updateUser(user.id, {
-        lastFish: new Date(now)
+        lastFish: new Date(now),
       });
 
-      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+      const randomMessage =
+        failureMessages[Math.floor(Math.random() * failureMessages.length)];
 
       return {
         success: false,
         fish: null,
         newBalance: user.coins,
         newXP: user.xp,
-        message: `${randomMessage} No catch this time!`
+        message: `${randomMessage} No catch this time!`,
       };
     }
 
@@ -722,7 +805,7 @@ export class EconomyService {
     const rand = Math.random();
     let cumulativeChance = 0;
     let caughtFish = fishTypes[0]; // default fallback
-    
+
     for (const fish of fishTypes.reverse()) {
       cumulativeChance += fish.chance;
       if (rand <= cumulativeChance) {
@@ -736,35 +819,36 @@ export class EconomyService {
       "You're basically Aquaman now! 🔱",
       "Fish fear you! 😱",
       "Master angler! 🎣✨",
-      "Reel deal champion! 🏆"
+      "Reel deal champion! 🏆",
     ];
 
     await storage.updateUser(user.id, {
       coins: user.coins + caughtFish.coins,
       xp: user.xp + caughtFish.xp,
-      lastFish: new Date(now)
+      lastFish: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'fish',
+      type: "fish",
       amount: caughtFish.coins,
       targetUser: null,
-      description: `Caught a ${caughtFish.name}: ${caughtFish.coins} coins, ${caughtFish.xp} XP`
+      description: `Caught a ${caughtFish.name}: ${caughtFish.coins} coins, ${caughtFish.xp} XP`,
     });
 
-    const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+    const randomMessage =
+      successMessages[Math.floor(Math.random() * successMessages.length)];
 
     return {
       success: true,
       fish: caughtFish,
       newBalance: user.coins + caughtFish.coins,
       newXP: user.xp + caughtFish.xp,
-      message: `${randomMessage} Caught a ${caughtFish.name}! +${caughtFish.coins} coins!`
+      message: `${randomMessage} Caught a ${caughtFish.name}! +${caughtFish.coins} coins!`,
     };
   }
 
-  // Mining system  
+  // Mining system
   static async mine(username: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
@@ -772,23 +856,25 @@ export class EconomyService {
     const now = Date.now();
     const mineCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastMine && (now - user.lastMine.getTime()) < mineCooldown) {
+    if (user.lastMine && now - user.lastMine.getTime() < mineCooldown) {
       const remaining = mineCooldown - (now - user.lastMine.getTime());
-      throw new Error(`Mining cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`);
+      throw new Error(
+        `Mining cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+      );
     }
 
     const ores = [
-      { name: 'Coal', coins: 80, chance: 0.5, xp: 6 },
-      { name: 'Iron', coins: 150, chance: 0.25, xp: 12 },
-      { name: 'Gold', coins: 300, chance: 0.15, xp: 20 },
-      { name: 'Diamond', coins: 800, chance: 0.08, xp: 40 },
-      { name: 'Mithril', coins: 1500, chance: 0.02, xp: 80 }
+      { name: "Coal", coins: 80, chance: 0.5, xp: 6 },
+      { name: "Iron", coins: 150, chance: 0.25, xp: 12 },
+      { name: "Gold", coins: 300, chance: 0.15, xp: 20 },
+      { name: "Diamond", coins: 800, chance: 0.08, xp: 40 },
+      { name: "Mithril", coins: 1500, chance: 0.02, xp: 80 },
     ];
 
     const rand = Math.random();
     let cumulativeChance = 0;
     let minedOre = ores[0];
-    
+
     for (const ore of ores.reverse()) {
       cumulativeChance += ore.chance;
       if (rand <= cumulativeChance) {
@@ -800,15 +886,15 @@ export class EconomyService {
     await storage.updateUser(user.id, {
       coins: user.coins + minedOre.coins,
       xp: user.xp + minedOre.xp,
-      lastMine: new Date(now)
+      lastMine: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'mine',
+      type: "mine",
       amount: minedOre.coins,
       targetUser: null,
-      description: `Mined ${minedOre.name}: ${minedOre.coins} coins, ${minedOre.xp} XP`
+      description: `Mined ${minedOre.name}: ${minedOre.coins} coins, ${minedOre.xp} XP`,
     });
 
     return {
@@ -816,7 +902,7 @@ export class EconomyService {
       ore: minedOre,
       newBalance: user.coins + minedOre.coins,
       newXP: user.xp + minedOre.xp,
-      message: `You mined ${minedOre.name} and earned ${minedOre.coins} coins! ⛏️`
+      message: `You mined ${minedOre.name} and earned ${minedOre.coins} coins! ⛏️`,
     };
   }
 
@@ -828,9 +914,11 @@ export class EconomyService {
     const now = Date.now();
     const voteCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastVote && (now - user.lastVote.getTime()) < voteCooldown) {
+    if (user.lastVote && now - user.lastVote.getTime() < voteCooldown) {
       const remaining = voteCooldown - (now - user.lastVote.getTime());
-      throw new Error(`Vote cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`);
+      throw new Error(
+        `Vote cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`,
+      );
     }
 
     const rewards = [250, 300, 350, 400, 450, 500];
@@ -840,15 +928,15 @@ export class EconomyService {
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
       xp: user.xp + xpGain,
-      lastVote: new Date(now)
+      lastVote: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'vote',
+      type: "vote",
       amount,
       targetUser: null,
-      description: `Community vote reward: ${amount} coins, ${xpGain} XP`
+      description: `Community vote reward: ${amount} coins, ${xpGain} XP`,
     });
 
     return {
@@ -857,7 +945,7 @@ export class EconomyService {
       xp: xpGain,
       newBalance: user.coins + amount,
       newXP: user.xp + xpGain,
-      message: `Thanks for voting! You earned ${amount} coins! 🗳️`
+      message: `Thanks for voting! You earned ${amount} coins! 🗳️`,
     };
   }
 
@@ -869,16 +957,22 @@ export class EconomyService {
     const now = Date.now();
     const adventureCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastAdventure && (now - user.lastAdventure.getTime()) < adventureCooldown) {
-      const remaining = adventureCooldown - (now - user.lastAdventure.getTime());
-      throw new Error(`Adventure cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`);
+    if (
+      user.lastAdventure &&
+      now - user.lastAdventure.getTime() < adventureCooldown
+    ) {
+      const remaining =
+        adventureCooldown - (now - user.lastAdventure.getTime());
+      throw new Error(
+        `Adventure cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`,
+      );
     }
 
     const adventures = [
-      { name: 'Forest Quest', coins: 300, xp: 25, success: 0.8 },
-      { name: 'Mountain Expedition', coins: 500, xp: 40, success: 0.6 },
-      { name: 'Dungeon Raid', coins: 800, xp: 60, success: 0.4 },
-      { name: 'Dragon Hunt', coins: 1200, xp: 100, success: 0.25 }
+      { name: "Forest Quest", coins: 300, xp: 25, success: 0.8 },
+      { name: "Mountain Expedition", coins: 500, xp: 40, success: 0.6 },
+      { name: "Dungeon Raid", coins: 800, xp: 60, success: 0.4 },
+      { name: "Dragon Hunt", coins: 1200, xp: 100, success: 0.25 },
     ];
 
     const adventure = adventures[Math.floor(Math.random() * adventures.length)];
@@ -888,15 +982,15 @@ export class EconomyService {
       await storage.updateUser(user.id, {
         coins: user.coins + adventure.coins,
         xp: user.xp + adventure.xp,
-        lastAdventure: new Date(now)
+        lastAdventure: new Date(now),
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'adventure',
+        type: "adventure",
         amount: adventure.coins,
         targetUser: null,
-        description: `${adventure.name} completed: ${adventure.coins} coins, ${adventure.xp} XP`
+        description: `${adventure.name} completed: ${adventure.coins} coins, ${adventure.xp} XP`,
       });
 
       return {
@@ -906,17 +1000,17 @@ export class EconomyService {
         xp: adventure.xp,
         newBalance: user.coins + adventure.coins,
         newXP: user.xp + adventure.xp,
-        message: `${adventure.name} successful! Earned ${adventure.coins} coins! 🗺️`
+        message: `${adventure.name} successful! Earned ${adventure.coins} coins! 🗺️`,
       };
     } else {
       await storage.updateUser(user.id, {
-        lastAdventure: new Date(now)
+        lastAdventure: new Date(now),
       });
 
       const failMessages = [
-        'Your adventure failed, but you gained experience from the journey!',
-        'The quest was too dangerous, you barely escaped!',
-        'Better luck next time, adventurer!'
+        "Your adventure failed, but you gained experience from the journey!",
+        "The quest was too dangerous, you barely escaped!",
+        "Better luck next time, adventurer!",
       ];
 
       return {
@@ -924,7 +1018,7 @@ export class EconomyService {
         adventure: adventure.name,
         coins: 0,
         newBalance: user.coins,
-        message: failMessages[Math.floor(Math.random() * failMessages.length)]
+        message: failMessages[Math.floor(Math.random() * failMessages.length)],
       };
     }
   }
@@ -938,31 +1032,76 @@ export class EconomyService {
     const currentAchievements = user.achievements || [];
 
     const achievementDefinitions = [
-      { id: 'first_coin', name: 'First Coin', description: 'Earn your first coin', coins: 100, requirement: () => user.coins > 0 },
-      { id: 'level_5', name: 'Level Up!', description: 'Reach level 5', coins: 500, requirement: () => user.level >= 5 },
-      { id: 'level_10', name: 'Experienced', description: 'Reach level 10', coins: 1000, requirement: () => user.level >= 10 },
-      { id: 'rich_1k', name: 'Rich!', description: 'Have 1,000 coins', coins: 250, requirement: () => user.coins >= 1000 },
-      { id: 'rich_10k', name: 'Very Rich!', description: 'Have 10,000 coins', coins: 1000, requirement: () => user.coins >= 10000 },
-      { id: 'worker', name: 'Hard Worker', description: 'Work 10 times', coins: 300, requirement: () => user.gameStats?.workCount >= 10 },
-      { id: 'owners', name: 'Owner', description: 'Special protection badge for owners', coins: 0, requirement: () => false } // Manually granted only
+      {
+        id: "first_coin",
+        name: "First Coin",
+        description: "Earn your first coin",
+        coins: 100,
+        requirement: () => user.coins > 0,
+      },
+      {
+        id: "level_5",
+        name: "Level Up!",
+        description: "Reach level 5",
+        coins: 500,
+        requirement: () => user.level >= 5,
+      },
+      {
+        id: "level_10",
+        name: "Experienced",
+        description: "Reach level 10",
+        coins: 1000,
+        requirement: () => user.level >= 10,
+      },
+      {
+        id: "rich_1k",
+        name: "Rich!",
+        description: "Have 1,000 coins",
+        coins: 250,
+        requirement: () => user.coins >= 1000,
+      },
+      {
+        id: "rich_10k",
+        name: "Very Rich!",
+        description: "Have 10,000 coins",
+        coins: 1000,
+        requirement: () => user.coins >= 10000,
+      },
+      {
+        id: "worker",
+        name: "Hard Worker",
+        description: "Work 10 times",
+        coins: 300,
+        requirement: () => user.gameStats?.workCount >= 10,
+      },
+      {
+        id: "owners",
+        name: "Owner",
+        description: "Special protection badge for owners",
+        coins: 0,
+        requirement: () => false,
+      }, // Manually granted only
     ];
 
     for (const achievement of achievementDefinitions) {
-      if (!currentAchievements.includes(achievement.id) && achievement.requirement()) {
+      if (
+        !currentAchievements.includes(achievement.id) &&
+        achievement.requirement()
+      ) {
         newAchievements.push(achievement);
         currentAchievements.push(achievement.id);
 
         await storage.updateUser(user.id, {
           coins: user.coins + achievement.coins,
-          achievements: currentAchievements
+          achievements: currentAchievements,
         });
 
         await storage.createTransaction({
           user: username,
-          type: 'earn',
+          type: "earn",
           amount: achievement.coins,
           targetUser: null,
-          description: `Achievement unlocked: ${achievement.name} - ${achievement.coins} coins`
+          description: `Achievement unlocked: ${achievement.name} - ${achievement.coins} coins`,
         });
       }
     }
@@ -974,9 +1113,9 @@ export class EconomyService {
   static async hasOwnersBadge(username: string): Promise<boolean> {
     const user = await storage.getUserByUsername(username);
     if (!user) return false;
-    
+
     const achievements = user.achievements || [];
-    return achievements.includes('owners');
+    return achievements.includes("owners");
   }
 
   // Manually grant owners badge to a user (admin only function)
@@ -985,20 +1124,23 @@ export class EconomyService {
     if (!user) throw new Error("User not found");
 
     const currentAchievements = user.achievements || [];
-    if (!currentAchievements.includes('owners')) {
-      currentAchievements.push('owners');
+    if (!currentAchievements.includes("owners")) {
+      currentAchievements.push("owners");
       await storage.updateUser(user.id, {
-        achievements: currentAchievements
+        achievements: currentAchievements,
       });
     }
     return true;
   }
 
   // Check if user has specific admin role badge
-  static async hasAdminRoleBadge(username: string, adminRole: string): Promise<boolean> {
+  static async hasAdminRoleBadge(
+    username: string,
+    adminRole: string,
+  ): Promise<boolean> {
     const user = await storage.getUserByUsername(username);
     if (!user) return false;
-    
+
     const achievements = user.achievements || [];
     return achievements.includes(`badge_${adminRole}`);
   }
@@ -1013,7 +1155,7 @@ export class EconomyService {
     if (!currentAchievements.includes(badgeId)) {
       currentAchievements.push(badgeId);
       await storage.updateUser(user.id, {
-        achievements: currentAchievements
+        achievements: currentAchievements,
       });
     }
     return true;
@@ -1021,42 +1163,42 @@ export class EconomyService {
 
   // Grant Junior Admin badge
   static async grantJuniorAdminBadge(username: string) {
-    return this.grantAdminRoleBadge(username, 'junior_admin');
+    return this.grantAdminRoleBadge(username, "junior_admin");
   }
 
   // Grant Admin badge
   static async grantAdminBadge(username: string) {
-    return this.grantAdminRoleBadge(username, 'admin');
+    return this.grantAdminRoleBadge(username, "admin");
   }
 
   // Grant Senior Admin badge
   static async grantSeniorAdminBadge(username: string) {
-    return this.grantAdminRoleBadge(username, 'senior_admin');
+    return this.grantAdminRoleBadge(username, "senior_admin");
   }
 
   // Grant Lead Admin badge
   static async grantLeadAdminBadge(username: string) {
-    return this.grantAdminRoleBadge(username, 'lead_admin');
+    return this.grantAdminRoleBadge(username, "lead_admin");
   }
 
   // Check if user has Junior Admin badge
   static async hasJuniorAdminBadge(username: string): Promise<boolean> {
-    return this.hasAdminRoleBadge(username, 'junior_admin');
+    return this.hasAdminRoleBadge(username, "junior_admin");
   }
 
   // Check if user has Admin badge
   static async hasSpecificAdminBadge(username: string): Promise<boolean> {
-    return this.hasAdminRoleBadge(username, 'admin');
+    return this.hasAdminRoleBadge(username, "admin");
   }
 
   // Check if user has Senior Admin badge
   static async hasSeniorAdminBadge(username: string): Promise<boolean> {
-    return this.hasAdminRoleBadge(username, 'senior_admin');
+    return this.hasAdminRoleBadge(username, "senior_admin");
   }
 
   // Check if user has Lead Admin badge
   static async hasLeadAdminBadge(username: string): Promise<boolean> {
-    return this.hasAdminRoleBadge(username, 'lead_admin');
+    return this.hasAdminRoleBadge(username, "lead_admin");
   }
 
   // Crime system
@@ -1067,35 +1209,65 @@ export class EconomyService {
     const now = Date.now();
     const crimeCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastCrime && (now - user.lastCrime.getTime()) < crimeCooldown) {
+    if (user.lastCrime && now - user.lastCrime.getTime() < crimeCooldown) {
       const remaining = crimeCooldown - (now - user.lastCrime.getTime());
-      throw new Error(`Crime cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+      throw new Error(
+        `Crime cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`,
+      );
     }
 
     const crimes = {
-      'steal-meme': { name: 'Steal a meme', success: 0.8, coins: 200, fine: 100, xp: 10 },
-      'rob-server': { name: 'Rob a Discord server', success: 0.6, coins: 500, fine: 300, xp: 15 },
-      'hack-computer': { name: 'Hack a computer', success: 0.4, coins: 1000, fine: 600, xp: 25 },
-      'bank-heist': { name: 'Bank heist', success: 0.2, coins: 2000, fine: 1200, xp: 50 }
+      "steal-meme": {
+        name: "Steal a meme",
+        success: 0.8,
+        coins: 200,
+        fine: 100,
+        xp: 10,
+      },
+      "rob-server": {
+        name: "Rob a Discord server",
+        success: 0.6,
+        coins: 500,
+        fine: 300,
+        xp: 15,
+      },
+      "hack-computer": {
+        name: "Hack a computer",
+        success: 0.4,
+        coins: 1000,
+        fine: 600,
+        xp: 25,
+      },
+      "bank-heist": {
+        name: "Bank heist",
+        success: 0.2,
+        coins: 2000,
+        fine: 1200,
+        xp: 50,
+      },
     };
 
-    const selectedCrimeKey = crimeType || Object.keys(crimes)[Math.floor(Math.random() * Object.keys(crimes).length)];
-    const selectedCrime = crimes[selectedCrimeKey] || crimes['steal-meme'];
+    const selectedCrimeKey =
+      crimeType ||
+      Object.keys(crimes)[
+        Math.floor(Math.random() * Object.keys(crimes).length)
+      ];
+    const selectedCrime = crimes[selectedCrimeKey] || crimes["steal-meme"];
     const success = Math.random() < selectedCrime.success;
 
     if (success) {
       await storage.updateUser(user.id, {
         coins: user.coins + selectedCrime.coins,
         xp: user.xp + selectedCrime.xp,
-        lastCrime: new Date(now)
+        lastCrime: new Date(now),
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'crime',
+        type: "crime",
         amount: selectedCrime.coins,
         targetUser: null,
-        description: `Crime "${selectedCrime.name}" successful: ${selectedCrime.coins} coins, ${selectedCrime.xp} XP`
+        description: `Crime "${selectedCrime.name}" successful: ${selectedCrime.coins} coins, ${selectedCrime.xp} XP`,
       });
 
       return {
@@ -1104,22 +1276,22 @@ export class EconomyService {
         coins: selectedCrime.coins,
         xp: selectedCrime.xp,
         newBalance: user.coins + selectedCrime.coins,
-        message: `Crime successful! ${selectedCrime.name} earned you ${selectedCrime.coins} coins! 🦹`
+        message: `Crime successful! ${selectedCrime.name} earned you ${selectedCrime.coins} coins! 🦹`,
       };
     } else {
       const totalLoss = Math.min(user.coins, selectedCrime.fine);
-      
+
       await storage.updateUser(user.id, {
         coins: user.coins - totalLoss,
-        lastCrime: new Date(now)
+        lastCrime: new Date(now),
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'fine',
+        type: "fine",
         amount: totalLoss,
         targetUser: null,
-        description: `Crime "${selectedCrime.name}" failed - fined ${totalLoss} coins`
+        description: `Crime "${selectedCrime.name}" failed - fined ${totalLoss} coins`,
       });
 
       return {
@@ -1127,7 +1299,7 @@ export class EconomyService {
         crime: selectedCrime.name,
         fine: totalLoss,
         newBalance: user.coins - totalLoss,
-        message: `Crime failed! You were caught and fined ${totalLoss} coins! 🚔`
+        message: `Crime failed! You were caught and fined ${totalLoss} coins! 🚔`,
       };
     }
   }
@@ -1139,42 +1311,48 @@ export class EconomyService {
 
     // Check if user has Hunting Rifle
     const allItems = await storage.getAllItems();
-    const huntingRifle = allItems.find(item => item.name === "Hunting Rifle");
+    const huntingRifle = allItems.find((item) => item.name === "Hunting Rifle");
     if (huntingRifle) {
-      const hasHuntingRifle = user.inventory.some(item => item.itemId === huntingRifle.id);
+      const hasHuntingRifle = user.inventory.some(
+        (item) => item.itemId === huntingRifle.id,
+      );
       if (!hasHuntingRifle) {
-        throw new Error("You need a Hunting Rifle to hunt! Buy one from the shop.");
+        throw new Error(
+          "You need a Hunting Rifle to hunt! Buy one from the shop.",
+        );
       }
     }
 
     const now = Date.now();
     const huntCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastHunt && (now - user.lastHunt.getTime()) < huntCooldown) {
+    if (user.lastHunt && now - user.lastHunt.getTime() < huntCooldown) {
       const remaining = huntCooldown - (now - user.lastHunt.getTime());
-      throw new Error(`Hunt cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+      throw new Error(
+        `Hunt cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`,
+      );
     }
 
     const huntingAreas = {
-      'forest': [
-        { name: 'Rabbit', coins: 50, chance: 0.5, xp: 5 },
-        { name: 'Duck', coins: 100, chance: 0.3, xp: 8 },
-        { name: 'Boar', coins: 200, chance: 0.2, xp: 12 }
+      forest: [
+        { name: "Rabbit", coins: 50, chance: 0.5, xp: 5 },
+        { name: "Duck", coins: 100, chance: 0.3, xp: 8 },
+        { name: "Boar", coins: 200, chance: 0.2, xp: 12 },
       ],
-      'mountains': [
-        { name: 'Duck', coins: 100, chance: 0.4, xp: 8 },
-        { name: 'Boar', coins: 200, chance: 0.35, xp: 12 },
-        { name: 'Bear', coins: 400, chance: 0.25, xp: 20 }
+      mountains: [
+        { name: "Duck", coins: 100, chance: 0.4, xp: 8 },
+        { name: "Boar", coins: 200, chance: 0.35, xp: 12 },
+        { name: "Bear", coins: 400, chance: 0.25, xp: 20 },
       ],
-      'dragons-lair': [
-        { name: 'Bear', coins: 400, chance: 0.87, xp: 20 },
-        { name: 'Dragon', coins: 1000, chance: 0.08, xp: 40 },
-        { name: 'Kraken', coins: 2000, chance: 0.05, xp: 60 }
-      ]
+      "dragons-lair": [
+        { name: "Bear", coins: 400, chance: 0.87, xp: 20 },
+        { name: "Dragon", coins: 1000, chance: 0.08, xp: 40 },
+        { name: "Kraken", coins: 2000, chance: 0.05, xp: 60 },
+      ],
     };
 
-    const selectedArea = huntType || 'forest';
-    const animals = huntingAreas[selectedArea] || huntingAreas['forest'];
+    const selectedArea = huntType || "forest";
+    const animals = huntingAreas[selectedArea] || huntingAreas["forest"];
 
     // 15% failure chance
     const huntingFailed = Math.random() < 0.15;
@@ -1185,28 +1363,29 @@ export class EconomyService {
         "You scared yourself more than the animal! 😱",
         "Your gun jammed! Classic! 🔫",
         "The animal laughed and ran away! 🏃💨",
-        "You tripped on a tree root! 🌳💥"
+        "You tripped on a tree root! 🌳💥",
       ];
 
       await storage.updateUser(user.id, {
-        lastHunt: new Date(now)
+        lastHunt: new Date(now),
       });
 
-      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+      const randomMessage =
+        failureMessages[Math.floor(Math.random() * failureMessages.length)];
 
       return {
         success: false,
         animal: null,
         newBalance: user.coins,
         newXP: user.xp,
-        message: `${randomMessage} No catch today!`
+        message: `${randomMessage} No catch today!`,
       };
     }
 
     const rand = Math.random();
     let cumulativeChance = 0;
     let caughtAnimal = animals[0];
-    
+
     for (const animal of [...animals].reverse()) {
       cumulativeChance += animal.chance;
       if (rand <= cumulativeChance) {
@@ -1220,31 +1399,32 @@ export class EconomyService {
       "The animal surrendered peacefully! 🏳️",
       "Bullseye! Perfect shot! 🎯",
       "Nature fears you! 🌲😱",
-      "Legendary hunter! 🏹✨"
+      "Legendary hunter! 🏹✨",
     ];
 
     await storage.updateUser(user.id, {
       coins: user.coins + caughtAnimal.coins,
       xp: user.xp + caughtAnimal.xp,
-      lastHunt: new Date(now)
+      lastHunt: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'earn',
+      type: "earn",
       amount: caughtAnimal.coins,
       targetUser: null,
-      description: `Hunted a ${caughtAnimal.name}: ${caughtAnimal.coins} coins, ${caughtAnimal.xp} XP`
+      description: `Hunted a ${caughtAnimal.name}: ${caughtAnimal.coins} coins, ${caughtAnimal.xp} XP`,
     });
 
-    const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+    const randomMessage =
+      successMessages[Math.floor(Math.random() * successMessages.length)];
 
     return {
       success: true,
       animal: caughtAnimal,
       newBalance: user.coins + caughtAnimal.coins,
       newXP: user.xp + caughtAnimal.xp,
-      message: `${randomMessage} Hunted a ${caughtAnimal.name}! +${caughtAnimal.coins} coins!`
+      message: `${randomMessage} Hunted a ${caughtAnimal.name}! +${caughtAnimal.coins} coins!`,
     };
   }
 
@@ -1255,9 +1435,11 @@ export class EconomyService {
 
     // Check if user has Shovel
     const allItems = await storage.getAllItems();
-    const shovel = allItems.find(item => item.name === "Shovel");
+    const shovel = allItems.find((item) => item.name === "Shovel");
     if (shovel) {
-      const hasShovel = user.inventory.some(item => item.itemId === shovel.id);
+      const hasShovel = user.inventory.some(
+        (item) => item.itemId === shovel.id,
+      );
       if (!hasShovel) {
         throw new Error("You need a Shovel to dig! Buy one from the shop.");
       }
@@ -1266,33 +1448,36 @@ export class EconomyService {
     const now = Date.now();
     const digCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastDig && (now - user.lastDig.getTime()) < digCooldown) {
+    if (user.lastDig && now - user.lastDig.getTime() < digCooldown) {
       const remaining = digCooldown - (now - user.lastDig.getTime());
-      throw new Error(`Dig cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+      throw new Error(
+        `Dig cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`,
+      );
     }
 
     const diggingLocations = {
-      'backyard': [
-        { name: 'Bottle Cap', coins: 20, chance: 0.4, xp: 2 },
-        { name: 'Old Coin', coins: 75, chance: 0.35, xp: 5 },
-        { name: 'Treasure Chest', coins: 200, chance: 0.25, xp: 10 }
+      backyard: [
+        { name: "Bottle Cap", coins: 20, chance: 0.4, xp: 2 },
+        { name: "Old Coin", coins: 75, chance: 0.35, xp: 5 },
+        { name: "Treasure Chest", coins: 200, chance: 0.25, xp: 10 },
       ],
-      'beach': [
-        { name: 'Old Coin', coins: 75, chance: 0.35, xp: 5 },
-        { name: 'Treasure Chest', coins: 200, chance: 0.3, xp: 10 },
-        { name: 'Ancient Artifact', coins: 500, chance: 0.25, xp: 20 },
-        { name: 'Pirate Treasure', coins: 800, chance: 0.1, xp: 30 }
+      beach: [
+        { name: "Old Coin", coins: 75, chance: 0.35, xp: 5 },
+        { name: "Treasure Chest", coins: 200, chance: 0.3, xp: 10 },
+        { name: "Ancient Artifact", coins: 500, chance: 0.25, xp: 20 },
+        { name: "Pirate Treasure", coins: 800, chance: 0.1, xp: 30 },
       ],
-      'cave': [
-        { name: 'Treasure Chest', coins: 200, chance: 0.3, xp: 10 },
-        { name: 'Ancient Artifact', coins: 500, chance: 0.35, xp: 20 },
-        { name: 'Legendary Gem', coins: 1500, chance: 0.25, xp: 40 },
-        { name: 'Dragon Hoard', coins: 3000, chance: 0.1, xp: 80 }
-      ]
+      cave: [
+        { name: "Treasure Chest", coins: 200, chance: 0.3, xp: 10 },
+        { name: "Ancient Artifact", coins: 500, chance: 0.35, xp: 20 },
+        { name: "Legendary Gem", coins: 1500, chance: 0.25, xp: 40 },
+        { name: "Dragon Hoard", coins: 3000, chance: 0.1, xp: 80 },
+      ],
     };
 
-    const selectedLocation = location || 'backyard';
-    const treasures = diggingLocations[selectedLocation] || diggingLocations['backyard'];
+    const selectedLocation = location || "backyard";
+    const treasures =
+      diggingLocations[selectedLocation] || diggingLocations["backyard"];
 
     // 20% failure chance
     const diggingFailed = Math.random() < 0.2;
@@ -1303,28 +1488,29 @@ export class EconomyService {
         "A mole bit your finger! 🐭😠",
         "Your shovel broke! 🔨💥",
         "You found... dirt. Just dirt. 😑",
-        "Hit a rock and hurt your back! 💥🪨"
+        "Hit a rock and hurt your back! 💥🪨",
       ];
 
       await storage.updateUser(user.id, {
-        lastDig: new Date(now)
+        lastDig: new Date(now),
       });
 
-      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+      const randomMessage =
+        failureMessages[Math.floor(Math.random() * failureMessages.length)];
 
       return {
         success: false,
         treasure: null,
         newBalance: user.coins,
         newXP: user.xp,
-        message: `${randomMessage} Better luck next time!`
+        message: `${randomMessage} Better luck next time!`,
       };
     }
 
     const rand = Math.random();
     let cumulativeChance = 0;
     let foundTreasure = treasures[0];
-    
+
     for (const treasure of [...treasures].reverse()) {
       cumulativeChance += treasure.chance;
       if (rand <= cumulativeChance) {
@@ -1338,31 +1524,32 @@ export class EconomyService {
       "Your back hurts but it was worth it! 💪",
       "Jackpot underground! 💎",
       "You're a digging machine! 🤖",
-      "Treasure hunter extraordinaire! 🏆"
+      "Treasure hunter extraordinaire! 🏆",
     ];
 
     await storage.updateUser(user.id, {
       coins: user.coins + foundTreasure.coins,
       xp: user.xp + foundTreasure.xp,
-      lastDig: new Date(now)
+      lastDig: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'earn',
+      type: "earn",
       amount: foundTreasure.coins,
       targetUser: null,
-      description: `Dug up a ${foundTreasure.name}: ${foundTreasure.coins} coins, ${foundTreasure.xp} XP`
+      description: `Dug up a ${foundTreasure.name}: ${foundTreasure.coins} coins, ${foundTreasure.xp} XP`,
     });
 
-    const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+    const randomMessage =
+      successMessages[Math.floor(Math.random() * successMessages.length)];
 
     return {
       success: true,
       treasure: foundTreasure,
       newBalance: user.coins + foundTreasure.coins,
       newXP: user.xp + foundTreasure.xp,
-      message: `${randomMessage} Dug up a ${foundTreasure.name}! +${foundTreasure.coins} coins!`
+      message: `${randomMessage} Dug up a ${foundTreasure.name}! +${foundTreasure.coins} coins!`,
     };
   }
 
@@ -1373,20 +1560,29 @@ export class EconomyService {
 
     // Check if user has Phone
     const allItems = await storage.getAllItems();
-    const phone = allItems.find(item => item.name.toLowerCase().includes("phone"));
+    const phone = allItems.find((item) =>
+      item.name.toLowerCase().includes("phone"),
+    );
     if (phone) {
-      const hasPhone = user.inventory.some(item => item.itemId === phone.id);
+      const hasPhone = user.inventory.some((item) => item.itemId === phone.id);
       if (!hasPhone) {
-        throw new Error("You need a Phone to post memes! Buy one from the shop.");
+        throw new Error(
+          "You need a Phone to post memes! Buy one from the shop.",
+        );
       }
     }
 
     const now = Date.now();
     const postmemeCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastPostmeme && (now - user.lastPostmeme.getTime()) < postmemeCooldown) {
+    if (
+      user.lastPostmeme &&
+      now - user.lastPostmeme.getTime() < postmemeCooldown
+    ) {
       const remaining = postmemeCooldown - (now - user.lastPostmeme.getTime());
-      throw new Error(`Postmeme cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+      throw new Error(
+        `Postmeme cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`,
+      );
     }
 
     // 15% failure chance
@@ -1398,14 +1594,15 @@ export class EconomyService {
         "WiFi went down at the worst time! 📶❌",
         "Posted to the wrong group chat! 😱💬",
         "Your meme got flagged for being too spicy! 🌶️🚫",
-        "Accidentally liked your ex's post while scrolling! 😳👍"
+        "Accidentally liked your ex's post while scrolling! 😳👍",
       ];
 
       await storage.updateUser(user.id, {
-        lastPostmeme: new Date(now)
+        lastPostmeme: new Date(now),
       });
 
-      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+      const randomMessage =
+        failureMessages[Math.floor(Math.random() * failureMessages.length)];
 
       return {
         success: false,
@@ -1415,20 +1612,24 @@ export class EconomyService {
         xp: 0,
         newBalance: user.coins,
         newXP: user.xp,
-        message: `${randomMessage} No meme posted this time!`
+        message: `${randomMessage} No meme posted this time!`,
       };
     }
 
     const memeTypes = {
-      'normie': { name: 'Normie Meme', coins: 50, likes: 100, xp: 3 },
-      'dank': { name: 'Dank Meme', coins: 150, likes: 500, xp: 8 },
-      'fresh': { name: 'Fresh Meme', coins: 300, likes: 1000, xp: 15 },
-      'spicy': { name: 'Spicy Meme', coins: 500, likes: 2000, xp: 25 },
-      'god-tier': { name: 'God-Tier Meme', coins: 1000, likes: 5000, xp: 50 }
+      normie: { name: "Normie Meme", coins: 50, likes: 100, xp: 3 },
+      dank: { name: "Dank Meme", coins: 150, likes: 500, xp: 8 },
+      fresh: { name: "Fresh Meme", coins: 300, likes: 1000, xp: 15 },
+      spicy: { name: "Spicy Meme", coins: 500, likes: 2000, xp: 25 },
+      "god-tier": { name: "God-Tier Meme", coins: 1000, likes: 5000, xp: 50 },
     };
 
-    const selectedMemeKey = memeType || Object.keys(memeTypes)[Math.floor(Math.random() * Object.keys(memeTypes).length)];
-    const meme = memeTypes[selectedMemeKey] || memeTypes['normie'];
+    const selectedMemeKey =
+      memeType ||
+      Object.keys(memeTypes)[
+        Math.floor(Math.random() * Object.keys(memeTypes).length)
+      ];
+    const meme = memeTypes[selectedMemeKey] || memeTypes["normie"];
     const actualLikes = Math.floor(meme.likes * (0.5 + Math.random() * 0.5)); // 50-100% of expected likes
     const bonusCoins = Math.floor(actualLikes / 10); // Bonus based on likes
 
@@ -1437,15 +1638,15 @@ export class EconomyService {
     await storage.updateUser(user.id, {
       coins: user.coins + totalCoins,
       xp: user.xp + meme.xp,
-      lastPostmeme: new Date(now)
+      lastPostmeme: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'postmeme',
+      type: "postmeme",
       amount: totalCoins,
       targetUser: null,
-      description: `Posted ${meme.name}: ${totalCoins} coins (${actualLikes} likes), ${meme.xp} XP`
+      description: `Posted ${meme.name}: ${totalCoins} coins (${actualLikes} likes), ${meme.xp} XP`,
     });
 
     return {
@@ -1456,12 +1657,16 @@ export class EconomyService {
       xp: meme.xp,
       newBalance: user.coins + totalCoins,
       newXP: user.xp + meme.xp,
-      message: `Your ${meme.name} got ${actualLikes} likes and earned ${totalCoins} coins! 📱`
+      message: `Your ${meme.name} got ${actualLikes} likes and earned ${totalCoins} coins! 📱`,
     };
   }
 
   // High-Low game
-  static async highlow(username: string, guess: 'higher' | 'lower', betAmount: number) {
+  static async highlow(
+    username: string,
+    guess: "higher" | "lower",
+    betAmount: number,
+  ) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -1475,25 +1680,25 @@ export class EconomyService {
 
     const currentNumber = Math.floor(Math.random() * 100) + 1;
     const nextNumber = Math.floor(Math.random() * 100) + 1;
-    
+
     let correct = false;
-    if (guess === 'higher' && nextNumber > currentNumber) correct = true;
-    if (guess === 'lower' && nextNumber < currentNumber) correct = true;
+    if (guess === "higher" && nextNumber > currentNumber) correct = true;
+    if (guess === "lower" && nextNumber < currentNumber) correct = true;
 
     if (correct) {
       const winnings = Math.floor(betAmount * 1.8); // 1.8x multiplier
-      
+
       await storage.updateUser(user.id, {
         coins: user.coins + winnings,
-        xp: user.xp + 5
+        xp: user.xp + 5,
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'earn',
+        type: "earn",
         amount: winnings,
         targetUser: null,
-        description: `High-Low win: guessed ${guess} (${currentNumber} → ${nextNumber}), won ${winnings} coins`
+        description: `High-Low win: guessed ${guess} (${currentNumber} → ${nextNumber}), won ${winnings} coins`,
       });
 
       return {
@@ -1503,19 +1708,19 @@ export class EconomyService {
         guess,
         won: winnings,
         newBalance: user.coins + winnings,
-        message: `Correct! ${currentNumber} → ${nextNumber}. You won ${winnings} coins! 🎯`
+        message: `Correct! ${currentNumber} → ${nextNumber}. You won ${winnings} coins! 🎯`,
       };
     } else {
       await storage.updateUser(user.id, {
-        coins: user.coins - betAmount
+        coins: user.coins - betAmount,
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'spend',
+        type: "spend",
         amount: betAmount,
         targetUser: null,
-        description: `High-Low loss: guessed ${guess} (${currentNumber} → ${nextNumber}), lost ${betAmount} coins`
+        description: `High-Low loss: guessed ${guess} (${currentNumber} → ${nextNumber}), lost ${betAmount} coins`,
       });
 
       return {
@@ -1525,7 +1730,7 @@ export class EconomyService {
         guess,
         lost: betAmount,
         newBalance: user.coins - betAmount,
-        message: `Wrong! ${currentNumber} → ${nextNumber}. You lost ${betAmount} coins! 📉`
+        message: `Wrong! ${currentNumber} → ${nextNumber}. You lost ${betAmount} coins! 📉`,
       };
     }
   }
@@ -1537,20 +1742,30 @@ export class EconomyService {
 
     // Check if user has Camera/Streaming Setup
     const allItems = await storage.getAllItems();
-    const camera = allItems.find(item => item.name.toLowerCase().includes("camera") || item.name.toLowerCase().includes("streaming"));
+    const camera = allItems.find(
+      (item) =>
+        item.name.toLowerCase().includes("camera") ||
+        item.name.toLowerCase().includes("streaming"),
+    );
     if (camera) {
-      const hasCamera = user.inventory.some(item => item.itemId === camera.id);
+      const hasCamera = user.inventory.some(
+        (item) => item.itemId === camera.id,
+      );
       if (!hasCamera) {
-        throw new Error("You need a Camera or Streaming Setup to stream! Buy one from the shop.");
+        throw new Error(
+          "You need a Camera or Streaming Setup to stream! Buy one from the shop.",
+        );
       }
     }
 
     const now = Date.now();
     const streamCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastStream && (now - user.lastStream.getTime()) < streamCooldown) {
+    if (user.lastStream && now - user.lastStream.getTime() < streamCooldown) {
       const remaining = streamCooldown - (now - user.lastStream.getTime());
-      throw new Error(`Stream cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+      throw new Error(
+        `Stream cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`,
+      );
     }
 
     // 15% failure chance
@@ -1562,14 +1777,15 @@ export class EconomyService {
         "Your cat walked in front of the camera! 🐱📹",
         "Internet lagged at the worst moment! 📡❌",
         "Forgot to unmute for 20 minutes! 🎤🤦",
-        "Accidentally showed your Discord DMs! 😳💬"
+        "Accidentally showed your Discord DMs! 😳💬",
       ];
 
       await storage.updateUser(user.id, {
-        lastStream: new Date(now)
+        lastStream: new Date(now),
       });
 
-      const randomMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+      const randomMessage =
+        failureMessages[Math.floor(Math.random() * failureMessages.length)];
 
       return {
         success: false,
@@ -1580,37 +1796,61 @@ export class EconomyService {
         xp: 0,
         newBalance: user.coins,
         newXP: user.xp,
-        message: `${randomMessage} Stream failed!`
+        message: `${randomMessage} Stream failed!`,
       };
     }
 
     const games = {
-      'among-us': { name: 'Among Us', viewers: 500, coins: 200, trending: false },
-      'fortnite': { name: 'Fortnite', viewers: 1000, coins: 300, trending: true },
-      'minecraft': { name: 'Minecraft', viewers: 800, coins: 250, trending: false },
-      'fall-guys': { name: 'Fall Guys', viewers: 600, coins: 220, trending: false },
-      'valorant': { name: 'Valorant', viewers: 1200, coins: 350, trending: true },
-      'apex-legends': { name: 'Apex Legends', viewers: 900, coins: 280, trending: false }
+      "among-us": {
+        name: "Among Us",
+        viewers: 500,
+        coins: 200,
+        trending: false,
+      },
+      fortnite: { name: "Fortnite", viewers: 1000, coins: 300, trending: true },
+      minecraft: {
+        name: "Minecraft",
+        viewers: 800,
+        coins: 250,
+        trending: false,
+      },
+      "fall-guys": {
+        name: "Fall Guys",
+        viewers: 600,
+        coins: 220,
+        trending: false,
+      },
+      valorant: { name: "Valorant", viewers: 1200, coins: 350, trending: true },
+      "apex-legends": {
+        name: "Apex Legends",
+        viewers: 900,
+        coins: 280,
+        trending: false,
+      },
     };
 
-    const selectedGameKey = gameChoice || Object.keys(games)[Math.floor(Math.random() * Object.keys(games).length)];
-    const game = games[selectedGameKey] || games['among-us'];
+    const selectedGameKey =
+      gameChoice ||
+      Object.keys(games)[Math.floor(Math.random() * Object.keys(games).length)];
+    const game = games[selectedGameKey] || games["among-us"];
     const multiplier = game.trending ? 3 : 1; // 3x for trending games
     const totalCoins = game.coins * multiplier;
-    const actualViewers = Math.floor(game.viewers * (0.7 + Math.random() * 0.6)); // Random viewer variance
+    const actualViewers = Math.floor(
+      game.viewers * (0.7 + Math.random() * 0.6),
+    ); // Random viewer variance
 
     await storage.updateUser(user.id, {
       coins: user.coins + totalCoins,
       xp: user.xp + 12,
-      lastStream: new Date(now)
+      lastStream: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'stream',
+      type: "stream",
       amount: totalCoins,
       targetUser: null,
-      description: `Streamed ${game.name}: ${totalCoins} coins (${actualViewers} viewers)${game.trending ? ' [TRENDING]' : ''}`
+      description: `Streamed ${game.name}: ${totalCoins} coins (${actualViewers} viewers)${game.trending ? " [TRENDING]" : ""}`,
     });
 
     return {
@@ -1622,7 +1862,7 @@ export class EconomyService {
       xp: 12,
       newBalance: user.coins + totalCoins,
       newXP: user.xp + 12,
-      message: `You streamed ${game.name} to ${actualViewers} viewers and earned ${totalCoins} coins!${game.trending ? ' 🔥 TRENDING GAME!' : ''} 📺`
+      message: `You streamed ${game.name} to ${actualViewers} viewers and earned ${totalCoins} coins!${game.trending ? " 🔥 TRENDING GAME!" : ""} 📺`,
     };
   }
 
@@ -1634,19 +1874,39 @@ export class EconomyService {
     const now = Date.now();
     const scratchCooldown = 11 * 1000; // 11 seconds
 
-    if (user.lastScratch && (now - user.lastScratch.getTime()) < scratchCooldown) {
+    if (
+      user.lastScratch &&
+      now - user.lastScratch.getTime() < scratchCooldown
+    ) {
       const remaining = scratchCooldown - (now - user.lastScratch.getTime());
-      throw new Error(`Scratch cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+      throw new Error(
+        `Scratch cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`,
+      );
     }
 
     const tickets = [
-      { name: 'Basic Ticket', cost: 100, prizes: [0, 50, 100, 150, 200, 500], odds: [0.4, 0.25, 0.15, 0.1, 0.08, 0.02] },
-      { name: 'Premium Ticket', cost: 250, prizes: [0, 150, 300, 500, 750, 1000, 2000], odds: [0.35, 0.25, 0.18, 0.12, 0.07, 0.025, 0.005] },
-      { name: 'Mega Ticket', cost: 500, prizes: [0, 300, 600, 1000, 1500, 2500, 5000], odds: [0.3, 0.25, 0.2, 0.15, 0.08, 0.018, 0.002] }
+      {
+        name: "Basic Ticket",
+        cost: 100,
+        prizes: [0, 50, 100, 150, 200, 500],
+        odds: [0.4, 0.25, 0.15, 0.1, 0.08, 0.02],
+      },
+      {
+        name: "Premium Ticket",
+        cost: 250,
+        prizes: [0, 150, 300, 500, 750, 1000, 2000],
+        odds: [0.35, 0.25, 0.18, 0.12, 0.07, 0.025, 0.005],
+      },
+      {
+        name: "Mega Ticket",
+        cost: 500,
+        prizes: [0, 300, 600, 1000, 1500, 2500, 5000],
+        odds: [0.3, 0.25, 0.2, 0.15, 0.08, 0.018, 0.002],
+      },
     ];
 
     const ticket = tickets[Math.floor(Math.random() * tickets.length)];
-    
+
     if (user.coins < ticket.cost) {
       throw new Error(`You need ${ticket.cost} coins to buy a ${ticket.name}`);
     }
@@ -1655,7 +1915,7 @@ export class EconomyService {
     const random = Math.random();
     let cumulativeOdds = 0;
     let prizeIndex = 0;
-    
+
     for (let i = 0; i < ticket.odds.length; i++) {
       cumulativeOdds += ticket.odds[i];
       if (random <= cumulativeOdds) {
@@ -1670,15 +1930,15 @@ export class EconomyService {
     await storage.updateUser(user.id, {
       coins: user.coins + netGain,
       xp: user.xp + 8,
-      lastScratch: new Date(now)
+      lastScratch: new Date(now),
     });
 
     await storage.createTransaction({
       user: username,
-      type: 'scratch',
+      type: "scratch",
       amount: netGain,
       targetUser: null,
-      description: `Scratched ${ticket.name}: cost ${ticket.cost}, won ${prize} coins (net: ${netGain > 0 ? '+' : ''}${netGain})`
+      description: `Scratched ${ticket.name}: cost ${ticket.cost}, won ${prize} coins (net: ${netGain > 0 ? "+" : ""}${netGain})`,
     });
 
     return {
@@ -1690,9 +1950,10 @@ export class EconomyService {
       xp: 8,
       newBalance: user.coins + netGain,
       newXP: user.xp + 8,
-      message: prize > 0 
-        ? `You bought a ${ticket.name} for ${ticket.cost} coins and won ${prize} coins! Net: ${netGain > 0 ? '+' : ''}${netGain} coins! 🎫✨`
-        : `You bought a ${ticket.name} for ${ticket.cost} coins but didn't win anything. Better luck next time! 🎫💸`
+      message:
+        prize > 0
+          ? `You bought a ${ticket.name} for ${ticket.cost} coins and won ${prize} coins! Net: ${netGain > 0 ? "+" : ""}${netGain} coins! 🎫✨`
+          : `You bought a ${ticket.name} for ${ticket.cost} coins but didn't win anything. Better luck next time! 🎫💸`,
     };
   }
 }

@@ -1,4 +1,10 @@
-import { createContext, ReactNode, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 import {
   useQuery,
   useMutation,
@@ -40,23 +46,23 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 // Helper function to parse ban error from API response
 function parseBanError(error: Error): BanInfo | null {
   const message = error.message;
-  
+
   // Check if it's a 403 ban error
   if (message.includes("403:")) {
     try {
       const responseText = message.substring(4); // Remove "403: " prefix
       const response = JSON.parse(responseText);
-      
+
       if (response.error === "Account banned") {
         return {
           type: "permanent",
-          reason: response.reason || "No reason provided"
+          reason: response.reason || "No reason provided",
         };
       } else if (response.error === "Account temporarily banned") {
         return {
           type: "temporary",
           reason: response.reason || "Temporary ban",
-          banUntil: response.banUntil
+          banUntil: response.banUntil,
         };
       }
     } catch (e) {
@@ -64,17 +70,20 @@ function parseBanError(error: Error): BanInfo | null {
       if (message.includes("Account banned") || message.includes("banned")) {
         return {
           type: "permanent",
-          reason: "Account banned"
+          reason: "Account banned",
         };
-      } else if (message.includes("temporarily banned") || message.includes("temp")) {
+      } else if (
+        message.includes("temporarily banned") ||
+        message.includes("temp")
+      ) {
         return {
           type: "temporary",
-          reason: "Account temporarily banned"
+          reason: "Account temporarily banned",
         };
       }
     }
   }
-  
+
   return null;
 }
 
@@ -82,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [banInfo, setBanInfo] = useState<BanInfo | null>(null);
   const [isBanned, setIsBanned] = useState(false);
-  
+
   const {
     data: user,
     error,

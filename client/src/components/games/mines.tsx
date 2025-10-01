@@ -3,7 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,8 +25,17 @@ export default function Mines() {
   const { toast } = useToast();
 
   const playMutation = useMutation({
-    mutationFn: async ({ betAmount, tiles }: { betAmount: number; tiles: number }) => {
-      const res = await apiRequest("POST", "/api/games/mines", { bet: betAmount, tilesRevealed: tiles });
+    mutationFn: async ({
+      betAmount,
+      tiles,
+    }: {
+      betAmount: number;
+      tiles: number;
+    }) => {
+      const res = await apiRequest("POST", "/api/games/mines", {
+        bet: betAmount,
+        tilesRevealed: tiles,
+      });
       return res.json();
     },
     onSuccess: (data) => {
@@ -30,13 +45,13 @@ export default function Mines() {
         setGameResult(data);
         toast({
           title: data.win ? "Mines Win! 💎" : "Mine Hit! 💣",
-          description: data.win 
-            ? `Revealed ${data.tilesRevealed} safe tiles! ${data.multiplier}x multiplier!` 
+          description: data.win
+            ? `Revealed ${data.tilesRevealed} safe tiles! ${data.multiplier}x multiplier!`
             : `Hit a mine after ${data.tilesRevealed} tiles!`,
           variant: data.win ? "default" : "destructive",
         });
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        
+
         if (data.win) {
           createConfetti();
         }
@@ -54,13 +69,13 @@ export default function Mines() {
 
   const createConfetti = () => {
     for (let i = 0; i < 50; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -76,7 +91,7 @@ export default function Mines() {
       });
       return;
     }
-    
+
     if (!user || user.coins < bet) {
       toast({
         title: "Insufficient Funds",
@@ -93,14 +108,14 @@ export default function Mines() {
   const quickBets = [10, 50, 100, 500, 1000];
 
   const getTileDisplay = (index: number) => {
-    if (!gameResult) return '❓';
+    if (!gameResult) return "❓";
     if (gameResult.revealedPositions.includes(index)) {
       if (gameResult.minePositions.includes(index)) {
-        return '💣';
+        return "💣";
       }
-      return '💎';
+      return "💎";
     }
-    return '❓';
+    return "❓";
   };
 
   const potentialWin = Math.pow(1.2, tilesRevealed);
@@ -110,8 +125,12 @@ export default function Mines() {
       <Card className="glow-secondary border-secondary/20">
         <CardHeader className="text-center">
           <div className="text-6xl mb-4">💣</div>
-          <CardTitle className="font-impact text-3xl text-secondary">MINES</CardTitle>
-          <CardDescription>Reveal tiles without hitting a mine!</CardDescription>
+          <CardTitle className="font-impact text-3xl text-secondary">
+            MINES
+          </CardTitle>
+          <CardDescription>
+            Reveal tiles without hitting a mine!
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <Card className="bg-muted p-6">
@@ -122,10 +141,10 @@ export default function Mines() {
                   className={`aspect-square rounded-lg border-2 flex items-center justify-center text-3xl transition-all ${
                     gameResult && gameResult.revealedPositions.includes(index)
                       ? gameResult.minePositions.includes(index)
-                        ? 'bg-destructive border-destructive animate-pulse'
-                        : 'bg-green-500 border-green-500'
-                      : 'bg-muted border-primary/20 hover:border-primary'
-                  } ${isRevealing ? 'animate-pulse' : ''}`}
+                        ? "bg-destructive border-destructive animate-pulse"
+                        : "bg-green-500 border-green-500"
+                      : "bg-muted border-primary/20 hover:border-primary"
+                  } ${isRevealing ? "animate-pulse" : ""}`}
                   data-testid={`tile-${index}`}
                 >
                   {getTileDisplay(index)}
@@ -142,7 +161,9 @@ export default function Mines() {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="tiles-revealed">Tiles to Reveal: {tilesRevealed}</Label>
+              <Label htmlFor="tiles-revealed">
+                Tiles to Reveal: {tilesRevealed}
+              </Label>
               <Slider
                 id="tiles-revealed"
                 min={1}
@@ -195,21 +216,34 @@ export default function Mines() {
 
             <Button
               onClick={handlePlay}
-              disabled={isRevealing || playMutation.isPending || !user || user.coins < bet}
+              disabled={
+                isRevealing ||
+                playMutation.isPending ||
+                !user ||
+                user.coins < bet
+              }
               className="w-full font-comic text-lg bg-secondary hover:bg-secondary/80 glow-secondary"
               data-testid="button-play-mines"
             >
-              {isRevealing ? "REVEALING..." : playMutation.isPending ? "Loading..." : `REVEAL TILES! (${bet} coins)`}
+              {isRevealing
+                ? "REVEALING..."
+                : playMutation.isPending
+                  ? "Loading..."
+                  : `REVEAL TILES! (${bet} coins)`}
             </Button>
           </div>
 
           {gameResult && !isRevealing && (
-            <Card className={`${gameResult.win ? 'border-green-500 glow-accent' : 'border-destructive'}`}>
+            <Card
+              className={`${gameResult.win ? "border-green-500 glow-accent" : "border-destructive"}`}
+            >
               <CardContent className="p-6 text-center">
                 <div className="text-4xl mb-4">
                   {gameResult.win ? "💎" : "💣"}
                 </div>
-                <h3 className={`text-2xl font-bold mb-2 ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
+                <h3
+                  className={`text-2xl font-bold mb-2 ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
                   {gameResult.win ? "SAFE!" : "MINE HIT!"}
                 </h3>
                 <div className="mb-4">
@@ -222,8 +256,11 @@ export default function Mines() {
                     {gameResult.multiplier}x Multiplier!
                   </Badge>
                 )}
-                <p className={`text-lg font-semibold ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
-                  {gameResult.win ? '+' : ''}{gameResult.amount} coins
+                <p
+                  className={`text-lg font-semibold ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
+                  {gameResult.win ? "+" : ""}
+                  {gameResult.amount} coins
                 </p>
                 <p className="text-muted-foreground">
                   New Balance: {gameResult.newBalance.toLocaleString()} coins

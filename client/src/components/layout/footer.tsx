@@ -6,15 +6,15 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center space-x-6">
-            <Link 
-              href="#" 
+            <Link
+              href="#"
               className="text-muted-foreground hover:text-primary transition-colors"
               data-testid="footer-about"
             >
               About
             </Link>
-            <a 
-              href="#" 
+            <a
+              href="#"
               className="text-muted-foreground hover:text-primary transition-colors"
               target="_blank"
               rel="noopener noreferrer"
@@ -22,8 +22,8 @@ export default function Footer() {
             >
               Discord
             </a>
-            <a 
-              href="#" 
+            <a
+              href="#"
               className="text-muted-foreground hover:text-primary transition-colors"
               target="_blank"
               rel="noopener noreferrer"
@@ -31,8 +31,8 @@ export default function Footer() {
             >
               Reddit
             </a>
-            <Link 
-              href="#" 
+            <Link
+              href="#"
               className="text-muted-foreground hover:text-primary transition-colors"
               data-testid="footer-support"
             >

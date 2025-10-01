@@ -3,7 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +24,9 @@ export default function Slots() {
 
   const playMutation = useMutation({
     mutationFn: async (betAmount: number) => {
-      const res = await apiRequest("POST", "/api/games/slots", { bet: betAmount });
+      const res = await apiRequest("POST", "/api/games/slots", {
+        bet: betAmount,
+      });
       return res.json();
     },
     onSuccess: (data) => {
@@ -29,11 +37,11 @@ export default function Slots() {
         setGameResult(data);
         toast({
           title: data.win ? "Slots Win! 🎰" : "Slots Loss 😔",
-          description: `${data.reels.join(' ')} - ${data.win ? `${data.multiplier}x multiplier!` : 'Better luck next time!'}`,
+          description: `${data.reels.join(" ")} - ${data.win ? `${data.multiplier}x multiplier!` : "Better luck next time!"}`,
           variant: data.win ? "default" : "destructive",
         });
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        
+
         // Confetti effect for wins
         if (data.win) {
           createConfetti();
@@ -52,13 +60,13 @@ export default function Slots() {
 
   const createConfetti = () => {
     for (let i = 0; i < 50; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -75,7 +83,7 @@ export default function Slots() {
       });
       return;
     }
-    
+
     if (!user || user.coins < bet) {
       toast({
         title: "Insufficient Funds",
@@ -90,25 +98,32 @@ export default function Slots() {
   };
 
   const quickBets = [10, 50, 100, 500, 1000];
-  const symbols = ['🐸', '💎', '🚀', '💰', '🔥'];
+  const symbols = ["🐸", "💎", "🚀", "💰", "🔥"];
 
   return (
     <div className="space-y-6">
       <Card className="glow-secondary border-secondary/20">
         <CardHeader className="text-center">
           <div className="text-6xl mb-4">🎰</div>
-          <CardTitle className="font-impact text-3xl text-secondary">MEME SLOTS</CardTitle>
-          <CardDescription>Spin the reels and match the meme symbols!</CardDescription>
+          <CardTitle className="font-impact text-3xl text-secondary">
+            MEME SLOTS
+          </CardTitle>
+          <CardDescription>
+            Spin the reels and match the meme symbols!
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Slot Machine Display */}
           <Card className="bg-muted p-6">
             <div className="flex justify-center space-x-4 mb-6">
-              {(isSpinning ? ['❓', '❓', '❓'] : (gameResult?.reels || ['🐸', '💎', '🚀'])).map((symbol, index) => (
+              {(isSpinning
+                ? ["❓", "❓", "❓"]
+                : gameResult?.reels || ["🐸", "💎", "🚀"]
+              ).map((symbol, index) => (
                 <div
                   key={index}
                   className={`w-20 h-20 bg-background border-2 border-primary rounded-lg flex items-center justify-center text-4xl ${
-                    isSpinning ? 'animate-spin' : ''
+                    isSpinning ? "animate-spin" : ""
                   }`}
                   data-testid={`slot-reel-${index}`}
                 >
@@ -116,14 +131,22 @@ export default function Slots() {
                 </div>
               ))}
             </div>
-            
+
             {/* Symbol Payouts */}
             <div className="grid grid-cols-5 gap-2 text-center text-sm mb-4">
               {symbols.map((symbol, index) => (
                 <div key={symbol} className="space-y-1">
                   <div className="text-2xl">{symbol}</div>
                   <div className="text-xs text-muted-foreground">
-                    {symbol === '💰' ? '50x' : symbol === '💎' ? '25x' : symbol === '🚀' ? '15x' : symbol === '🔥' ? '10x' : '5x'}
+                    {symbol === "💰"
+                      ? "50x"
+                      : symbol === "💎"
+                        ? "25x"
+                        : symbol === "🚀"
+                          ? "15x"
+                          : symbol === "🔥"
+                            ? "10x"
+                            : "5x"}
                   </div>
                 </div>
               ))}
@@ -163,22 +186,35 @@ export default function Slots() {
 
             <Button
               type="submit"
-              disabled={playMutation.isPending || isSpinning || !user || user.coins < bet}
+              disabled={
+                playMutation.isPending ||
+                isSpinning ||
+                !user ||
+                user.coins < bet
+              }
               className="w-full font-comic text-lg bg-secondary hover:bg-secondary/80 glow-secondary"
               data-testid="button-spin-slots"
             >
-              {isSpinning ? "SPINNING..." : playMutation.isPending ? "Loading..." : `SPIN! (${bet} coins)`}
+              {isSpinning
+                ? "SPINNING..."
+                : playMutation.isPending
+                  ? "Loading..."
+                  : `SPIN! (${bet} coins)`}
             </Button>
           </form>
 
           {/* Game Result */}
           {gameResult && !isSpinning && (
-            <Card className={`${gameResult.win ? 'border-green-500 glow-accent' : 'border-destructive'}`}>
+            <Card
+              className={`${gameResult.win ? "border-green-500 glow-accent" : "border-destructive"}`}
+            >
               <CardContent className="p-6 text-center">
                 <div className="text-4xl mb-4">
                   {gameResult.win ? "🎉" : "😔"}
                 </div>
-                <h3 className={`text-2xl font-bold mb-2 ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
+                <h3
+                  className={`text-2xl font-bold mb-2 ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
                   {gameResult.win ? "JACKPOT!" : "NO MATCH!"}
                 </h3>
                 <div className="flex justify-center space-x-2 text-3xl mb-4">
@@ -193,8 +229,11 @@ export default function Slots() {
                     {gameResult.multiplier}x Multiplier!
                   </Badge>
                 )}
-                <p className={`text-lg font-semibold ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
-                  {gameResult.win ? '+' : ''}{gameResult.amount} coins
+                <p
+                  className={`text-lg font-semibold ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
+                  {gameResult.win ? "+" : ""}
+                  {gameResult.amount} coins
                 </p>
                 <p className="text-muted-foreground">
                   New Balance: {gameResult.newBalance.toLocaleString()} coins

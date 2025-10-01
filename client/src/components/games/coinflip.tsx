@@ -3,7 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,15 +17,24 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Coinflip() {
   const [bet, setBet] = useState(100);
-  const [choice, setChoice] = useState<'heads' | 'tails' | null>(null);
+  const [choice, setChoice] = useState<"heads" | "tails" | null>(null);
   const [gameResult, setGameResult] = useState<any>(null);
   const [isFlipping, setIsFlipping] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
   const playMutation = useMutation({
-    mutationFn: async ({ betAmount, selectedChoice }: { betAmount: number; selectedChoice: 'heads' | 'tails' }) => {
-      const res = await apiRequest("POST", "/api/games/coinflip", { bet: betAmount, choice: selectedChoice });
+    mutationFn: async ({
+      betAmount,
+      selectedChoice,
+    }: {
+      betAmount: number;
+      selectedChoice: "heads" | "tails";
+    }) => {
+      const res = await apiRequest("POST", "/api/games/coinflip", {
+        bet: betAmount,
+        choice: selectedChoice,
+      });
       return res.json();
     },
     onSuccess: (data) => {
@@ -30,11 +45,11 @@ export default function Coinflip() {
         setGameResult(data);
         toast({
           title: data.win ? "Coinflip Win! 🪙" : "Coinflip Loss 😔",
-          description: `The coin landed on ${data.result}! You ${data.win ? 'won' : 'lost'} ${Math.abs(data.amount)} coins!`,
+          description: `The coin landed on ${data.result}! You ${data.win ? "won" : "lost"} ${Math.abs(data.amount)} coins!`,
           variant: data.win ? "default" : "destructive",
         });
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        
+
         // Confetti effect for wins
         if (data.win) {
           createConfetti();
@@ -53,13 +68,13 @@ export default function Coinflip() {
 
   const createConfetti = () => {
     for (let i = 0; i < 50; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -84,7 +99,7 @@ export default function Coinflip() {
       });
       return;
     }
-    
+
     if (!user || user.coins < bet) {
       toast({
         title: "Insufficient Funds",
@@ -105,8 +120,12 @@ export default function Coinflip() {
       <Card className="glow-accent border-accent/20">
         <CardHeader className="text-center">
           <div className="text-6xl mb-4 animate-bounce-slow">🪙</div>
-          <CardTitle className="font-impact text-3xl text-accent">COINFLIP</CardTitle>
-          <CardDescription>Call it in the air - heads or tails?</CardDescription>
+          <CardTitle className="font-impact text-3xl text-accent">
+            COINFLIP
+          </CardTitle>
+          <CardDescription>
+            Call it in the air - heads or tails?
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Coin Display */}
@@ -114,14 +133,20 @@ export default function Coinflip() {
             <div className="flex justify-center mb-6">
               <div
                 className={`w-32 h-32 rounded-full border-4 border-accent flex items-center justify-center text-6xl bg-gradient-to-br from-yellow-400 to-yellow-600 ${
-                  isFlipping ? 'animate-spin' : ''
+                  isFlipping ? "animate-spin" : ""
                 }`}
                 data-testid="coin-display"
               >
-                {isFlipping ? '🪙' : (gameResult ? (gameResult.result === 'heads' ? '👑' : '🎯') : '🪙')}
+                {isFlipping
+                  ? "🪙"
+                  : gameResult
+                    ? gameResult.result === "heads"
+                      ? "👑"
+                      : "🎯"
+                    : "🪙"}
               </div>
             </div>
-            
+
             {gameResult && !isFlipping && (
               <div className="text-center">
                 <Badge variant="secondary" className="text-lg px-4 py-2">
@@ -133,11 +158,13 @@ export default function Coinflip() {
 
           {/* Choice Selection */}
           <div className="space-y-4">
-            <Label className="text-center block text-lg font-semibold">Choose Your Side</Label>
+            <Label className="text-center block text-lg font-semibold">
+              Choose Your Side
+            </Label>
             <div className="grid grid-cols-2 gap-4">
               <Button
-                variant={choice === 'heads' ? 'default' : 'outline'}
-                onClick={() => setChoice('heads')}
+                variant={choice === "heads" ? "default" : "outline"}
+                onClick={() => setChoice("heads")}
                 className="h-20 font-comic text-lg bg-primary hover:bg-primary/80"
                 disabled={isFlipping || playMutation.isPending}
                 data-testid="button-choose-heads"
@@ -148,8 +175,8 @@ export default function Coinflip() {
                 </div>
               </Button>
               <Button
-                variant={choice === 'tails' ? 'default' : 'outline'}
-                onClick={() => setChoice('tails')}
+                variant={choice === "tails" ? "default" : "outline"}
+                onClick={() => setChoice("tails")}
                 className="h-20 font-comic text-lg bg-secondary hover:bg-secondary/80"
                 disabled={isFlipping || playMutation.isPending}
                 data-testid="button-choose-tails"
@@ -199,41 +226,70 @@ export default function Coinflip() {
 
             <Button
               onClick={handleFlip}
-              disabled={!choice || isFlipping || playMutation.isPending || !user || user.coins < bet}
+              disabled={
+                !choice ||
+                isFlipping ||
+                playMutation.isPending ||
+                !user ||
+                user.coins < bet
+              }
               className="w-full font-comic text-lg bg-accent hover:bg-accent/80 glow-accent"
               data-testid="button-flip-coin"
             >
-              {isFlipping ? "FLIPPING..." : playMutation.isPending ? "Loading..." : `FLIP COIN! (${bet} coins)`}
+              {isFlipping
+                ? "FLIPPING..."
+                : playMutation.isPending
+                  ? "Loading..."
+                  : `FLIP COIN! (${bet} coins)`}
             </Button>
           </div>
 
           {/* Game Result */}
           {gameResult && !isFlipping && (
-            <Card className={`${gameResult.win ? 'border-green-500 glow-accent' : 'border-destructive'}`}>
+            <Card
+              className={`${gameResult.win ? "border-green-500 glow-accent" : "border-destructive"}`}
+            >
               <CardContent className="p-6 text-center">
                 <div className="text-4xl mb-4">
                   {gameResult.win ? "🎉" : "😔"}
                 </div>
-                <h3 className={`text-2xl font-bold mb-2 ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
+                <h3
+                  className={`text-2xl font-bold mb-2 ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
                   {gameResult.win ? "YOU WIN!" : "YOU LOSE!"}
                 </h3>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-center items-center space-x-4">
                     <div className="text-center">
-                      <div className="text-2xl">{gameResult.choice === 'heads' ? '👑' : '🎯'}</div>
-                      <div className="text-sm text-muted-foreground">Your Choice</div>
-                      <div className="font-semibold">{gameResult.choice.toUpperCase()}</div>
+                      <div className="text-2xl">
+                        {gameResult.choice === "heads" ? "👑" : "🎯"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Your Choice
+                      </div>
+                      <div className="font-semibold">
+                        {gameResult.choice.toUpperCase()}
+                      </div>
                     </div>
                     <div className="text-2xl">vs</div>
                     <div className="text-center">
-                      <div className="text-2xl">{gameResult.result === 'heads' ? '👑' : '🎯'}</div>
-                      <div className="text-sm text-muted-foreground">Result</div>
-                      <div className="font-semibold">{gameResult.result.toUpperCase()}</div>
+                      <div className="text-2xl">
+                        {gameResult.result === "heads" ? "👑" : "🎯"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Result
+                      </div>
+                      <div className="font-semibold">
+                        {gameResult.result.toUpperCase()}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <p className={`text-lg font-semibold ${gameResult.win ? 'text-green-500' : 'text-destructive'}`}>
-                  {gameResult.win ? '+' : ''}{gameResult.amount} coins
+                <p
+                  className={`text-lg font-semibold ${gameResult.win ? "text-green-500" : "text-destructive"}`}
+                >
+                  {gameResult.win ? "+" : ""}
+                  {gameResult.amount} coins
                 </p>
                 <p className="text-muted-foreground">
                   New Balance: {gameResult.newBalance.toLocaleString()} coins

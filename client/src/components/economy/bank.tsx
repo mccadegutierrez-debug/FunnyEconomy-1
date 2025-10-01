@@ -18,7 +18,9 @@ export default function Bank() {
 
   const depositMutation = useMutation({
     mutationFn: async (depositAmount: number) => {
-      const res = await apiRequest("POST", "/api/economy/deposit", { amount: depositAmount });
+      const res = await apiRequest("POST", "/api/economy/deposit", {
+        amount: depositAmount,
+      });
       return res.json();
     },
     onSuccess: (data) => {
@@ -40,7 +42,9 @@ export default function Bank() {
 
   const withdrawMutation = useMutation({
     mutationFn: async (withdrawAmount: number) => {
-      const res = await apiRequest("POST", "/api/economy/withdraw", { amount: withdrawAmount });
+      const res = await apiRequest("POST", "/api/economy/withdraw", {
+        amount: withdrawAmount,
+      });
       return res.json();
     },
     onSuccess: (data) => {
@@ -63,7 +67,7 @@ export default function Bank() {
   const handleDeposit = (e: React.FormEvent) => {
     e.preventDefault();
     const depositAmount = parseInt(amount);
-    
+
     if (!depositAmount || depositAmount <= 0) {
       toast({
         title: "Invalid Amount",
@@ -79,7 +83,7 @@ export default function Bank() {
   const handleWithdraw = (e: React.FormEvent) => {
     e.preventDefault();
     const withdrawAmount = parseInt(amount);
-    
+
     if (!withdrawAmount || withdrawAmount <= 0) {
       toast({
         title: "Invalid Amount",
@@ -94,7 +98,8 @@ export default function Bank() {
 
   if (!user) return null;
 
-  const bankUsagePercent = ((user.bank || 0) / (user.bankCapacity || 10000)) * 100;
+  const bankUsagePercent =
+    ((user.bank || 0) / (user.bankCapacity || 10000)) * 100;
 
   return (
     <Card className="border-primary/20" data-testid="bank-card">
@@ -107,13 +112,19 @@ export default function Bank() {
       <CardContent className="space-y-4">
         {/* Bank Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-4 bg-muted rounded-lg" data-testid="bank-balance">
+          <div
+            className="text-center p-4 bg-muted rounded-lg"
+            data-testid="bank-balance"
+          >
             <div className="text-accent font-bold text-lg">
               💰 {(user.bank || 0).toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground">Bank Balance</div>
           </div>
-          <div className="text-center p-4 bg-muted rounded-lg" data-testid="bank-capacity">
+          <div
+            className="text-center p-4 bg-muted rounded-lg"
+            data-testid="bank-capacity"
+          >
             <div className="text-secondary font-bold text-lg">
               💰 {(user.bankCapacity || 10000).toLocaleString()}
             </div>
@@ -131,7 +142,7 @@ export default function Bank() {
           </div>
           <Progress value={bankUsagePercent} className="h-2" />
         </div>
-        
+
         {/* Banking Interface */}
         <form className="space-y-4">
           <div className="space-y-2">
@@ -147,12 +158,17 @@ export default function Bank() {
               data-testid="input-bank-amount"
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"
               onClick={handleDeposit}
-              disabled={depositMutation.isPending || !amount || parseInt(amount) <= 0 || parseInt(amount) > (user.coins || 0)}
+              disabled={
+                depositMutation.isPending ||
+                !amount ||
+                parseInt(amount) <= 0 ||
+                parseInt(amount) > (user.coins || 0)
+              }
               className="font-comic bg-primary text-primary-foreground hover:bg-primary/80"
               data-testid="button-deposit"
             >
@@ -162,7 +178,12 @@ export default function Bank() {
             <Button
               type="button"
               onClick={handleWithdraw}
-              disabled={withdrawMutation.isPending || !amount || parseInt(amount) <= 0 || parseInt(amount) > (user.bank || 0)}
+              disabled={
+                withdrawMutation.isPending ||
+                !amount ||
+                parseInt(amount) <= 0 ||
+                parseInt(amount) > (user.bank || 0)
+              }
               className="font-comic bg-secondary text-secondary-foreground hover:bg-secondary/80"
               data-testid="button-withdraw"
             >
@@ -170,7 +191,7 @@ export default function Bank() {
               {withdrawMutation.isPending ? "Withdrawing..." : "WITHDRAW"}
             </Button>
           </div>
-          
+
           {/* Quick Amount Buttons */}
           <div className="grid grid-cols-4 gap-1">
             <Button
@@ -215,7 +236,7 @@ export default function Bank() {
             </Button>
           </div>
         </form>
-        
+
         {/* Bank Info */}
         <div className="text-center text-sm text-muted-foreground space-y-1">
           <p>💰 Daily Interest: 0.5%</p>

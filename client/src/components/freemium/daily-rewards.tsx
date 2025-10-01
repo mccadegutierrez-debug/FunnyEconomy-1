@@ -29,36 +29,36 @@ export default function DailyRewards() {
     },
     onSuccess: (data) => {
       setClaiming(true);
-      
+
       // Show reward with delay for excitement
       setTimeout(() => {
         setClaiming(false);
         let title = "Daily Reward Claimed! 🎁";
         let description = "";
-        
+
         switch (data.type) {
-          case 'coins':
+          case "coins":
             title = "Coin Reward! 💰";
             description = `You received ${data.amount} coins!`;
             break;
-          case 'item':
+          case "item":
             title = `${data.rarity.charAt(0).toUpperCase() + data.rarity.slice(1)} Item! ✨`;
             description = `You received a ${data.item.name}!`;
             break;
-          case 'lootbox':
+          case "lootbox":
             title = "Lootbox Reward! 📦";
             description = `You received a ${data.item.name} with ${data.lootboxContents.length} items inside!`;
             break;
         }
-        
+
         toast({
           title,
           description,
         });
-        
+
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         queryClient.invalidateQueries({ queryKey: ["/api/freemium/next"] });
-        
+
         // Confetti effect
         createConfetti();
       }, 2000);
@@ -75,13 +75,13 @@ export default function DailyRewards() {
 
   const createConfetti = () => {
     for (let i = 0; i < 100; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.animationDelay = Math.random() * 3 + 's';
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = Math.random() * 100 + "%";
+      confetti.style.animationDelay = Math.random() * 3 + "s";
       confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
       document.body.appendChild(confetti);
-      
+
       setTimeout(() => {
         confetti.remove();
       }, 3000);
@@ -90,10 +90,10 @@ export default function DailyRewards() {
 
   const formatTimeRemaining = (milliseconds: number) => {
     if (milliseconds <= 0) return "Ready!";
-    
+
     const hours = Math.floor(milliseconds / (1000 * 60 * 60));
     const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -104,7 +104,10 @@ export default function DailyRewards() {
   const timeRemaining = formatTimeRemaining(nextClaimTime);
 
   return (
-    <Card className="bg-gradient-to-r from-primary to-accent hover:scale-105 transition-transform glow-primary" data-testid="daily-rewards-card">
+    <Card
+      className="bg-gradient-to-r from-primary to-accent hover:scale-105 transition-transform glow-primary"
+      data-testid="daily-rewards-card"
+    >
       <CardContent className="p-4 text-center">
         <div className="flex items-center justify-center mb-2">
           <Gift className="mr-1 text-2xl" />
@@ -114,11 +117,11 @@ export default function DailyRewards() {
             </div>
           )}
         </div>
-        
+
         <h3 className="font-comic font-bold text-primary-foreground">
           {claiming ? "Opening..." : "Daily Reward"}
         </h3>
-        
+
         {claiming ? (
           <div className="space-y-2 mt-2">
             <div className="text-4xl animate-bounce">🎁</div>
@@ -142,7 +145,10 @@ export default function DailyRewards() {
               </Button>
             ) : (
               <div className="mt-2 space-y-2">
-                <Badge variant="secondary" className="bg-white/20 text-primary-foreground">
+                <Badge
+                  variant="secondary"
+                  className="bg-white/20 text-primary-foreground"
+                >
                   <Clock className="w-3 h-3 mr-1" />
                   {timeRemaining}
                 </Badge>

@@ -1,7 +1,7 @@
 import { storage } from "../storage";
 
 // In-memory storage for pending freemium rewards
-const pendingRewards = new Map<string, { rewards: any[], expiresAt: number }>();
+const pendingRewards = new Map<string, { rewards: any[]; expiresAt: number }>();
 
 export class FreemiumService {
   // Generate 3 different rewards for the user to choose from
@@ -14,9 +14,11 @@ export class FreemiumService {
 
     if (user.lastFreemiumClaim) {
       const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
-      if ((now - lastClaimTime) < freemiumCooldown) {
+      if (now - lastClaimTime < freemiumCooldown) {
         const remaining = freemiumCooldown - (now - lastClaimTime);
-        throw new Error(`Freemium cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`);
+        throw new Error(
+          `Freemium cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`,
+        );
       }
     }
 
@@ -27,13 +29,13 @@ export class FreemiumService {
     }
 
     // Get loot table
-    const lootTable = await storage.db?.get('freemium:loot') || {
+    const lootTable = (await storage.db?.get("freemium:loot")) || {
       coins: { weight: 40, min: 100, max: 500 },
       common: { weight: 25 },
       uncommon: { weight: 15 },
       rare: { weight: 10 },
       epic: { weight: 5 },
-      legendary: { weight: 5 }
+      legendary: { weight: 5 },
     };
 
     // Generate 3 different rewards
@@ -48,20 +50,26 @@ export class FreemiumService {
     // Store rewards with 5 minute expiration
     pendingRewards.set(username, {
       rewards,
-      expiresAt: now + (5 * 60 * 1000)
+      expiresAt: now + 5 * 60 * 1000,
     });
 
     return rewards;
   }
 
-  private static async generateSingleReward(lootTable: any, usedTypes: Set<string>) {
+  private static async generateSingleReward(
+    lootTable: any,
+    usedTypes: Set<string>,
+  ) {
     const items = await storage.getAllItems();
-    
+
     // Weighted random selection
-    const totalWeight = Object.values(lootTable).reduce((sum: number, item: any) => sum + item.weight, 0);
+    const totalWeight = Object.values(lootTable).reduce(
+      (sum: number, item: any) => sum + item.weight,
+      0,
+    );
     let random = Math.random() * totalWeight;
-    
-    let selectedReward = 'coins';
+
+    let selectedReward = "coins";
     for (const [reward, data] of Object.entries(lootTable)) {
       random -= (data as any).weight;
       if (random <= 0) {
@@ -72,43 +80,48 @@ export class FreemiumService {
 
     let result: any = { type: selectedReward };
 
-    if (selectedReward === 'coins') {
+    if (selectedReward === "coins") {
       const coinData = lootTable.coins as any;
-      const amount = coinData.min + Math.floor(Math.random() * (coinData.max - coinData.min + 1));
-      
+      const amount =
+        coinData.min +
+        Math.floor(Math.random() * (coinData.max - coinData.min + 1));
+
       result = {
-        type: 'coins',
+        type: "coins",
         amount,
-        rarity: 'coins',
-        icon: '💰',
+        rarity: "coins",
+        icon: "💰",
         name: `${amount} Coins`,
-        description: `Receive ${amount} coins`
+        description: `Receive ${amount} coins`,
       };
     } else {
       // Item reward
-      const rarityItems = items.filter(item => item.rarity === selectedReward);
-      
+      const rarityItems = items.filter(
+        (item) => item.rarity === selectedReward,
+      );
+
       if (rarityItems.length === 0) {
         // Fallback to coins if no items of that rarity
         const amount = 250;
         result = {
-          type: 'coins',
+          type: "coins",
           amount,
-          rarity: 'coins',
-          icon: '💰',
+          rarity: "coins",
+          icon: "💰",
           name: `${amount} Coins`,
-          description: `Receive ${amount} coins`
+          description: `Receive ${amount} coins`,
         };
       } else {
-        const selectedItem = rarityItems[Math.floor(Math.random() * rarityItems.length)];
-        
+        const selectedItem =
+          rarityItems[Math.floor(Math.random() * rarityItems.length)];
+
         result = {
-          type: 'item',
+          type: "item",
           item: selectedItem,
           rarity: selectedReward,
-          icon: selectedItem.icon || '✨',
+          icon: selectedItem.icon || "✨",
           name: selectedItem.name,
-          description: selectedItem.description
+          description: selectedItem.description,
         };
       }
     }
@@ -136,43 +149,45 @@ export class FreemiumService {
     const now = Date.now();
 
     // Apply the reward
-    if (selectedReward.type === 'coins') {
+    if (selectedReward.type === "coins") {
       await storage.updateUser(user.id, {
         coins: user.coins + selectedReward.amount,
-        lastFreemiumClaim: new Date(now)
+        lastFreemiumClaim: new Date(now),
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'freemium',
+        type: "freemium",
         amount: selectedReward.amount,
-        description: `Freemium reward: ${selectedReward.amount} coins`
+        description: `Freemium reward: ${selectedReward.amount} coins`,
       });
 
       selectedReward.newBalance = user.coins + selectedReward.amount;
     } else {
       // Item reward
-      const existingItem = user.inventory.find(item => item.itemId === selectedReward.item.id);
+      const existingItem = user.inventory.find(
+        (item) => item.itemId === selectedReward.item.id,
+      );
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
         user.inventory.push({
           itemId: selectedReward.item.id,
           quantity: 1,
-          equipped: false
+          equipped: false,
         });
       }
 
       await storage.updateUser(user.id, {
         inventory: user.inventory,
-        lastFreemiumClaim: new Date(now)
+        lastFreemiumClaim: new Date(now),
       });
 
       await storage.createTransaction({
         user: username,
-        type: 'freemium',
+        type: "freemium",
         amount: 0,
-        description: `Freemium reward: ${selectedReward.item.name} (${selectedReward.rarity})`
+        description: `Freemium reward: ${selectedReward.item.name} (${selectedReward.rarity})`,
       });
     }
 
@@ -184,41 +199,46 @@ export class FreemiumService {
 
   private static async openLootbox(user: any, lootbox: any) {
     const items = await storage.getAllItems();
-    const nonLootboxItems = items.filter(item => item.type !== 'lootbox');
-    
+    const nonLootboxItems = items.filter((item) => item.type !== "lootbox");
+
     const numItems = 2 + Math.floor(Math.random() * 4); // 2-5 items
     const lootboxContents = [];
-    
+
     for (let i = 0; i < numItems; i++) {
       // Weighted selection favoring common items
       const random = Math.random();
-      let selectedRarity = 'common';
-      
-      if (random < 0.05) selectedRarity = 'legendary';
-      else if (random < 0.15) selectedRarity = 'epic';
-      else if (random < 0.3) selectedRarity = 'rare';
-      else if (random < 0.5) selectedRarity = 'uncommon';
-      
-      const rarityItems = nonLootboxItems.filter(item => item.rarity === selectedRarity);
+      let selectedRarity = "common";
+
+      if (random < 0.05) selectedRarity = "legendary";
+      else if (random < 0.15) selectedRarity = "epic";
+      else if (random < 0.3) selectedRarity = "rare";
+      else if (random < 0.5) selectedRarity = "uncommon";
+
+      const rarityItems = nonLootboxItems.filter(
+        (item) => item.rarity === selectedRarity,
+      );
       if (rarityItems.length === 0) continue;
-      
-      const selectedItem = rarityItems[Math.floor(Math.random() * rarityItems.length)];
-      
+
+      const selectedItem =
+        rarityItems[Math.floor(Math.random() * rarityItems.length)];
+
       // Add to user inventory
-      const existingItem = user.inventory.find((item: any) => item.itemId === selectedItem.id);
+      const existingItem = user.inventory.find(
+        (item: any) => item.itemId === selectedItem.id,
+      );
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
         user.inventory.push({
           itemId: selectedItem.id,
           quantity: 1,
-          equipped: false
+          equipped: false,
         });
       }
-      
+
       lootboxContents.push(selectedItem);
     }
-    
+
     return lootboxContents;
   }
 

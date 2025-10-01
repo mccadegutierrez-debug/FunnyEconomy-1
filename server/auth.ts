@@ -28,11 +28,12 @@ export async function logAdminAction(options: {
       targetId: options.targetId || null,
       targetName: options.targetName || null,
       details: options.details || {},
-      ipAddress: options.req.ip || options.req.connection?.remoteAddress || null,
-      userAgent: options.req.get('User-Agent') || null,
+      ipAddress:
+        options.req.ip || options.req.connection?.remoteAddress || null,
+      userAgent: options.req.get("User-Agent") || null,
     });
   } catch (error) {
-    console.error('Failed to log admin action:', error);
+    console.error("Failed to log admin action:", error);
     // Don't throw error to avoid breaking the main operation
   }
 }
@@ -44,7 +45,7 @@ declare global {
 }
 
 // Extend session data interface
-declare module 'express-session' {
+declare module "express-session" {
   interface SessionData {
     isAdmin?: boolean;
     adminAuthTime?: string | null;
@@ -92,7 +93,9 @@ export function setupAuth(app: Express) {
   const adminAuthLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 3, // Only 3 admin authentication attempts per window
-    message: { error: "Too many admin authentication attempts, try again later" },
+    message: {
+      error: "Too many admin authentication attempts, try again later",
+    },
     standardHeaders: true,
     legacyHeaders: false,
   });
@@ -104,17 +107,19 @@ export function setupAuth(app: Express) {
         if (!user || !(await comparePasswords(password, user.passwordHash))) {
           return done(null, false, { message: "Invalid username or password" });
         }
-        
+
         if (user.banned) {
-          return done(null, false, { message: `Account banned: ${user.banReason}` });
+          return done(null, false, {
+            message: `Account banned: ${user.banReason}`,
+          });
         }
-        
+
         // Update last active and online status
-        await storage.updateUser(user.id, { 
+        await storage.updateUser(user.id, {
           onlineStatus: true,
-          lastActive: new Date()
+          lastActive: new Date(),
         });
-        
+
         return done(null, user);
       } catch (error) {
         return done(error);
@@ -136,20 +141,20 @@ export function setupAuth(app: Express) {
   app.post("/api/admin/authenticate", adminAuthLimiter, async (req, res) => {
     try {
       const { adminKey } = req.body;
-      
+
       if (!adminKey) {
         return res.status(400).json({ error: "Admin key is required" });
       }
-      
+
       const serverAdminKey = process.env.ADMIN_KEY;
       if (!serverAdminKey) {
         return res.status(500).json({ error: "Admin system not configured" });
       }
-      
+
       if (adminKey !== serverAdminKey) {
         return res.status(403).json({ error: "Invalid admin key" });
       }
-      
+
       // Store admin authentication in session
       if (req.session) {
         req.session.isAdmin = true;
@@ -158,20 +163,20 @@ export function setupAuth(app: Express) {
 
       // Log admin authentication
       await logAdminAction({
-        adminUsername: 'system_admin',
-        adminRole: 'system',
-        action: 'admin_login',
-        details: { 
+        adminUsername: "system_admin",
+        adminRole: "system",
+        action: "admin_login",
+        details: {
           success: true,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        req
+        req,
       });
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         message: "Admin authentication successful",
-        adminAuthTime: new Date().toISOString()
+        adminAuthTime: new Date().toISOString(),
       });
     } catch (error) {
       res.status(500).json({ error: "Authentication failed" });
@@ -183,13 +188,13 @@ export function setupAuth(app: Express) {
     if (req.session && req.session.isAdmin) {
       // Log admin logout
       await logAdminAction({
-        adminUsername: 'system_admin',
-        adminRole: 'system',
-        action: 'admin_logout',
-        details: { 
-          timestamp: new Date().toISOString()
+        adminUsername: "system_admin",
+        adminRole: "system",
+        action: "admin_logout",
+        details: {
+          timestamp: new Date().toISOString(),
         },
-        req
+        req,
       });
 
       req.session.isAdmin = false;
@@ -201,27 +206,36 @@ export function setupAuth(app: Express) {
   app.post("/api/register", authLimiter, async (req, res, next) => {
     try {
       const { username, password } = req.body;
-      
+
       // Validate input
       if (!username || !password) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
       if (username.length < 3 || username.length > 20) {
-        return res.status(400).json({ error: "Username must be 3-20 characters" });
+        return res
+          .status(400)
+          .json({ error: "Username must be 3-20 characters" });
       }
 
       if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-        return res.status(400).json({ error: "Username can only contain letters, numbers, and underscores" });
+        return res
+          .status(400)
+          .json({
+            error:
+              "Username can only contain letters, numbers, and underscores",
+          });
       }
 
       if (password.length < 8) {
-        return res.status(400).json({ error: "Password must be at least 8 characters" });
+        return res
+          .status(400)
+          .json({ error: "Password must be at least 8 characters" });
       }
 
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(username);
-      
+
       if (existingUser) {
         return res.status(400).json({ error: "Username already exists" });
       }
@@ -234,21 +248,21 @@ export function setupAuth(app: Express) {
       // Create welcome transaction
       await storage.createTransaction({
         user: user.username,
-        type: 'earn',
+        type: "earn",
         amount: 500,
         targetUser: null,
-        description: 'Welcome bonus! 🎉',
-        timestamp: new Date()
+        description: "Welcome bonus! 🎉",
+        timestamp: new Date(),
       });
 
       req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json({ 
-          id: user.id, 
+        res.status(201).json({
+          id: user.id,
           username: user.username,
           coins: user.coins,
           level: user.level,
-          xp: user.xp 
+          xp: user.xp,
         });
       });
     } catch (error) {
@@ -260,7 +274,9 @@ export function setupAuth(app: Express) {
     passport.authenticate("local", (err: any, user: SelectUser, info: any) => {
       if (err) return next(err);
       if (!user) {
-        return res.status(401).json({ error: info?.message || "Invalid credentials" });
+        return res
+          .status(401)
+          .json({ error: info?.message || "Invalid credentials" });
       }
 
       req.login(user, (err) => {
@@ -270,7 +286,7 @@ export function setupAuth(app: Express) {
           username: user.username,
           coins: user.coins,
           level: user.level,
-          xp: user.xp
+          xp: user.xp,
         });
       });
     })(req, res, next);
@@ -308,7 +324,7 @@ export function setupAuth(app: Express) {
       achievements: req.user.achievements,
       gameStats: req.user.gameStats,
       lastFreemiumClaim: req.user.lastFreemiumClaim,
-      lastDailyClaim: req.user.lastDailyClaim
+      lastDailyClaim: req.user.lastDailyClaim,
     });
   });
 }
@@ -320,22 +336,22 @@ export function requireAuth(req: any, res: any, next: any) {
   }
 
   const user = req.user;
-  
+
   // Check for permanent ban
   if (user.banned) {
-    return res.status(403).json({ 
-      error: "Account banned", 
-      reason: user.banReason || "No reason provided" 
+    return res.status(403).json({
+      error: "Account banned",
+      reason: user.banReason || "No reason provided",
     });
   }
 
   // Check for temporary ban
   if (user.tempBanUntil && new Date(user.tempBanUntil) > new Date()) {
     const banUntil = new Date(user.tempBanUntil);
-    return res.status(403).json({ 
-      error: "Account temporarily banned", 
+    return res.status(403).json({
+      error: "Account temporarily banned",
       reason: user.banReason || "Temporary ban",
-      banUntil: banUntil.toISOString()
+      banUntil: banUntil.toISOString(),
     });
   }
 
@@ -354,37 +370,40 @@ export function requireAdmin(req: any, res: any, next: any) {
   if (!req.session || !req.session.isAdmin) {
     return res.status(403).json({ error: "Admin authentication required" });
   }
-  
+
   // Check session timeout (24 hours)
   if (req.session.adminAuthTime) {
     const authTime = new Date(req.session.adminAuthTime);
     const now = new Date();
-    const hoursSinceAuth = (now.getTime() - authTime.getTime()) / (1000 * 60 * 60);
-    
+    const hoursSinceAuth =
+      (now.getTime() - authTime.getTime()) / (1000 * 60 * 60);
+
     if (hoursSinceAuth > 24) {
       req.session.isAdmin = false;
       req.session.adminAuthTime = null;
-      return res.status(403).json({ error: "Admin session expired. Please re-authenticate." });
+      return res
+        .status(403)
+        .json({ error: "Admin session expired. Please re-authenticate." });
     }
   }
-  
+
   return next();
 }
 
 // Legacy admin key check (fallback for backward compatibility)
 export function requireAdminKey(req: any, res: any, next: any) {
   const adminKey = process.env.ADMIN_KEY;
-  
+
   if (!adminKey) {
     return res.status(500).json({ error: "Admin system not configured" });
   }
-  
-  const providedKey = req.headers['admin-key'] || req.body.adminKey;
-  
+
+  const providedKey = req.headers["admin-key"] || req.body.adminKey;
+
   if (providedKey === adminKey) {
     return next();
   }
-  
+
   res.status(403).json({ error: "Admin access required" });
 }
 
@@ -392,39 +411,92 @@ export function requireAdminKey(req: any, res: any, next: any) {
 export const AdminPermissions = {
   // Junior Admin can do basic actions
   junior_admin: [
-    'view_users', 'view_items', 'view_transactions', 'view_analytics',
-    'tempban', 'give_coins_small', 'kick'
+    "view_users",
+    "view_items",
+    "view_transactions",
+    "view_analytics",
+    "tempban",
+    "give_coins_small",
+    "kick",
   ],
-  
+
   // Admin can do junior admin actions plus more
   admin: [
-    'view_users', 'view_items', 'view_transactions', 'view_analytics',
-    'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium'
+    "view_users",
+    "view_items",
+    "view_transactions",
+    "view_analytics",
+    "tempban",
+    "give_coins_small",
+    "kick",
+    "unban",
+    "give_coins_medium",
   ],
-  
+
   // Senior Admin can do admin actions plus dangerous ones
   senior_admin: [
-    'view_users', 'view_items', 'view_transactions', 'view_analytics',
-    'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
-    'ban', 'remove_coins', 'manage_items', 'manage_pets'
+    "view_users",
+    "view_items",
+    "view_transactions",
+    "view_analytics",
+    "tempban",
+    "give_coins_small",
+    "kick",
+    "unban",
+    "give_coins_medium",
+    "ban",
+    "remove_coins",
+    "manage_items",
+    "manage_pets",
   ],
-  
+
   // Lead Admin can do senior admin actions plus system commands
   lead_admin: [
-    'view_users', 'view_items', 'view_transactions', 'view_analytics',
-    'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
-    'ban', 'remove_coins', 'manage_items', 'manage_pets', 'give_coins_large', 'reset_user',
-    'set_level', 'give_all_limited', 'give_admin_roles'
+    "view_users",
+    "view_items",
+    "view_transactions",
+    "view_analytics",
+    "tempban",
+    "give_coins_small",
+    "kick",
+    "unban",
+    "give_coins_medium",
+    "ban",
+    "remove_coins",
+    "manage_items",
+    "manage_pets",
+    "give_coins_large",
+    "reset_user",
+    "set_level",
+    "give_all_limited",
+    "give_admin_roles",
   ],
-  
+
   // Owner can do everything
   owner: [
-    'view_users', 'view_items', 'view_transactions', 'view_analytics',
-    'tempban', 'give_coins_small', 'kick', 'unban', 'give_coins_medium',
-    'ban', 'remove_coins', 'manage_items', 'manage_pets', 'give_coins_large', 'reset_user',
-    'set_level', 'give_all_limited', 'give_admin_roles', 'reset_economy',
-    'clear_transactions', 'give_all_unlimited', 'remove_admin_roles'
-  ]
+    "view_users",
+    "view_items",
+    "view_transactions",
+    "view_analytics",
+    "tempban",
+    "give_coins_small",
+    "kick",
+    "unban",
+    "give_coins_medium",
+    "ban",
+    "remove_coins",
+    "manage_items",
+    "manage_pets",
+    "give_coins_large",
+    "reset_user",
+    "set_level",
+    "give_all_limited",
+    "give_admin_roles",
+    "reset_economy",
+    "clear_transactions",
+    "give_all_unlimited",
+    "remove_admin_roles",
+  ],
 };
 
 // Middleware to check role-based permissions (session-based)
@@ -435,38 +507,50 @@ export function requirePermission(permission: string) {
       if (!req.session || !req.session.isAdmin) {
         return res.status(403).json({ error: "Admin authentication required" });
       }
-      
+
       // Check session timeout (24 hours)
       if (req.session.adminAuthTime) {
         const authTime = new Date(req.session.adminAuthTime);
         const now = new Date();
-        const hoursSinceAuth = (now.getTime() - authTime.getTime()) / (1000 * 60 * 60);
-        
+        const hoursSinceAuth =
+          (now.getTime() - authTime.getTime()) / (1000 * 60 * 60);
+
         if (hoursSinceAuth > 24) {
           req.session.isAdmin = false;
           req.session.adminAuthTime = null;
-          return res.status(403).json({ error: "Admin session expired. Please re-authenticate." });
+          return res
+            .status(403)
+            .json({ error: "Admin session expired. Please re-authenticate." });
         }
       }
 
       // Check if this is a basic view operation that can be done with admin session only
-      const basicViewPermissions = ['view_users', 'view_items', 'view_transactions', 'view_analytics'];
+      const basicViewPermissions = [
+        "view_users",
+        "view_items",
+        "view_transactions",
+        "view_analytics",
+      ];
       const isBasicViewOperation = basicViewPermissions.includes(permission);
 
       // For basic view operations, admin session is sufficient
       if (isBasicViewOperation && req.session && req.session.isAdmin) {
-        req.adminRole = 'system_admin';
+        req.adminRole = "system_admin";
         req.hasOwnersBadge = true; // Grant full permissions for system admin
         return next();
       }
 
       // For role-based permissions, we need the user to be authenticated
       if (!req.isAuthenticated() || !req.user) {
-        return res.status(401).json({ error: "User authentication required for role-based permissions" });
+        return res
+          .status(401)
+          .json({
+            error: "User authentication required for role-based permissions",
+          });
       }
 
       const user = await storage.getUserByUsername(req.user.username);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -476,26 +560,32 @@ export function requirePermission(permission: string) {
       const hasOwnersBadge = false;
 
       // Get user's permissions based on their admin role
-      const userPermissions = AdminPermissions[user.adminRole as keyof typeof AdminPermissions] || [];
-      
+      const userPermissions =
+        AdminPermissions[user.adminRole as keyof typeof AdminPermissions] || [];
+
       // Check if user has the required permission
-      const hasPermission = userPermissions.includes(permission) || hasOwnersBadge;
-      
+      const hasPermission =
+        userPermissions.includes(permission) || hasOwnersBadge;
+
       if (!hasPermission) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           error: `Insufficient permissions: ${permission} required`,
           userRole: user.adminRole,
-          hasOwnersBadge 
+          hasOwnersBadge,
         });
       }
 
       // Attach user role info to request for use in endpoints
       req.adminRole = user.adminRole;
       req.hasOwnersBadge = hasOwnersBadge;
-      
+
       return next();
     } catch (error) {
-      return res.status(500).json({ error: "Permission check failed: " + (error as Error).message });
+      return res
+        .status(500)
+        .json({
+          error: "Permission check failed: " + (error as Error).message,
+        });
     }
   };
 }

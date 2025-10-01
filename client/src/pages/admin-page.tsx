@@ -4,16 +4,55 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertTriangle, Users, DollarSign, Settings, Command, Package, Activity, BarChart3, Search, Plus, Edit2, Trash2, Eye, RefreshCw, Clock, TrendingUp, Database, Server, Heart } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertTriangle,
+  Users,
+  DollarSign,
+  Settings,
+  Command,
+  Package,
+  Activity,
+  BarChart3,
+  Search,
+  Plus,
+  Edit2,
+  Trash2,
+  Eye,
+  RefreshCw,
+  Clock,
+  TrendingUp,
+  Database,
+  Server,
+  Heart,
+} from "lucide-react";
 import { STATIC_PET_TYPES } from "@shared/pet-types-data";
 
 export default function AdminPage() {
@@ -35,10 +74,14 @@ export default function AdminPage() {
     stock: "",
     effects: {
       passive: { winRateBoost: 0, coinsPerHour: 0 },
-      active: { useCooldown: 0, duration: 0, effect: "" }
+      active: { useCooldown: 0, duration: 0, effect: "" },
     },
-    lootboxContents: [] as { itemName: string; rarity: string; chance: number }[],
-    consumableEffect: { type: "", magnitude: 0, duration: 0 }
+    lootboxContents: [] as {
+      itemName: string;
+      rarity: string;
+      chance: number;
+    }[],
+    consumableEffect: { type: "", magnitude: 0, duration: 0 },
   });
   const [adminKey, setAdminKey] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(true);
@@ -52,7 +95,9 @@ export default function AdminPage() {
   const [selectedPetId, setSelectedPetId] = useState("");
   const [petName, setPetName] = useState("");
   const [showPetDialog, setShowPetDialog] = useState(false);
-  const [expandedUserActions, setExpandedUserActions] = useState<Set<string>>(new Set());
+  const [expandedUserActions, setExpandedUserActions] = useState<Set<string>>(
+    new Set(),
+  );
   const [showCreatePetDialog, setShowCreatePetDialog] = useState(false);
   const [newPet, setNewPet] = useState({
     petId: "",
@@ -64,13 +109,13 @@ export default function AdminPage() {
     hungerDecay: "",
     hygieneDecay: "",
     energyDecay: "",
-    funDecay: ""
+    funDecay: "",
   });
   const { toast } = useToast();
 
   // Helper function to toggle user actions expansion
   const toggleUserActions = (userId: string) => {
-    setExpandedUserActions(prev => {
+    setExpandedUserActions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(userId)) {
         newSet.delete(userId);
@@ -86,28 +131,30 @@ export default function AdminPage() {
     const checkAdminAccess = async () => {
       try {
         setIsAuthenticating(true);
-        
+
         // First check if user is logged in
         const userRes = await apiRequest("GET", "/api/user");
-        
+
         if (!userRes.ok) {
           setAuthError("Please log in first to access admin panel.");
           setIsAuthenticated(false);
           return;
         }
-        
+
         const userData = await userRes.json();
         setCurrentUser(userData);
-        
+
         // Check admin access by trying to access admin endpoint
         const adminRes = await apiRequest("GET", "/api/admin/users");
-        
+
         if (adminRes.ok) {
           setIsAuthenticated(true);
           setAuthError("");
         } else {
           setIsAuthenticated(false);
-          setAuthError("Admin authentication required. Please enter the admin key.");
+          setAuthError(
+            "Admin authentication required. Please enter the admin key.",
+          );
         }
       } catch (error) {
         setIsAuthenticated(false);
@@ -117,12 +164,17 @@ export default function AdminPage() {
         setIsAuthenticating(false);
       }
     };
-    
+
     checkAdminAccess();
   }, []);
-  
+
   // Fetch admin data using session-based authentication only
-  const { data: users = [], isLoading, error, isFetching: isFetchingUsers } = useQuery({
+  const {
+    data: users = [],
+    isLoading,
+    error,
+    isFetching: isFetchingUsers,
+  } = useQuery({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/admin/users");
@@ -143,14 +195,15 @@ export default function AdminPage() {
   });
 
   // Fetch transactions for monitoring
-  const { data: transactions = [], isFetching: isFetchingTransactions } = useQuery({
-    queryKey: ["/api/admin/transactions"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/transactions");
-      return res.json();
-    },
-    enabled: isAuthenticated,
-  });
+  const { data: transactions = [], isFetching: isFetchingTransactions } =
+    useQuery({
+      queryKey: ["/api/admin/transactions"],
+      queryFn: async () => {
+        const res = await apiRequest("GET", "/api/admin/transactions");
+        return res.json();
+      },
+      enabled: isAuthenticated,
+    });
 
   // Fetch analytics data
   const { data: analytics } = useQuery({
@@ -165,7 +218,7 @@ export default function AdminPage() {
   const executeCommandMutation = useMutation({
     mutationFn: async (cmd: string) => {
       const res = await apiRequest("POST", "/api/admin/command", {
-        command: cmd
+        command: cmd,
       });
       return res.json();
     },
@@ -187,9 +240,15 @@ export default function AdminPage() {
   });
 
   const banUserMutation = useMutation({
-    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+    mutationFn: async ({
+      userId,
+      reason,
+    }: {
+      userId: string;
+      reason: string;
+    }) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/ban`, {
-        reason
+        reason,
       });
       return res.json();
     },
@@ -227,11 +286,23 @@ export default function AdminPage() {
   });
 
   const tempBanUserMutation = useMutation({
-    mutationFn: async ({ userId, reason, duration }: { userId: string; reason: string; duration: string }) => {
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/tempban`, {
-        reason,
-        duration: parseInt(duration) || 1
-      });
+    mutationFn: async ({
+      userId,
+      reason,
+      duration,
+    }: {
+      userId: string;
+      reason: string;
+      duration: string;
+    }) => {
+      const res = await apiRequest(
+        "POST",
+        `/api/admin/users/${userId}/tempban`,
+        {
+          reason,
+          duration: parseInt(duration) || 1,
+        },
+      );
       return res.json();
     },
     onSuccess: () => {
@@ -248,10 +319,20 @@ export default function AdminPage() {
   });
 
   const giveCoinsUserMutation = useMutation({
-    mutationFn: async ({ userId, amount }: { userId: string; amount: string }) => {
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/give-coins`, {
-        amount: parseInt(amount) || 0
-      });
+    mutationFn: async ({
+      userId,
+      amount,
+    }: {
+      userId: string;
+      amount: string;
+    }) => {
+      const res = await apiRequest(
+        "POST",
+        `/api/admin/users/${userId}/give-coins`,
+        {
+          amount: parseInt(amount) || 0,
+        },
+      );
       return res.json();
     },
     onSuccess: () => {
@@ -267,16 +348,27 @@ export default function AdminPage() {
   });
 
   const removeCoinsUserMutation = useMutation({
-    mutationFn: async ({ userId, amount }: { userId: string; amount: string }) => {
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/remove-coins`, {
-        amount: parseInt(amount) || 0
-      });
+    mutationFn: async ({
+      userId,
+      amount,
+    }: {
+      userId: string;
+      amount: string;
+    }) => {
+      const res = await apiRequest(
+        "POST",
+        `/api/admin/users/${userId}/remove-coins`,
+        {
+          amount: parseInt(amount) || 0,
+        },
+      );
       return res.json();
     },
     onSuccess: (data) => {
       toast({
         title: "Coins Removed! 💸",
-        description: data.message || "Coins have been removed from the user successfully.",
+        description:
+          data.message || "Coins have been removed from the user successfully.",
       });
       setSelectedUser(null);
       setCoinAmount("");
@@ -293,17 +385,30 @@ export default function AdminPage() {
   });
 
   const givePetMutation = useMutation({
-    mutationFn: async ({ userId, petId, petName }: { userId: string; petId: string; petName: string }) => {
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/give-pet`, {
-        petId,
-        petName
-      });
+    mutationFn: async ({
+      userId,
+      petId,
+      petName,
+    }: {
+      userId: string;
+      petId: string;
+      petName: string;
+    }) => {
+      const res = await apiRequest(
+        "POST",
+        `/api/admin/users/${userId}/give-pet`,
+        {
+          petId,
+          petName,
+        },
+      );
       return res.json();
     },
     onSuccess: (data) => {
       toast({
         title: "Pet Given! 🐾",
-        description: data.message || "Pet has been given to the user successfully.",
+        description:
+          data.message || "Pet has been given to the user successfully.",
       });
       setSelectedUser(null);
       setSelectedPetId("");
@@ -333,7 +438,7 @@ export default function AdminPage() {
           hungerDecay: parseInt(petData.hungerDecay),
           hygieneDecay: parseInt(petData.hygieneDecay),
           energyDecay: parseInt(petData.energyDecay),
-          funDecay: parseInt(petData.funDecay)
+          funDecay: parseInt(petData.funDecay),
         });
         const data = await res.json();
         if (!data.success && data.error) {
@@ -361,7 +466,7 @@ export default function AdminPage() {
         hungerDecay: "",
         hygieneDecay: "",
         energyDecay: "",
-        funDecay: ""
+        funDecay: "",
       });
     },
     onError: (error: Error) => {
@@ -378,26 +483,29 @@ export default function AdminPage() {
     mutationFn: async (itemData: any) => {
       const effectsData: any = {
         passive: itemData.effects.passive,
-        active: itemData.effects.active
+        active: itemData.effects.active,
       };
-      
-      if (itemData.type === 'lootbox') {
+
+      if (itemData.type === "lootbox") {
         effectsData.lootboxContents = itemData.lootboxContents;
-      } else if (itemData.type === 'consumable') {
+      } else if (itemData.type === "consumable") {
         effectsData.consumableEffect = itemData.consumableEffect;
       }
-      
+
       const res = await apiRequest("POST", "/api/admin/items", {
         body: {
           name: itemData.name,
           description: itemData.description,
           price: parseFloat(itemData.price) || 0,
-          stock: itemData.stock === "999999" ? 2147483647 : parseInt(itemData.stock) || 0,
+          stock:
+            itemData.stock === "999999"
+              ? 2147483647
+              : parseInt(itemData.stock) || 0,
           type: itemData.type,
           rarity: itemData.rarity,
           currentPrice: parseFloat(itemData.price) || 0,
-          effects: effectsData
-        }
+          effects: effectsData,
+        },
       });
       return res.json();
     },
@@ -415,10 +523,10 @@ export default function AdminPage() {
         stock: "",
         effects: {
           passive: { winRateBoost: 0, coinsPerHour: 0 },
-          active: { useCooldown: 0, duration: 0, effect: "" }
+          active: { useCooldown: 0, duration: 0, effect: "" },
         },
         lootboxContents: [],
-        consumableEffect: { type: "", magnitude: 0, duration: 0 }
+        consumableEffect: { type: "", magnitude: 0, duration: 0 },
       });
       setShowItemDialog(false);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] });
@@ -432,11 +540,14 @@ export default function AdminPage() {
           name: itemData.name,
           description: itemData.description,
           price: parseFloat(itemData.price) || undefined,
-          stock: itemData.stock === "999999" ? 2147483647 : parseInt(itemData.stock) || undefined,
+          stock:
+            itemData.stock === "999999"
+              ? 2147483647
+              : parseInt(itemData.stock) || undefined,
           type: itemData.type,
           rarity: itemData.rarity,
-          currentPrice: parseFloat(itemData.price) || undefined
-        }
+          currentPrice: parseFloat(itemData.price) || undefined,
+        },
       });
       return res.json();
     },
@@ -466,10 +577,20 @@ export default function AdminPage() {
   });
 
   const giveAdminRoleMutation = useMutation({
-    mutationFn: async ({ userId, adminRole }: { userId: string; adminRole: string }) => {
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/give-admin`, {
-        body: { adminRole }
-      });
+    mutationFn: async ({
+      userId,
+      adminRole,
+    }: {
+      userId: string;
+      adminRole: string;
+    }) => {
+      const res = await apiRequest(
+        "POST",
+        `/api/admin/users/${userId}/give-admin`,
+        {
+          body: { adminRole },
+        },
+      );
       return res.json();
     },
     onSuccess: (data) => {
@@ -493,7 +614,10 @@ export default function AdminPage() {
 
   const removeAdminRoleMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/remove-admin`);
+      const res = await apiRequest(
+        "POST",
+        `/api/admin/users/${userId}/remove-admin`,
+      );
       return res.json();
     },
     onSuccess: (data) => {
@@ -519,9 +643,9 @@ export default function AdminPage() {
       try {
         // Use new admin authentication endpoint
         const res = await apiRequest("POST", "/api/admin/authenticate", {
-          body: { adminKey }
+          body: { adminKey },
         });
-        
+
         if (res.ok) {
           setIsAuthenticated(true);
           setAdminKey(""); // Clear the key from memory
@@ -532,7 +656,9 @@ export default function AdminPage() {
           // Refresh the queries to load admin data
           queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
           queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
+          queryClient.invalidateQueries({
+            queryKey: ["/api/admin/transactions"],
+          });
         } else {
           const errorData = await res.json();
           toast({
@@ -589,13 +715,15 @@ export default function AdminPage() {
                     data-testid="input-admin-key"
                   />
                 </div>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full font-comic bg-destructive hover:bg-destructive/80"
                   data-testid="button-submit-admin-key"
                   disabled={isAuthenticating}
                 >
-                  {isAuthenticating ? "⏳ Checking Access..." : "🔓 ACCESS ADMIN PANEL"}
+                  {isAuthenticating
+                    ? "⏳ Checking Access..."
+                    : "🔓 ACCESS ADMIN PANEL"}
                 </Button>
               </form>
             </CardContent>
@@ -615,9 +743,13 @@ export default function AdminPage() {
           <Card className="max-w-md mx-auto border-destructive">
             <CardContent className="p-6 text-center">
               <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-destructive mb-2">Access Denied</h3>
-              <p className="text-muted-foreground mb-4">Invalid admin key or insufficient permissions.</p>
-              <Button 
+              <h3 className="text-xl font-bold text-destructive mb-2">
+                Access Denied
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Invalid admin key or insufficient permissions.
+              </p>
+              <Button
                 onClick={() => {
                   setAdminKey("");
                   setAuthError("");
@@ -639,10 +771,13 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-6 space-y-8">
         <div className="text-center">
-          <h1 className="font-impact text-4xl text-destructive mb-2" data-testid="admin-title">
+          <h1
+            className="font-impact text-4xl text-destructive mb-2"
+            data-testid="admin-title"
+          >
             🔧 ADMIN PANEL 🔧
           </h1>
           <p className="text-muted-foreground text-lg">
@@ -661,31 +796,59 @@ export default function AdminPage() {
         ) : (
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="flex flex-wrap justify-center gap-2 h-auto p-2 bg-muted rounded-lg">
-              <TabsTrigger value="overview" data-testid="tab-overview" className="flex-shrink-0">
+              <TabsTrigger
+                value="overview"
+                data-testid="tab-overview"
+                className="flex-shrink-0"
+              >
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="users" data-testid="tab-users" className="flex-shrink-0">
+              <TabsTrigger
+                value="users"
+                data-testid="tab-users"
+                className="flex-shrink-0"
+              >
                 <Users className="w-4 h-4 mr-2" />
                 Users
               </TabsTrigger>
-              <TabsTrigger value="items" data-testid="tab-items" className="flex-shrink-0">
+              <TabsTrigger
+                value="items"
+                data-testid="tab-items"
+                className="flex-shrink-0"
+              >
                 <Package className="w-4 h-4 mr-2" />
                 Items
               </TabsTrigger>
-              <TabsTrigger value="transactions" data-testid="tab-transactions" className="flex-shrink-0">
+              <TabsTrigger
+                value="transactions"
+                data-testid="tab-transactions"
+                className="flex-shrink-0"
+              >
                 <Activity className="w-4 h-4 mr-2" />
                 Transactions
               </TabsTrigger>
-              <TabsTrigger value="analytics" data-testid="tab-analytics" className="flex-shrink-0">
+              <TabsTrigger
+                value="analytics"
+                data-testid="tab-analytics"
+                className="flex-shrink-0"
+              >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Analytics
               </TabsTrigger>
-              <TabsTrigger value="pets" data-testid="tab-pets" className="flex-shrink-0">
+              <TabsTrigger
+                value="pets"
+                data-testid="tab-pets"
+                className="flex-shrink-0"
+              >
                 <Heart className="w-4 h-4 mr-2" />
                 Pets
               </TabsTrigger>
-              <TabsTrigger value="system" data-testid="tab-system" className="flex-shrink-0">
+              <TabsTrigger
+                value="system"
+                data-testid="tab-system"
+                className="flex-shrink-0"
+              >
                 <Settings className="w-4 h-4 mr-2" />
                 System
               </TabsTrigger>
@@ -697,44 +860,67 @@ export default function AdminPage() {
                   <CardContent className="p-4 text-center">
                     <div className="flex items-center justify-center space-x-2 mb-2">
                       <Users className="w-5 h-5 text-primary" />
-                      <div className="text-2xl font-bold text-primary" data-testid="overview-total-users">
+                      <div
+                        className="text-2xl font-bold text-primary"
+                        data-testid="overview-total-users"
+                      >
                         {analytics?.users?.total || 0}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Total Users</div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Users
+                    </div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="flex items-center justify-center space-x-2 mb-2">
                       <DollarSign className="w-5 h-5 text-accent" />
-                      <div className="text-2xl font-bold text-accent" data-testid="overview-total-coins">
+                      <div
+                        className="text-2xl font-bold text-accent"
+                        data-testid="overview-total-coins"
+                      >
                         {analytics?.economy?.totalCoins?.toLocaleString() || 0}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Total Coins</div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Coins
+                    </div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="flex items-center justify-center space-x-2 mb-2">
                       <Package className="w-5 h-5 text-secondary" />
-                      <div className="text-2xl font-bold text-secondary" data-testid="overview-total-items">
+                      <div
+                        className="text-2xl font-bold text-secondary"
+                        data-testid="overview-total-items"
+                      >
                         {analytics?.economy?.totalItems || 0}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Total Items</div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Items
+                    </div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="flex items-center justify-center space-x-2 mb-2">
                       <Server className="w-5 h-5 text-green-500" />
-                      <div className="text-2xl font-bold text-green-500" data-testid="overview-uptime">
-                        {analytics?.system?.uptime ? Math.floor(analytics.system.uptime / 3600) : 0}h
+                      <div
+                        className="text-2xl font-bold text-green-500"
+                        data-testid="overview-uptime"
+                      >
+                        {analytics?.system?.uptime
+                          ? Math.floor(analytics.system.uptime / 3600)
+                          : 0}
+                        h
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Server Uptime</div>
+                    <div className="text-sm text-muted-foreground">
+                      Server Uptime
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -742,21 +928,29 @@ export default function AdminPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-impact text-xl">📊 Quick Stats</CardTitle>
+                    <CardTitle className="font-impact text-xl">
+                      📊 Quick Stats
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span>Active Users:</span>
-                        <Badge variant="secondary">{analytics?.users?.active || 0}</Badge>
+                        <Badge variant="secondary">
+                          {analytics?.users?.active || 0}
+                        </Badge>
                       </div>
                       <div className="flex justify-between">
                         <span>Banned Users:</span>
-                        <Badge variant="destructive">{analytics?.users?.banned || 0}</Badge>
+                        <Badge variant="destructive">
+                          {analytics?.users?.banned || 0}
+                        </Badge>
                       </div>
                       <div className="flex justify-between">
                         <span>New Users (7d):</span>
-                        <Badge variant="outline">{analytics?.users?.recent || 0}</Badge>
+                        <Badge variant="outline">
+                          {analytics?.users?.recent || 0}
+                        </Badge>
                       </div>
                       <div className="flex justify-between">
                         <span>Average Level:</span>
@@ -768,18 +962,31 @@ export default function AdminPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-impact text-xl">⚡ Recent Activity</CardTitle>
+                    <CardTitle className="font-impact text-xl">
+                      ⚡ Recent Activity
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {transactions.slice(0, 5).map((transaction: any) => (
-                        <div key={transaction.id} className="flex items-center justify-between text-sm p-2 bg-muted rounded">
+                        <div
+                          key={transaction.id}
+                          className="flex items-center justify-between text-sm p-2 bg-muted rounded"
+                        >
                           <div>
-                            <span className="font-medium">{transaction.user}</span>
-                            <span className="text-muted-foreground"> • {transaction.type}</span>
+                            <span className="font-medium">
+                              {transaction.user}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {" "}
+                              • {transaction.type}
+                            </span>
                           </div>
-                          <div className={`font-bold ${transaction.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                            {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                          <div
+                            className={`font-bold ${transaction.amount > 0 ? "text-green-500" : "text-red-500"}`}
+                          >
+                            {transaction.amount > 0 ? "+" : ""}
+                            {transaction.amount}
                           </div>
                         </div>
                       ))}
@@ -793,12 +1000,14 @@ export default function AdminPage() {
               <Card>
                 <CardHeader className="space-y-4">
                   <div>
-                    <CardTitle className="font-impact text-2xl text-primary">👥 USER MANAGEMENT</CardTitle>
+                    <CardTitle className="font-impact text-2xl text-primary">
+                      👥 USER MANAGEMENT
+                    </CardTitle>
                     <CardDescription className="text-base">
                       Manage user accounts, bans, permissions, and coins
                     </CardDescription>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -810,7 +1019,7 @@ export default function AdminPage() {
                         data-testid="input-user-search"
                       />
                     </div>
-                    
+
                     <div className="flex gap-2">
                       <Button
                         onClick={() => setShowAllUsers(!showAllUsers)}
@@ -821,15 +1030,21 @@ export default function AdminPage() {
                         <Eye className="w-4 h-4 mr-2" />
                         {showAllUsers ? "Show Less" : "Show All Users"}
                       </Button>
-                      
+
                       <Button
-                        onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] })}
+                        onClick={() =>
+                          queryClient.invalidateQueries({
+                            queryKey: ["/api/admin/users"],
+                          })
+                        }
                         variant="outline"
                         size="sm"
                         disabled={isFetchingUsers}
                         data-testid="button-refresh-users"
                       >
-                        <RefreshCw className={`w-4 h-4 ${isFetchingUsers ? 'animate-spin' : ''}`} />
+                        <RefreshCw
+                          className={`w-4 h-4 ${isFetchingUsers ? "animate-spin" : ""}`}
+                        />
                       </Button>
                     </div>
                   </div>
@@ -838,34 +1053,60 @@ export default function AdminPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card className="border-l-4 border-l-primary">
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-primary" data-testid="total-users">
+                        <div
+                          className="text-2xl font-bold text-primary"
+                          data-testid="total-users"
+                        >
                           {users.length}
                         </div>
-                        <div className="text-sm text-muted-foreground">Total Users</div>
+                        <div className="text-sm text-muted-foreground">
+                          Total Users
+                        </div>
                       </CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-green-500">
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-green-500" data-testid="active-users">
+                        <div
+                          className="text-2xl font-bold text-green-500"
+                          data-testid="active-users"
+                        >
                           {users.filter((u: any) => !u.banned).length}
                         </div>
-                        <div className="text-sm text-muted-foreground">Active Users</div>
+                        <div className="text-sm text-muted-foreground">
+                          Active Users
+                        </div>
                       </CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-destructive">
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-destructive" data-testid="banned-users">
+                        <div
+                          className="text-2xl font-bold text-destructive"
+                          data-testid="banned-users"
+                        >
                           {users.filter((u: any) => u.banned).length}
                         </div>
-                        <div className="text-sm text-muted-foreground">Banned Users</div>
+                        <div className="text-sm text-muted-foreground">
+                          Banned Users
+                        </div>
                       </CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-blue-500">
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-blue-500" data-testid="temp-banned-users">
-                          {users.filter((u: any) => u.tempBanUntil && new Date(u.tempBanUntil) > new Date()).length}
+                        <div
+                          className="text-2xl font-bold text-blue-500"
+                          data-testid="temp-banned-users"
+                        >
+                          {
+                            users.filter(
+                              (u: any) =>
+                                u.tempBanUntil &&
+                                new Date(u.tempBanUntil) > new Date(),
+                            ).length
+                          }
                         </div>
-                        <div className="text-sm text-muted-foreground">Temp Banned</div>
+                        <div className="text-sm text-muted-foreground">
+                          Temp Banned
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
@@ -874,180 +1115,237 @@ export default function AdminPage() {
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-semibold">User List</h3>
                       <p className="text-sm text-muted-foreground">
-                        Showing {showAllUsers ? 'all' : `first ${usersPerPage}`} users
+                        Showing {showAllUsers ? "all" : `first ${usersPerPage}`}{" "}
+                        users
                         {userSearchTerm && ` matching "${userSearchTerm}"`}
                       </p>
                     </div>
-                    
+
                     <div className="space-y-3 max-h-[600px] overflow-y-auto border rounded-lg p-4">
                       {users
-                        .filter((user: any) => 
-                          userSearchTerm === "" || 
-                          user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
+                        .filter(
+                          (user: any) =>
+                            userSearchTerm === "" ||
+                            user.username
+                              .toLowerCase()
+                              .includes(userSearchTerm.toLowerCase()),
                         )
                         .slice(0, showAllUsers ? undefined : usersPerPage)
                         .map((user: any) => (
-                          <div 
+                          <div
                             key={user.id}
                             className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
                             data-testid={`user-${user.id}`}
                           >
                             <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold">
-                            {user.username[0].toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-bold text-foreground flex items-center space-x-2">
-                              <span>{user.username}</span>
-                              {user.banned && <Badge variant="destructive">BANNED</Badge>}
-                              {user.tempBanUntil && new Date(user.tempBanUntil) > new Date() && (
-                                <Badge variant="secondary">TEMP BANNED</Badge>
-                              )}
-                              {user.adminRole && user.adminRole !== 'none' && (
-                                <Badge variant={user.adminRole === 'owner' ? 'default' : 'outline'} className={
-                                  user.adminRole === 'owner' ? 'bg-purple-600 text-white' :
-                                  user.adminRole === 'lead_admin' ? 'bg-red-600 text-white' :
-                                  user.adminRole === 'senior_admin' ? 'bg-orange-600 text-white' :
-                                  user.adminRole === 'admin' ? 'bg-blue-600 text-white' :
-                                  user.adminRole === 'junior_admin' ? 'bg-green-600 text-white' : ''
-                                }>
-                                  {user.adminRole === 'owner' ? '👑 OWNER' :
-                                   user.adminRole === 'lead_admin' ? '🔴 LEAD ADMIN' :
-                                   user.adminRole === 'senior_admin' ? '🟠 SENIOR ADMIN' :
-                                   user.adminRole === 'admin' ? '🔵 ADMIN' :
-                                   user.adminRole === 'junior_admin' ? '🟢 JUNIOR ADMIN' : ''}
-                                </Badge>
-                              )}
+                              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold">
+                                {user.username[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="font-bold text-foreground flex items-center space-x-2">
+                                  <span>{user.username}</span>
+                                  {user.banned && (
+                                    <Badge variant="destructive">BANNED</Badge>
+                                  )}
+                                  {user.tempBanUntil &&
+                                    new Date(user.tempBanUntil) >
+                                      new Date() && (
+                                      <Badge variant="secondary">
+                                        TEMP BANNED
+                                      </Badge>
+                                    )}
+                                  {user.adminRole &&
+                                    user.adminRole !== "none" && (
+                                      <Badge
+                                        variant={
+                                          user.adminRole === "owner"
+                                            ? "default"
+                                            : "outline"
+                                        }
+                                        className={
+                                          user.adminRole === "owner"
+                                            ? "bg-purple-600 text-white"
+                                            : user.adminRole === "lead_admin"
+                                              ? "bg-red-600 text-white"
+                                              : user.adminRole ===
+                                                  "senior_admin"
+                                                ? "bg-orange-600 text-white"
+                                                : user.adminRole === "admin"
+                                                  ? "bg-blue-600 text-white"
+                                                  : user.adminRole ===
+                                                      "junior_admin"
+                                                    ? "bg-green-600 text-white"
+                                                    : ""
+                                        }
+                                      >
+                                        {user.adminRole === "owner"
+                                          ? "👑 OWNER"
+                                          : user.adminRole === "lead_admin"
+                                            ? "🔴 LEAD ADMIN"
+                                            : user.adminRole === "senior_admin"
+                                              ? "🟠 SENIOR ADMIN"
+                                              : user.adminRole === "admin"
+                                                ? "🔵 ADMIN"
+                                                : user.adminRole ===
+                                                    "junior_admin"
+                                                  ? "🟢 JUNIOR ADMIN"
+                                                  : ""}
+                                      </Badge>
+                                    )}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  Level {user.level} •{" "}
+                                  {user.coins?.toLocaleString() || 0} coins
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  Joined{" "}
+                                  {new Date(
+                                    user.createdAt,
+                                  ).toLocaleDateString()}
+                                  {user.tempBanUntil &&
+                                    new Date(user.tempBanUntil) >
+                                      new Date() && (
+                                      <span>
+                                        {" "}
+                                        • Temp ban until{" "}
+                                        {new Date(
+                                          user.tempBanUntil,
+                                        ).toLocaleString()}
+                                      </span>
+                                    )}
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              Level {user.level} • {user.coins?.toLocaleString() || 0} coins
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Joined {new Date(user.createdAt).toLocaleDateString()}
-                              {user.tempBanUntil && new Date(user.tempBanUntil) > new Date() && (
-                                <span> • Temp ban until {new Date(user.tempBanUntil).toLocaleString()}</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {user.banned || (user.tempBanUntil && new Date(user.tempBanUntil) > new Date()) ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => unbanUserMutation.mutate(user.id)}
-                              data-testid={`button-unban-${user.id}`}
-                            >
-                              ✅ Unban {user.banned ? "(Permanent)" : "(Temp)"}
-                            </Button>
-                          ) : (
-                            <>
-                              {/* Essential actions - always visible */}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setUserAction("give-coins");
-                                  setShowUserActionDialog(true);
-                                }}
-                                data-testid={`button-give-coins-${user.id}`}
-                              >
-                                💰 Give Coins
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setShowPetDialog(true);
-                                }}
-                                data-testid={`button-give-pet-${user.id}`}
-                              >
-                                🐾 Give Pet
-                              </Button>
-                              
-                              {/* Show All Actions toggle button */}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => toggleUserActions(user.id)}
-                                data-testid={`button-toggle-actions-${user.id}`}
-                              >
-                                {expandedUserActions.has(user.id) ? "← Less" : "More →"}
-                              </Button>
-                              
-                              {/* Additional actions - show when expanded */}
-                              {expandedUserActions.has(user.id) && (
+                            <div className="flex items-center space-x-2">
+                              {user.banned ||
+                              (user.tempBanUntil &&
+                                new Date(user.tempBanUntil) > new Date()) ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    unbanUserMutation.mutate(user.id)
+                                  }
+                                  data-testid={`button-unban-${user.id}`}
+                                >
+                                  ✅ Unban{" "}
+                                  {user.banned ? "(Permanent)" : "(Temp)"}
+                                </Button>
+                              ) : (
                                 <>
+                                  {/* Essential actions - always visible */}
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => {
                                       setSelectedUser(user);
-                                      setUserAction("remove-coins");
+                                      setUserAction("give-coins");
                                       setShowUserActionDialog(true);
                                     }}
-                                    data-testid={`button-remove-coins-${user.id}`}
+                                    data-testid={`button-give-coins-${user.id}`}
                                   >
-                                    💸 Remove Coins
+                                    💰 Give Coins
                                   </Button>
-                                  {user.adminRole !== 'owner' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setShowPetDialog(true);
+                                    }}
+                                    data-testid={`button-give-pet-${user.id}`}
+                                  >
+                                    🐾 Give Pet
+                                  </Button>
+
+                                  {/* Show All Actions toggle button */}
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => toggleUserActions(user.id)}
+                                    data-testid={`button-toggle-actions-${user.id}`}
+                                  >
+                                    {expandedUserActions.has(user.id)
+                                      ? "← Less"
+                                      : "More →"}
+                                  </Button>
+
+                                  {/* Additional actions - show when expanded */}
+                                  {expandedUserActions.has(user.id) && (
                                     <>
-                                      {user.adminRole && user.adminRole !== 'none' ? (
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => removeAdminRoleMutation.mutate(user.id)}
-                                          data-testid={`button-remove-admin-${user.id}`}
-                                        >
-                                          🚫 Remove Admin
-                                        </Button>
-                                      ) : (
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => {
-                                            setSelectedUser(user);
-                                            setUserAction("give-admin");
-                                            setShowUserActionDialog(true);
-                                          }}
-                                          data-testid={`button-give-admin-${user.id}`}
-                                        >
-                                          🛡️ Give Admin
-                                        </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setSelectedUser(user);
+                                          setUserAction("remove-coins");
+                                          setShowUserActionDialog(true);
+                                        }}
+                                        data-testid={`button-remove-coins-${user.id}`}
+                                      >
+                                        💸 Remove Coins
+                                      </Button>
+                                      {user.adminRole !== "owner" && (
+                                        <>
+                                          {user.adminRole &&
+                                          user.adminRole !== "none" ? (
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() =>
+                                                removeAdminRoleMutation.mutate(
+                                                  user.id,
+                                                )
+                                              }
+                                              data-testid={`button-remove-admin-${user.id}`}
+                                            >
+                                              🚫 Remove Admin
+                                            </Button>
+                                          ) : (
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => {
+                                                setSelectedUser(user);
+                                                setUserAction("give-admin");
+                                                setShowUserActionDialog(true);
+                                              }}
+                                              data-testid={`button-give-admin-${user.id}`}
+                                            >
+                                              🛡️ Give Admin
+                                            </Button>
+                                          )}
+                                        </>
                                       )}
+                                      <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={() => {
+                                          setSelectedUser(user);
+                                          setUserAction("temp-ban");
+                                          setShowUserActionDialog(true);
+                                        }}
+                                        data-testid={`button-temp-ban-${user.id}`}
+                                      >
+                                        ⏱️ Temp Ban
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => {
+                                          setSelectedUser(user);
+                                          setUserAction("ban");
+                                          setShowUserActionDialog(true);
+                                        }}
+                                        data-testid={`button-ban-${user.id}`}
+                                      >
+                                        🔨 Ban
+                                      </Button>
                                     </>
                                   )}
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={() => {
-                                      setSelectedUser(user);
-                                      setUserAction("temp-ban");
-                                      setShowUserActionDialog(true);
-                                    }}
-                                    data-testid={`button-temp-ban-${user.id}`}
-                                  >
-                                    ⏱️ Temp Ban
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => {
-                                      setSelectedUser(user);
-                                      setUserAction("ban");
-                                      setShowUserActionDialog(true);
-                                    }}
-                                    data-testid={`button-ban-${user.id}`}
-                                  >
-                                    🔨 Ban
-                                  </Button>
                                 </>
                               )}
-                            </>
-                          )}
-                        </div>
+                            </div>
                           </div>
                         ))}
                     </div>
@@ -1077,14 +1375,20 @@ export default function AdminPage() {
                     <div className="flex space-x-2">
                       <Button
                         variant="destructive"
-                        onClick={() => banUserMutation.mutate({ 
-                          userId: selectedUser.id, 
-                          reason: banReason 
-                        })}
-                        disabled={!banReason.trim() || banUserMutation.isPending}
+                        onClick={() =>
+                          banUserMutation.mutate({
+                            userId: selectedUser.id,
+                            reason: banReason,
+                          })
+                        }
+                        disabled={
+                          !banReason.trim() || banUserMutation.isPending
+                        }
                         data-testid="button-confirm-ban"
                       >
-                        {banUserMutation.isPending ? "Banning..." : "Confirm Ban"}
+                        {banUserMutation.isPending
+                          ? "Banning..."
+                          : "Confirm Ban"}
                       </Button>
                       <Button
                         variant="outline"
@@ -1105,43 +1409,65 @@ export default function AdminPage() {
             <TabsContent value="items" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-impact text-2xl text-secondary">📦 ITEM MANAGEMENT</CardTitle>
+                  <CardTitle className="font-impact text-2xl text-secondary">
+                    📦 ITEM MANAGEMENT
+                  </CardTitle>
                   <CardDescription>
                     Create, edit, and manage shop items and inventory
                   </CardDescription>
                   <div className="flex items-center space-x-4 mt-4">
-                    <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
+                    <Dialog
+                      open={showItemDialog}
+                      onOpenChange={setShowItemDialog}
+                    >
                       <DialogTrigger asChild>
-                        <Button onClick={() => {
-                          setSelectedItem(null);
-                          setNewItem({
-                            name: "",
-                            description: "",
-                            price: "",
-                            type: "tool",
-                            rarity: "common",
-                            stock: "",
-                            effects: {
-                              passive: { winRateBoost: 0, coinsPerHour: 0 },
-                              active: { useCooldown: 0, duration: 0, effect: "" }
-                            },
-                            lootboxContents: [],
-                            consumableEffect: { type: "", magnitude: 0, duration: 0 }
-                          });
-                        }} data-testid="button-create-item">
+                        <Button
+                          onClick={() => {
+                            setSelectedItem(null);
+                            setNewItem({
+                              name: "",
+                              description: "",
+                              price: "",
+                              type: "tool",
+                              rarity: "common",
+                              stock: "",
+                              effects: {
+                                passive: { winRateBoost: 0, coinsPerHour: 0 },
+                                active: {
+                                  useCooldown: 0,
+                                  duration: 0,
+                                  effect: "",
+                                },
+                              },
+                              lootboxContents: [],
+                              consumableEffect: {
+                                type: "",
+                                magnitude: 0,
+                                duration: 0,
+                              },
+                            });
+                          }}
+                          data-testid="button-create-item"
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Create Item
                         </Button>
                       </DialogTrigger>
                     </Dialog>
                     <Button
-                      onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/items"] })}
+                      onClick={() =>
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/admin/items"],
+                        })
+                      }
                       variant="outline"
                       size="sm"
                       disabled={isFetchingItems}
                       data-testid="button-refresh-items"
                     >
-                      <RefreshCw className={`w-4 h-4 ${isFetchingItems ? 'animate-spin' : ''}`} />
+                      <RefreshCw
+                        className={`w-4 h-4 ${isFetchingItems ? "animate-spin" : ""}`}
+                      />
                     </Button>
                   </div>
                 </CardHeader>
@@ -1149,54 +1475,96 @@ export default function AdminPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-primary" data-testid="total-items">
+                        <div
+                          className="text-2xl font-bold text-primary"
+                          data-testid="total-items"
+                        >
                           {items.length}
                         </div>
-                        <div className="text-sm text-muted-foreground">Total Items</div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-accent" data-testid="total-item-value">
-                          {items.reduce((sum: number, item: any) => sum + (item.price * item.stock), 0).toLocaleString()}
+                        <div className="text-sm text-muted-foreground">
+                          Total Items
                         </div>
-                        <div className="text-sm text-muted-foreground">Total Value</div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-green-500" data-testid="available-items">
+                        <div
+                          className="text-2xl font-bold text-accent"
+                          data-testid="total-item-value"
+                        >
+                          {items
+                            .reduce(
+                              (sum: number, item: any) =>
+                                sum + item.price * item.stock,
+                              0,
+                            )
+                            .toLocaleString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Total Value
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div
+                          className="text-2xl font-bold text-green-500"
+                          data-testid="available-items"
+                        >
                           {items.filter((item: any) => item.stock > 0).length}
                         </div>
-                        <div className="text-sm text-muted-foreground">In Stock</div>
+                        <div className="text-sm text-muted-foreground">
+                          In Stock
+                        </div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-red-500" data-testid="out-of-stock-items">
+                        <div
+                          className="text-2xl font-bold text-red-500"
+                          data-testid="out-of-stock-items"
+                        >
                           {items.filter((item: any) => item.stock === 0).length}
                         </div>
-                        <div className="text-sm text-muted-foreground">Out of Stock</div>
+                        <div className="text-sm text-muted-foreground">
+                          Out of Stock
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {items.map((item: any) => (
-                      <Card key={item.id} className="relative" data-testid={`item-${item.id}`}>
+                      <Card
+                        key={item.id}
+                        className="relative"
+                        data-testid={`item-${item.id}`}
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <h3 className="font-bold text-foreground">{item.name}</h3>
-                              <Badge variant={
-                                item.rarity === 'legendary' ? 'default' :
-                                item.rarity === 'epic' ? 'secondary' :
-                                item.rarity === 'rare' ? 'outline' : 'secondary'
-                              }>
+                              <h3 className="font-bold text-foreground">
+                                {item.name}
+                              </h3>
+                              <Badge
+                                variant={
+                                  item.rarity === "legendary"
+                                    ? "default"
+                                    : item.rarity === "epic"
+                                      ? "secondary"
+                                      : item.rarity === "rare"
+                                        ? "outline"
+                                        : "secondary"
+                                }
+                              >
                                 {item.rarity.toUpperCase()}
                               </Badge>
                             </div>
-                            <Badge variant={item.stock > 0 ? 'secondary' : 'destructive'}>
+                            <Badge
+                              variant={
+                                item.stock > 0 ? "secondary" : "destructive"
+                              }
+                            >
                               {item.stock === 2147483647 ? "∞" : item.stock}
                             </Badge>
                           </div>
@@ -1204,8 +1572,14 @@ export default function AdminPage() {
                             {item.description}
                           </p>
                           <div className="flex items-center justify-between text-sm mb-3">
-                            <span className="font-medium">💰 {item.currentPrice?.toLocaleString() || item.price?.toLocaleString()}</span>
-                            <span className="text-muted-foreground">{item.type}</span>
+                            <span className="font-medium">
+                              💰{" "}
+                              {item.currentPrice?.toLocaleString() ||
+                                item.price?.toLocaleString()}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {item.type}
+                            </span>
                           </div>
                           <div className="flex space-x-2">
                             <Button
@@ -1216,16 +1590,34 @@ export default function AdminPage() {
                                 setNewItem({
                                   name: item.name,
                                   description: item.description,
-                                  price: item.currentPrice?.toString() || item.price?.toString(),
+                                  price:
+                                    item.currentPrice?.toString() ||
+                                    item.price?.toString(),
                                   type: item.type,
                                   rarity: item.rarity,
-                                  stock: item.stock === 2147483647 ? "999999" : item.stock?.toString(),
+                                  stock:
+                                    item.stock === 2147483647
+                                      ? "999999"
+                                      : item.stock?.toString(),
                                   effects: item.effects || {
-                                    passive: { winRateBoost: 0, coinsPerHour: 0 },
-                                    active: { useCooldown: 0, duration: 0, effect: "" }
+                                    passive: {
+                                      winRateBoost: 0,
+                                      coinsPerHour: 0,
+                                    },
+                                    active: {
+                                      useCooldown: 0,
+                                      duration: 0,
+                                      effect: "",
+                                    },
                                   },
-                                  lootboxContents: item.effects?.lootboxContents || [],
-                                  consumableEffect: item.effects?.consumableEffect || { type: "", magnitude: 0, duration: 0 }
+                                  lootboxContents:
+                                    item.effects?.lootboxContents || [],
+                                  consumableEffect: item.effects
+                                    ?.consumableEffect || {
+                                    type: "",
+                                    magnitude: 0,
+                                    duration: 0,
+                                  },
                                 });
                                 setShowItemDialog(true);
                               }}
@@ -1237,7 +1629,11 @@ export default function AdminPage() {
                               size="sm"
                               variant="destructive"
                               onClick={() => {
-                                if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+                                if (
+                                  confirm(
+                                    `Are you sure you want to delete "${item.name}"?`,
+                                  )
+                                ) {
                                   deleteItemMutation.mutate(item.id);
                                 }
                               }}
@@ -1257,19 +1653,27 @@ export default function AdminPage() {
             <TabsContent value="transactions" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-impact text-2xl text-accent">💸 TRANSACTION MONITORING</CardTitle>
+                  <CardTitle className="font-impact text-2xl text-accent">
+                    💸 TRANSACTION MONITORING
+                  </CardTitle>
                   <CardDescription>
                     Monitor all user transactions and economic activity
                   </CardDescription>
                   <div className="flex items-center space-x-4 mt-4">
                     <Button
-                      onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] })}
+                      onClick={() =>
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/admin/transactions"],
+                        })
+                      }
                       variant="outline"
                       size="sm"
                       disabled={isFetchingTransactions}
                       data-testid="button-refresh-transactions"
                     >
-                      <RefreshCw className={`w-4 h-4 ${isFetchingTransactions ? 'animate-spin' : ''}`} />
+                      <RefreshCw
+                        className={`w-4 h-4 ${isFetchingTransactions ? "animate-spin" : ""}`}
+                      />
                     </Button>
                   </div>
                 </CardHeader>
@@ -1277,49 +1681,78 @@ export default function AdminPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-primary" data-testid="total-transactions">
+                        <div
+                          className="text-2xl font-bold text-primary"
+                          data-testid="total-transactions"
+                        >
                           {transactions.length}
                         </div>
-                        <div className="text-sm text-muted-foreground">Total Transactions</div>
+                        <div className="text-sm text-muted-foreground">
+                          Total Transactions
+                        </div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-green-500" data-testid="earn-transactions">
+                        <div
+                          className="text-2xl font-bold text-green-500"
+                          data-testid="earn-transactions"
+                        >
                           {transactions.filter((t: any) => t.amount > 0).length}
                         </div>
-                        <div className="text-sm text-muted-foreground">Earning Transactions</div>
+                        <div className="text-sm text-muted-foreground">
+                          Earning Transactions
+                        </div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-red-500" data-testid="spend-transactions">
+                        <div
+                          className="text-2xl font-bold text-red-500"
+                          data-testid="spend-transactions"
+                        >
                           {transactions.filter((t: any) => t.amount < 0).length}
                         </div>
-                        <div className="text-sm text-muted-foreground">Spending Transactions</div>
+                        <div className="text-sm text-muted-foreground">
+                          Spending Transactions
+                        </div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-accent" data-testid="total-volume">
-                          {Math.abs(transactions.reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0)).toLocaleString()}
+                        <div
+                          className="text-2xl font-bold text-accent"
+                          data-testid="total-volume"
+                        >
+                          {Math.abs(
+                            transactions.reduce(
+                              (sum: number, t: any) => sum + Math.abs(t.amount),
+                              0,
+                            ),
+                          ).toLocaleString()}
                         </div>
-                        <div className="text-sm text-muted-foreground">Total Volume</div>
+                        <div className="text-sm text-muted-foreground">
+                          Total Volume
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
 
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {transactions.map((transaction: any) => (
-                      <div 
+                      <div
                         key={transaction.id}
                         className="flex items-center justify-between p-3 bg-muted rounded-lg"
                         data-testid={`transaction-${transaction.id}`}
                       >
                         <div className="flex items-center space-x-4">
-                          <div className={`w-3 h-3 rounded-full ${
-                            transaction.amount > 0 ? 'bg-green-500' : 'bg-red-500'
-                          }`}></div>
+                          <div
+                            className={`w-3 h-3 rounded-full ${
+                              transaction.amount > 0
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
+                          ></div>
                           <div>
                             <div className="font-bold text-foreground">
                               {transaction.user}
@@ -1328,14 +1761,20 @@ export default function AdminPage() {
                               {transaction.description}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {new Date(transaction.timestamp).toLocaleString()} • {transaction.type}
+                              {new Date(transaction.timestamp).toLocaleString()}{" "}
+                              • {transaction.type}
                             </div>
                           </div>
                         </div>
-                        <div className={`font-bold text-lg ${
-                          transaction.amount > 0 ? 'text-green-500' : 'text-red-500'
-                        }`}>
-                          {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()}
+                        <div
+                          className={`font-bold text-lg ${
+                            transaction.amount > 0
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {transaction.amount > 0 ? "+" : ""}
+                          {transaction.amount.toLocaleString()}
                         </div>
                       </div>
                     ))}
@@ -1347,7 +1786,9 @@ export default function AdminPage() {
             <TabsContent value="analytics" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-impact text-2xl text-primary">📊 SYSTEM ANALYTICS</CardTitle>
+                  <CardTitle className="font-impact text-2xl text-primary">
+                    📊 SYSTEM ANALYTICS
+                  </CardTitle>
                   <CardDescription>
                     Advanced analytics and system monitoring
                   </CardDescription>
@@ -1356,44 +1797,44 @@ export default function AdminPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-lg">💾 System Resources</CardTitle>
+                        <CardTitle className="text-lg">
+                          💾 System Resources
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
                           <div className="flex justify-between">
                             <span>Memory Used:</span>
                             <Badge variant="outline">
-                              {analytics?.system?.memoryUsage ? 
-                                `${Math.round(analytics.system.memoryUsage.heapUsed / 1024 / 1024)}MB` : 
-                                'N/A'
-                              }
+                              {analytics?.system?.memoryUsage
+                                ? `${Math.round(analytics.system.memoryUsage.heapUsed / 1024 / 1024)}MB`
+                                : "N/A"}
                             </Badge>
                           </div>
                           <div className="flex justify-between">
                             <span>Memory Total:</span>
                             <Badge variant="outline">
-                              {analytics?.system?.memoryUsage ? 
-                                `${Math.round(analytics.system.memoryUsage.heapTotal / 1024 / 1024)}MB` : 
-                                'N/A'
-                              }
+                              {analytics?.system?.memoryUsage
+                                ? `${Math.round(analytics.system.memoryUsage.heapTotal / 1024 / 1024)}MB`
+                                : "N/A"}
                             </Badge>
                           </div>
                           <div className="flex justify-between">
                             <span>Uptime:</span>
                             <Badge variant="secondary">
-                              {analytics?.system?.uptime ? 
-                                `${Math.floor(analytics.system.uptime / 3600)}h ${Math.floor((analytics.system.uptime % 3600) / 60)}m` : 
-                                'N/A'
-                              }
+                              {analytics?.system?.uptime
+                                ? `${Math.floor(analytics.system.uptime / 3600)}h ${Math.floor((analytics.system.uptime % 3600) / 60)}m`
+                                : "N/A"}
                             </Badge>
                           </div>
                           <div className="flex justify-between">
                             <span>Last Updated:</span>
                             <Badge variant="outline">
-                              {analytics?.system?.timestamp ? 
-                                new Date(analytics.system.timestamp).toLocaleTimeString() : 
-                                'N/A'
-                              }
+                              {analytics?.system?.timestamp
+                                ? new Date(
+                                    analytics.system.timestamp,
+                                  ).toLocaleTimeString()
+                                : "N/A"}
                             </Badge>
                           </div>
                         </div>
@@ -1402,23 +1843,28 @@ export default function AdminPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-lg">📈 Economic Trends</CardTitle>
+                        <CardTitle className="text-lg">
+                          📈 Economic Trends
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
                           <div className="flex justify-between">
                             <span>Total Economy Value:</span>
                             <Badge variant="secondary">
-                              {analytics?.economy?.totalCoins?.toLocaleString() || 0}
+                              {analytics?.economy?.totalCoins?.toLocaleString() ||
+                                0}
                             </Badge>
                           </div>
                           <div className="flex justify-between">
                             <span>Average User Wealth:</span>
                             <Badge variant="outline">
-                              {analytics?.users?.total ? 
-                                Math.round((analytics.economy?.totalCoins || 0) / analytics.users.total).toLocaleString() : 
-                                0
-                              }
+                              {analytics?.users?.total
+                                ? Math.round(
+                                    (analytics.economy?.totalCoins || 0) /
+                                      analytics.users.total,
+                                  ).toLocaleString()
+                                : 0}
                             </Badge>
                           </div>
                           <div className="flex justify-between">
@@ -1429,11 +1875,16 @@ export default function AdminPage() {
                           </div>
                           <div className="flex justify-between">
                             <span>Active vs Banned Ratio:</span>
-                            <Badge variant={
-                              (analytics?.users?.banned || 0) > (analytics?.users?.active || 0) * 0.1 ? 
-                              'destructive' : 'secondary'
-                            }>
-                              {analytics?.users?.active || 0}:{analytics?.users?.banned || 0}
+                            <Badge
+                              variant={
+                                (analytics?.users?.banned || 0) >
+                                (analytics?.users?.active || 0) * 0.1
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                            >
+                              {analytics?.users?.active || 0}:
+                              {analytics?.users?.banned || 0}
                             </Badge>
                           </div>
                         </div>
@@ -1447,7 +1898,9 @@ export default function AdminPage() {
             <TabsContent value="economy" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-impact text-2xl text-accent">💰 ECONOMY CONTROLS</CardTitle>
+                  <CardTitle className="font-impact text-2xl text-accent">
+                    💰 ECONOMY CONTROLS
+                  </CardTitle>
                   <CardDescription>
                     Manage the game economy and user finances
                   </CardDescription>
@@ -1456,34 +1909,72 @@ export default function AdminPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-accent" data-testid="total-coins">
-                          💰 {users.reduce((sum: number, u: any) => sum + u.coins, 0).toLocaleString()}
+                        <div
+                          className="text-2xl font-bold text-accent"
+                          data-testid="total-coins"
+                        >
+                          💰{" "}
+                          {users
+                            .reduce((sum: number, u: any) => sum + u.coins, 0)
+                            .toLocaleString()}
                         </div>
-                        <div className="text-sm text-muted-foreground">Total Coins in Circulation</div>
+                        <div className="text-sm text-muted-foreground">
+                          Total Coins in Circulation
+                        </div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-secondary" data-testid="avg-level">
-                          ⭐ {Math.round(users.reduce((sum: number, u: any) => sum + u.level, 0) / users.length || 0)}
+                        <div
+                          className="text-2xl font-bold text-secondary"
+                          data-testid="avg-level"
+                        >
+                          ⭐{" "}
+                          {Math.round(
+                            users.reduce(
+                              (sum: number, u: any) => sum + u.level,
+                              0,
+                            ) / users.length || 0,
+                          )}
                         </div>
-                        <div className="text-sm text-muted-foreground">Average User Level</div>
+                        <div className="text-sm text-muted-foreground">
+                          Average User Level
+                        </div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-primary" data-testid="richest-user">
-                          👑 {Math.max(...users.map((u: any) => u.coins)).toLocaleString()}
+                        <div
+                          className="text-2xl font-bold text-primary"
+                          data-testid="richest-user"
+                        >
+                          👑{" "}
+                          {Math.max(
+                            ...users.map((u: any) => u.coins),
+                          ).toLocaleString()}
                         </div>
-                        <div className="text-sm text-muted-foreground">Richest User</div>
+                        <div className="text-sm text-muted-foreground">
+                          Richest User
+                        </div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-muted-foreground" data-testid="avg-coins">
-                          📊 {Math.round(users.reduce((sum: number, u: any) => sum + u.coins, 0) / users.length || 0).toLocaleString()}
+                        <div
+                          className="text-2xl font-bold text-muted-foreground"
+                          data-testid="avg-coins"
+                        >
+                          📊{" "}
+                          {Math.round(
+                            users.reduce(
+                              (sum: number, u: any) => sum + u.coins,
+                              0,
+                            ) / users.length || 0,
+                          ).toLocaleString()}
                         </div>
-                        <div className="text-sm text-muted-foreground">Average Coins</div>
+                        <div className="text-sm text-muted-foreground">
+                          Average Coins
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
@@ -1494,45 +1985,65 @@ export default function AdminPage() {
             <TabsContent value="pets" className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-green-400">Pet Management</h2>
-                  <p className="text-muted-foreground">Manage pet distribution and availability</p>
+                  <h2 className="text-2xl font-bold text-green-400">
+                    Pet Management
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Manage pet distribution and availability
+                  </p>
                 </div>
-                <Dialog open={showCreatePetDialog} onOpenChange={setShowCreatePetDialog}>
+                <Dialog
+                  open={showCreatePetDialog}
+                  onOpenChange={setShowCreatePetDialog}
+                >
                   <DialogTrigger asChild>
-                    <Button onClick={() => {
-                      setNewPet({
-                        petId: "",
-                        name: "",
-                        description: "",
-                        emoji: "",
-                        rarity: "common",
-                        adoptionCost: "",
-                        hungerDecay: "",
-                        hygieneDecay: "",
-                        energyDecay: "",
-                        funDecay: ""
-                      });
-                    }} data-testid="button-create-pet">
+                    <Button
+                      onClick={() => {
+                        setNewPet({
+                          petId: "",
+                          name: "",
+                          description: "",
+                          emoji: "",
+                          rarity: "common",
+                          adoptionCost: "",
+                          hungerDecay: "",
+                          hygieneDecay: "",
+                          energyDecay: "",
+                          funDecay: "",
+                        });
+                      }}
+                      data-testid="button-create-pet"
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       Create Pet
                     </Button>
                   </DialogTrigger>
                 </Dialog>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {STATIC_PET_TYPES.map((pet) => (
-                  <Card key={pet.petId} className="p-4 border-green-700 bg-green-900/20" data-testid={`pet-card-${pet.petId}`}>
+                  <Card
+                    key={pet.petId}
+                    className="p-4 border-green-700 bg-green-900/20"
+                    data-testid={`pet-card-${pet.petId}`}
+                  >
                     <div className="flex items-center space-x-3">
-                      <img 
-                        src={`/PetIcons/${pet.iconPath}`} 
-                        alt={pet.name} 
+                      <img
+                        src={`/PetIcons/${pet.iconPath}`}
+                        alt={pet.name}
                         className="w-16 h-16 object-contain"
                       />
                       <div className="flex-1">
-                        <h3 className="font-semibold text-green-300">{pet.name}</h3>
-                        <p className="text-sm text-muted-foreground capitalize">{pet.rarity}</p>
-                        <p className="text-sm text-green-400">{pet.adoptionCost.toLocaleString()} coins</p>
+                        <h3 className="font-semibold text-green-300">
+                          {pet.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground capitalize">
+                          {pet.rarity}
+                        </p>
+                        <p className="text-sm text-green-400">
+                          {pet.adoptionCost.toLocaleString()} coins
+                        </p>
                       </div>
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground">
@@ -1544,12 +2055,15 @@ export default function AdminPage() {
                   </Card>
                 ))}
               </div>
-              
+
               <div className="mt-6 p-4 border border-green-700 rounded-lg bg-green-900/10">
-                <h3 className="text-lg font-semibold text-green-300 mb-2">Quick Actions</h3>
+                <h3 className="text-lg font-semibold text-green-300 mb-2">
+                  Quick Actions
+                </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Use the "Give Pet" button in the Users tab to grant pets to specific users.
-                  All pets shown above are available for distribution.
+                  Use the "Give Pet" button in the Users tab to grant pets to
+                  specific users. All pets shown above are available for
+                  distribution.
                 </p>
                 <div className="text-sm text-green-400">
                   Total available pets: {STATIC_PET_TYPES.length}
@@ -1560,7 +2074,9 @@ export default function AdminPage() {
             <TabsContent value="system" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-impact text-2xl text-destructive">⚙️ SYSTEM CONTROLS</CardTitle>
+                  <CardTitle className="font-impact text-2xl text-destructive">
+                    ⚙️ SYSTEM CONTROLS
+                  </CardTitle>
                   <CardDescription>
                     Execute administrative commands and system maintenance
                   </CardDescription>
@@ -1580,12 +2096,16 @@ export default function AdminPage() {
                         />
                         <Button
                           type="submit"
-                          disabled={!command.trim() || executeCommandMutation.isPending}
+                          disabled={
+                            !command.trim() || executeCommandMutation.isPending
+                          }
                           className="font-comic bg-destructive hover:bg-destructive/80"
                           data-testid="button-execute-command"
                         >
                           <Command className="w-4 h-4 mr-2" />
-                          {executeCommandMutation.isPending ? "Executing..." : "EXECUTE"}
+                          {executeCommandMutation.isPending
+                            ? "Executing..."
+                            : "EXECUTE"}
                         </Button>
                       </div>
                     </div>
@@ -1594,9 +2114,24 @@ export default function AdminPage() {
                   <div className="text-sm text-muted-foreground bg-muted p-4 rounded-lg">
                     <h4 className="font-bold mb-2">Available Commands:</h4>
                     <ul className="space-y-1">
-                      <li><code className="bg-background px-2 py-1 rounded">giveAll [amount]</code> - Give coins to all active users</li>
-                      <li><code className="bg-background px-2 py-1 rounded">resetEconomy</code> - Reset all user balances (dangerous!)</li>
-                      <li><code className="bg-background px-2 py-1 rounded">clearTransactions</code> - Clear all transaction history</li>
+                      <li>
+                        <code className="bg-background px-2 py-1 rounded">
+                          giveAll [amount]
+                        </code>{" "}
+                        - Give coins to all active users
+                      </li>
+                      <li>
+                        <code className="bg-background px-2 py-1 rounded">
+                          resetEconomy
+                        </code>{" "}
+                        - Reset all user balances (dangerous!)
+                      </li>
+                      <li>
+                        <code className="bg-background px-2 py-1 rounded">
+                          clearTransactions
+                        </code>{" "}
+                        - Clear all transaction history
+                      </li>
                     </ul>
                   </div>
                 </CardContent>
@@ -1606,7 +2141,10 @@ export default function AdminPage() {
         )}
 
         {/* User Action Dialog */}
-        <Dialog open={showUserActionDialog} onOpenChange={setShowUserActionDialog}>
+        <Dialog
+          open={showUserActionDialog}
+          onOpenChange={setShowUserActionDialog}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
@@ -1618,10 +2156,14 @@ export default function AdminPage() {
               <DialogDescription>
                 {selectedUser && (
                   <>
-                    {userAction === "ban" && `Permanently ban ${selectedUser.username} from the platform.`}
-                    {userAction === "temp-ban" && `Temporarily ban ${selectedUser.username} for a specified duration.`}
-                    {userAction === "give-coins" && `Give coins to ${selectedUser.username}.`}
-                    {userAction === "remove-coins" && `Remove coins from ${selectedUser.username}.`}
+                    {userAction === "ban" &&
+                      `Permanently ban ${selectedUser.username} from the platform.`}
+                    {userAction === "temp-ban" &&
+                      `Temporarily ban ${selectedUser.username} for a specified duration.`}
+                    {userAction === "give-coins" &&
+                      `Give coins to ${selectedUser.username}.`}
+                    {userAction === "remove-coins" &&
+                      `Remove coins from ${selectedUser.username}.`}
                   </>
                 )}
               </DialogDescription>
@@ -1639,7 +2181,7 @@ export default function AdminPage() {
                   />
                 </div>
               )}
-              
+
               {userAction === "temp-ban" && (
                 <>
                   <div>
@@ -1667,7 +2209,7 @@ export default function AdminPage() {
                   </div>
                 </>
               )}
-              
+
               {userAction === "give-coins" && (
                 <div>
                   <Label htmlFor="coin-amount">Amount</Label>
@@ -1682,7 +2224,7 @@ export default function AdminPage() {
                   />
                 </div>
               )}
-              
+
               {userAction === "remove-coins" && (
                 <div>
                   <Label htmlFor="remove-coin-amount">Amount</Label>
@@ -1697,69 +2239,91 @@ export default function AdminPage() {
                   />
                   {selectedUser && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      Current balance: {selectedUser.coins.toLocaleString()} coins
+                      Current balance: {selectedUser.coins.toLocaleString()}{" "}
+                      coins
                     </p>
                   )}
                 </div>
               )}
-              
+
               {userAction === "give-admin" && (
                 <div>
                   <Label htmlFor="admin-role">Admin Role</Label>
-                  <Select value={selectedAdminRole} onValueChange={setSelectedAdminRole}>
+                  <Select
+                    value={selectedAdminRole}
+                    onValueChange={setSelectedAdminRole}
+                  >
                     <SelectTrigger data-testid="select-admin-role">
                       <SelectValue placeholder="Select admin role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="junior_admin">🟢 Junior Admin</SelectItem>
+                      <SelectItem value="junior_admin">
+                        🟢 Junior Admin
+                      </SelectItem>
                       <SelectItem value="admin">🔵 Admin</SelectItem>
-                      <SelectItem value="senior_admin">🟠 Senior Admin</SelectItem>
+                      <SelectItem value="senior_admin">
+                        🟠 Senior Admin
+                      </SelectItem>
                       <SelectItem value="lead_admin">🔴 Lead Admin</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-muted-foreground mt-2">
-                    <strong>Permission Levels:</strong><br />
-                    🟢 <strong>Junior Admin:</strong> Basic user management, view analytics<br />
-                    🔵 <strong>Admin:</strong> Full user management, item management<br />
-                    🟠 <strong>Senior Admin:</strong> Advanced controls, system commands<br />
-                    🔴 <strong>Lead Admin:</strong> All permissions except owner functions
+                    <strong>Permission Levels:</strong>
+                    <br />
+                    🟢 <strong>Junior Admin:</strong> Basic user management,
+                    view analytics
+                    <br />
+                    🔵 <strong>Admin:</strong> Full user management, item
+                    management
+                    <br />
+                    🟠 <strong>Senior Admin:</strong> Advanced controls, system
+                    commands
+                    <br />
+                    🔴 <strong>Lead Admin:</strong> All permissions except owner
+                    functions
                   </p>
                 </div>
               )}
-              
+
               <div className="flex space-x-2">
                 <Button
                   onClick={() => {
                     if (userAction === "ban" && selectedUser) {
-                      banUserMutation.mutate({ userId: selectedUser.id, reason: banReason });
+                      banUserMutation.mutate({
+                        userId: selectedUser.id,
+                        reason: banReason,
+                      });
                     } else if (userAction === "temp-ban" && selectedUser) {
-                      tempBanUserMutation.mutate({ 
-                        userId: selectedUser.id, 
-                        reason: banReason, 
-                        duration: tempBanDuration 
+                      tempBanUserMutation.mutate({
+                        userId: selectedUser.id,
+                        reason: banReason,
+                        duration: tempBanDuration,
                       });
                     } else if (userAction === "give-coins" && selectedUser) {
-                      giveCoinsUserMutation.mutate({ 
-                        userId: selectedUser.id, 
-                        amount: coinAmount 
+                      giveCoinsUserMutation.mutate({
+                        userId: selectedUser.id,
+                        amount: coinAmount,
                       });
                     } else if (userAction === "remove-coins" && selectedUser) {
-                      removeCoinsUserMutation.mutate({ 
-                        userId: selectedUser.id, 
-                        amount: coinAmount 
+                      removeCoinsUserMutation.mutate({
+                        userId: selectedUser.id,
+                        amount: coinAmount,
                       });
                     } else if (userAction === "give-admin" && selectedUser) {
-                      giveAdminRoleMutation.mutate({ 
-                        userId: selectedUser.id, 
-                        adminRole: selectedAdminRole 
+                      giveAdminRoleMutation.mutate({
+                        userId: selectedUser.id,
+                        adminRole: selectedAdminRole,
                       });
                     }
                   }}
                   disabled={
                     (userAction === "ban" && !banReason.trim()) ||
-                    (userAction === "temp-ban" && (!banReason.trim() || !tempBanDuration)) ||
-                    (userAction === "give-coins" && (!coinAmount || parseInt(coinAmount) <= 0)) ||
-                    (userAction === "remove-coins" && (!coinAmount || parseInt(coinAmount) <= 0)) ||
+                    (userAction === "temp-ban" &&
+                      (!banReason.trim() || !tempBanDuration)) ||
+                    (userAction === "give-coins" &&
+                      (!coinAmount || parseInt(coinAmount) <= 0)) ||
+                    (userAction === "remove-coins" &&
+                      (!coinAmount || parseInt(coinAmount) <= 0)) ||
                     (userAction === "give-admin" && !selectedAdminRole)
                   }
                   data-testid="button-confirm-action"
@@ -1798,7 +2362,9 @@ export default function AdminPage() {
                 {selectedItem ? "✏️ Edit Item" : "📦 Create New Item"}
               </DialogTitle>
               <DialogDescription>
-                {selectedItem ? "Update the item details below." : "Fill in the details to create a new item."}
+                {selectedItem
+                  ? "Update the item details below."
+                  : "Fill in the details to create a new item."}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -1807,7 +2373,9 @@ export default function AdminPage() {
                 <Input
                   id="item-name"
                   value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, name: e.target.value })
+                  }
                   placeholder="Item name"
                   data-testid="input-item-name"
                 />
@@ -1817,7 +2385,9 @@ export default function AdminPage() {
                 <Textarea
                   id="item-description"
                   value={newItem.description}
-                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, description: e.target.value })
+                  }
                   placeholder="Item description"
                   data-testid="textarea-item-description"
                 />
@@ -1829,7 +2399,9 @@ export default function AdminPage() {
                     id="item-price"
                     type="number"
                     value={newItem.price}
-                    onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, price: e.target.value })
+                    }
                     placeholder="0"
                     min="0"
                     data-testid="input-item-price"
@@ -1841,7 +2413,9 @@ export default function AdminPage() {
                     id="item-stock"
                     type="number"
                     value={newItem.stock}
-                    onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, stock: e.target.value })
+                    }
                     placeholder="0"
                     min="0"
                     data-testid="input-item-stock"
@@ -1851,7 +2425,12 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="item-type">Type</Label>
-                  <Select value={newItem.type} onValueChange={(value) => setNewItem({ ...newItem, type: value })}>
+                  <Select
+                    value={newItem.type}
+                    onValueChange={(value) =>
+                      setNewItem({ ...newItem, type: value })
+                    }
+                  >
                     <SelectTrigger data-testid="select-item-type">
                       <SelectValue />
                     </SelectTrigger>
@@ -1866,7 +2445,12 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <Label htmlFor="item-rarity">Rarity</Label>
-                  <Select value={newItem.rarity} onValueChange={(value) => setNewItem({ ...newItem, rarity: value })}>
+                  <Select
+                    value={newItem.rarity}
+                    onValueChange={(value) =>
+                      setNewItem({ ...newItem, rarity: value })
+                    }
+                  >
                     <SelectTrigger data-testid="select-item-rarity">
                       <SelectValue />
                     </SelectTrigger>
@@ -1882,10 +2466,15 @@ export default function AdminPage() {
               </div>
 
               {/* Type-specific fields */}
-              {newItem.type === 'lootbox' && (
+              {newItem.type === "lootbox" && (
                 <div className="space-y-3 p-3 border rounded-md bg-muted/50">
-                  <Label className="text-sm font-semibold">Lootbox Configuration</Label>
-                  <p className="text-xs text-muted-foreground">Configure items and drop chances (stored in effects.lootboxContents)</p>
+                  <Label className="text-sm font-semibold">
+                    Lootbox Configuration
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Configure items and drop chances (stored in
+                    effects.lootboxContents)
+                  </p>
                   <Textarea
                     placeholder='e.g., [{"itemName": "Gold Coin", "rarity": "common", "chance": 50}, {"itemName": "Diamond", "rarity": "rare", "chance": 10}]'
                     value={JSON.stringify(newItem.lootboxContents, null, 2)}
@@ -1901,38 +2490,70 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {newItem.type === 'consumable' && (
+              {newItem.type === "consumable" && (
                 <div className="space-y-3 p-3 border rounded-md bg-muted/50">
-                  <Label className="text-sm font-semibold">Consumable Effects</Label>
+                  <Label className="text-sm font-semibold">
+                    Consumable Effects
+                  </Label>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <Label htmlFor="consumable-type" className="text-xs">Effect Type</Label>
+                      <Label htmlFor="consumable-type" className="text-xs">
+                        Effect Type
+                      </Label>
                       <Input
                         id="consumable-type"
                         value={newItem.consumableEffect.type}
-                        onChange={(e) => setNewItem({ ...newItem, consumableEffect: { ...newItem.consumableEffect, type: e.target.value }})}
+                        onChange={(e) =>
+                          setNewItem({
+                            ...newItem,
+                            consumableEffect: {
+                              ...newItem.consumableEffect,
+                              type: e.target.value,
+                            },
+                          })
+                        }
                         placeholder="e.g., heal, boost"
                         data-testid="input-consumable-type"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="consumable-magnitude" className="text-xs">Magnitude</Label>
+                      <Label htmlFor="consumable-magnitude" className="text-xs">
+                        Magnitude
+                      </Label>
                       <Input
                         id="consumable-magnitude"
                         type="number"
                         value={newItem.consumableEffect.magnitude}
-                        onChange={(e) => setNewItem({ ...newItem, consumableEffect: { ...newItem.consumableEffect, magnitude: parseInt(e.target.value) || 0 }})}
+                        onChange={(e) =>
+                          setNewItem({
+                            ...newItem,
+                            consumableEffect: {
+                              ...newItem.consumableEffect,
+                              magnitude: parseInt(e.target.value) || 0,
+                            },
+                          })
+                        }
                         placeholder="e.g., 50"
                         data-testid="input-consumable-magnitude"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="consumable-duration" className="text-xs">Duration (sec)</Label>
+                      <Label htmlFor="consumable-duration" className="text-xs">
+                        Duration (sec)
+                      </Label>
                       <Input
                         id="consumable-duration"
                         type="number"
                         value={newItem.consumableEffect.duration}
-                        onChange={(e) => setNewItem({ ...newItem, consumableEffect: { ...newItem.consumableEffect, duration: parseInt(e.target.value) || 0 }})}
+                        onChange={(e) =>
+                          setNewItem({
+                            ...newItem,
+                            consumableEffect: {
+                              ...newItem.consumableEffect,
+                              duration: parseInt(e.target.value) || 0,
+                            },
+                          })
+                        }
                         placeholder="e.g., 3600"
                         data-testid="input-consumable-duration"
                       />
@@ -1941,30 +2562,56 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {(newItem.type === 'tool' || newItem.type === 'powerup') && (
+              {(newItem.type === "tool" || newItem.type === "powerup") && (
                 <div className="space-y-3 p-3 border rounded-md bg-muted/50">
                   <Label className="text-sm font-semibold">Item Effects</Label>
                   <div className="space-y-2">
                     <Label className="text-xs">Passive Effects</Label>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label htmlFor="win-rate-boost" className="text-xs">Win Rate Boost (%)</Label>
+                        <Label htmlFor="win-rate-boost" className="text-xs">
+                          Win Rate Boost (%)
+                        </Label>
                         <Input
                           id="win-rate-boost"
                           type="number"
                           value={newItem.effects.passive.winRateBoost}
-                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, passive: { ...newItem.effects.passive, winRateBoost: parseInt(e.target.value) || 0 }}})}
+                          onChange={(e) =>
+                            setNewItem({
+                              ...newItem,
+                              effects: {
+                                ...newItem.effects,
+                                passive: {
+                                  ...newItem.effects.passive,
+                                  winRateBoost: parseInt(e.target.value) || 0,
+                                },
+                              },
+                            })
+                          }
                           placeholder="0"
                           data-testid="input-win-rate-boost"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="coins-per-hour" className="text-xs">Coins Per Hour</Label>
+                        <Label htmlFor="coins-per-hour" className="text-xs">
+                          Coins Per Hour
+                        </Label>
                         <Input
                           id="coins-per-hour"
                           type="number"
                           value={newItem.effects.passive.coinsPerHour}
-                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, passive: { ...newItem.effects.passive, coinsPerHour: parseInt(e.target.value) || 0 }}})}
+                          onChange={(e) =>
+                            setNewItem({
+                              ...newItem,
+                              effects: {
+                                ...newItem.effects,
+                                passive: {
+                                  ...newItem.effects.passive,
+                                  coinsPerHour: parseInt(e.target.value) || 0,
+                                },
+                              },
+                            })
+                          }
                           placeholder="0"
                           data-testid="input-coins-per-hour"
                         />
@@ -1973,33 +2620,72 @@ export default function AdminPage() {
                     <Label className="text-xs mt-2">Active Effects</Label>
                     <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <Label htmlFor="effect-text" className="text-xs">Effect</Label>
+                        <Label htmlFor="effect-text" className="text-xs">
+                          Effect
+                        </Label>
                         <Input
                           id="effect-text"
                           value={newItem.effects.active.effect}
-                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, active: { ...newItem.effects.active, effect: e.target.value }}})}
+                          onChange={(e) =>
+                            setNewItem({
+                              ...newItem,
+                              effects: {
+                                ...newItem.effects,
+                                active: {
+                                  ...newItem.effects.active,
+                                  effect: e.target.value,
+                                },
+                              },
+                            })
+                          }
                           placeholder="e.g., double_coins"
                           data-testid="input-effect-text"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="effect-duration" className="text-xs">Duration (sec)</Label>
+                        <Label htmlFor="effect-duration" className="text-xs">
+                          Duration (sec)
+                        </Label>
                         <Input
                           id="effect-duration"
                           type="number"
                           value={newItem.effects.active.duration}
-                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, active: { ...newItem.effects.active, duration: parseInt(e.target.value) || 0 }}})}
+                          onChange={(e) =>
+                            setNewItem({
+                              ...newItem,
+                              effects: {
+                                ...newItem.effects,
+                                active: {
+                                  ...newItem.effects.active,
+                                  duration: parseInt(e.target.value) || 0,
+                                },
+                              },
+                            })
+                          }
                           placeholder="0"
                           data-testid="input-effect-duration"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="use-cooldown" className="text-xs">Cooldown (sec)</Label>
+                        <Label htmlFor="use-cooldown" className="text-xs">
+                          Cooldown (sec)
+                        </Label>
                         <Input
                           id="use-cooldown"
                           type="number"
                           value={newItem.effects.active.useCooldown}
-                          onChange={(e) => setNewItem({ ...newItem, effects: { ...newItem.effects, active: { ...newItem.effects.active, useCooldown: parseInt(e.target.value) || 0 }}})}
+                          onChange={(e) =>
+                            setNewItem({
+                              ...newItem,
+                              effects: {
+                                ...newItem.effects,
+                                active: {
+                                  ...newItem.effects.active,
+                                  useCooldown: parseInt(e.target.value) || 0,
+                                },
+                              },
+                            })
+                          }
                           placeholder="0"
                           data-testid="input-use-cooldown"
                         />
@@ -2012,15 +2698,18 @@ export default function AdminPage() {
                 <Button
                   onClick={() => {
                     if (selectedItem) {
-                      updateItemMutation.mutate({ id: selectedItem.id, itemData: newItem });
+                      updateItemMutation.mutate({
+                        id: selectedItem.id,
+                        itemData: newItem,
+                      });
                     } else {
                       createItemMutation.mutate(newItem);
                     }
                   }}
                   disabled={
-                    !newItem.name.trim() || 
-                    !newItem.description.trim() || 
-                    !newItem.price || 
+                    !newItem.name.trim() ||
+                    !newItem.description.trim() ||
+                    !newItem.price ||
                     !newItem.stock ||
                     parseInt(newItem.price) <= 0 ||
                     parseInt(newItem.stock) < 0
@@ -2043,10 +2732,10 @@ export default function AdminPage() {
                       stock: "",
                       effects: {
                         passive: { winRateBoost: 0, coinsPerHour: 0 },
-                        active: { useCooldown: 0, duration: 0, effect: "" }
+                        active: { useCooldown: 0, duration: 0, effect: "" },
                       },
                       lootboxContents: [],
-                      consumableEffect: { type: "", magnitude: 0, duration: 0 }
+                      consumableEffect: { type: "", magnitude: 0, duration: 0 },
                     });
                   }}
                   data-testid="button-cancel-item"
@@ -2077,7 +2766,8 @@ export default function AdminPage() {
                   <SelectContent>
                     {STATIC_PET_TYPES.map((pet) => (
                       <SelectItem key={pet.petId} value={pet.petId}>
-                        {pet.emoji} {pet.name} ({pet.rarity}) - {pet.adoptionCost.toLocaleString()} coins
+                        {pet.emoji} {pet.name} ({pet.rarity}) -{" "}
+                        {pet.adoptionCost.toLocaleString()} coins
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -2101,7 +2791,12 @@ export default function AdminPage() {
                       givePetMutation.mutate({
                         userId: selectedUser.id,
                         petId: selectedPetId,
-                        petName: petName || STATIC_PET_TYPES.find(p => p.petId === selectedPetId)?.name || ""
+                        petName:
+                          petName ||
+                          STATIC_PET_TYPES.find(
+                            (p) => p.petId === selectedPetId,
+                          )?.name ||
+                          "",
                       });
                     }
                   }}
@@ -2127,7 +2822,10 @@ export default function AdminPage() {
         </Dialog>
 
         {/* Create Pet Dialog */}
-        <Dialog open={showCreatePetDialog} onOpenChange={setShowCreatePetDialog}>
+        <Dialog
+          open={showCreatePetDialog}
+          onOpenChange={setShowCreatePetDialog}
+        >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Pet</DialogTitle>
@@ -2141,7 +2839,9 @@ export default function AdminPage() {
                 <Input
                   id="pet-id"
                   value={newPet.petId}
-                  onChange={(e) => setNewPet({ ...newPet, petId: e.target.value })}
+                  onChange={(e) =>
+                    setNewPet({ ...newPet, petId: e.target.value })
+                  }
                   placeholder="e.g., dragon_fire"
                   data-testid="input-pet-id"
                 />
@@ -2152,7 +2852,9 @@ export default function AdminPage() {
                   <Input
                     id="pet-name"
                     value={newPet.name}
-                    onChange={(e) => setNewPet({ ...newPet, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewPet({ ...newPet, name: e.target.value })
+                    }
                     placeholder="e.g., Dragon"
                     data-testid="input-pet-name"
                   />
@@ -2162,7 +2864,9 @@ export default function AdminPage() {
                   <Input
                     id="pet-emoji"
                     value={newPet.emoji}
-                    onChange={(e) => setNewPet({ ...newPet, emoji: e.target.value })}
+                    onChange={(e) =>
+                      setNewPet({ ...newPet, emoji: e.target.value })
+                    }
                     placeholder="🐉"
                     maxLength={10}
                     data-testid="input-pet-emoji"
@@ -2174,7 +2878,9 @@ export default function AdminPage() {
                 <Textarea
                   id="pet-description"
                   value={newPet.description}
-                  onChange={(e) => setNewPet({ ...newPet, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewPet({ ...newPet, description: e.target.value })
+                  }
                   placeholder="e.g., A majestic fire-breathing dragon"
                   data-testid="input-pet-description"
                 />
@@ -2182,7 +2888,12 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="pet-rarity">Rarity</Label>
-                  <Select value={newPet.rarity} onValueChange={(value) => setNewPet({ ...newPet, rarity: value })}>
+                  <Select
+                    value={newPet.rarity}
+                    onValueChange={(value) =>
+                      setNewPet({ ...newPet, rarity: value })
+                    }
+                  >
                     <SelectTrigger data-testid="select-pet-rarity">
                       <SelectValue />
                     </SelectTrigger>
@@ -2201,7 +2912,9 @@ export default function AdminPage() {
                     id="pet-adoption-cost"
                     type="number"
                     value={newPet.adoptionCost}
-                    onChange={(e) => setNewPet({ ...newPet, adoptionCost: e.target.value })}
+                    onChange={(e) =>
+                      setNewPet({ ...newPet, adoptionCost: e.target.value })
+                    }
                     placeholder="1000"
                     min="0"
                     data-testid="input-pet-adoption-cost"
@@ -2212,12 +2925,16 @@ export default function AdminPage() {
                 <Label>Decay Rates (per hour)</Label>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="pet-hunger-decay" className="text-sm">Hunger Decay</Label>
+                    <Label htmlFor="pet-hunger-decay" className="text-sm">
+                      Hunger Decay
+                    </Label>
                     <Input
                       id="pet-hunger-decay"
                       type="number"
                       value={newPet.hungerDecay}
-                      onChange={(e) => setNewPet({ ...newPet, hungerDecay: e.target.value })}
+                      onChange={(e) =>
+                        setNewPet({ ...newPet, hungerDecay: e.target.value })
+                      }
                       placeholder="12"
                       min="0"
                       max="100"
@@ -2225,12 +2942,16 @@ export default function AdminPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="pet-hygiene-decay" className="text-sm">Hygiene Decay</Label>
+                    <Label htmlFor="pet-hygiene-decay" className="text-sm">
+                      Hygiene Decay
+                    </Label>
                     <Input
                       id="pet-hygiene-decay"
                       type="number"
                       value={newPet.hygieneDecay}
-                      onChange={(e) => setNewPet({ ...newPet, hygieneDecay: e.target.value })}
+                      onChange={(e) =>
+                        setNewPet({ ...newPet, hygieneDecay: e.target.value })
+                      }
                       placeholder="18"
                       min="0"
                       max="100"
@@ -2238,12 +2959,16 @@ export default function AdminPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="pet-energy-decay" className="text-sm">Energy Decay</Label>
+                    <Label htmlFor="pet-energy-decay" className="text-sm">
+                      Energy Decay
+                    </Label>
                     <Input
                       id="pet-energy-decay"
                       type="number"
                       value={newPet.energyDecay}
-                      onChange={(e) => setNewPet({ ...newPet, energyDecay: e.target.value })}
+                      onChange={(e) =>
+                        setNewPet({ ...newPet, energyDecay: e.target.value })
+                      }
                       placeholder="24"
                       min="0"
                       max="100"
@@ -2251,12 +2976,16 @@ export default function AdminPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="pet-fun-decay" className="text-sm">Fun Decay</Label>
+                    <Label htmlFor="pet-fun-decay" className="text-sm">
+                      Fun Decay
+                    </Label>
                     <Input
                       id="pet-fun-decay"
                       type="number"
                       value={newPet.funDecay}
-                      onChange={(e) => setNewPet({ ...newPet, funDecay: e.target.value })}
+                      onChange={(e) =>
+                        setNewPet({ ...newPet, funDecay: e.target.value })
+                      }
                       placeholder="12"
                       min="0"
                       max="100"
@@ -2303,7 +3032,7 @@ export default function AdminPage() {
                       hungerDecay: "",
                       hygieneDecay: "",
                       energyDecay: "",
-                      funDecay: ""
+                      funDecay: "",
                     });
                   }}
                   data-testid="button-cancel-pet"
