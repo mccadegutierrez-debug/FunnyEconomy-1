@@ -13,6 +13,7 @@ import {
   petBreeding,
   petHunts,
   petActivities,
+  featureFlags,
   type User,
   type InsertUser,
   type Item,
@@ -35,6 +36,7 @@ import {
   type InsertPetHunt,
   type PetActivity,
   type InsertPetActivity,
+  type FeatureFlag,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, lt, gte, sql } from "drizzle-orm";
@@ -160,6 +162,17 @@ export interface IStorage {
     rewards?: any,
   ): Promise<PetActivity>;
   getPetActivities(petId: string, limit?: number): Promise<PetActivity[]>;
+
+  // Feature Flags
+  getAllFeatureFlags(): Promise<FeatureFlag[]>;
+  getFeatureFlag(featureKey: string): Promise<FeatureFlag | undefined>;
+  isFeatureEnabled(featureKey: string): Promise<boolean>;
+  updateFeatureFlag(
+    featureKey: string,
+    enabled: boolean,
+    updatedBy: string,
+  ): Promise<FeatureFlag>;
+  initializeFeatureFlags(): Promise<void>;
 
   // System
   initializeData(): Promise<void>;
@@ -1669,6 +1682,98 @@ export class DatabaseStorage implements IStorage {
       .where(eq(petActivities.petId, petId))
       .orderBy(desc(petActivities.timestamp))
       .limit(limit);
+  }
+
+  async getAllFeatureFlags(): Promise<FeatureFlag[]> {
+    return await db.select().from(featureFlags);
+  }
+
+  async getFeatureFlag(featureKey: string): Promise<FeatureFlag | undefined> {
+    const [flag] = await db
+      .select()
+      .from(featureFlags)
+      .where(eq(featureFlags.featureKey, featureKey));
+    return flag || undefined;
+  }
+
+  async isFeatureEnabled(featureKey: string): Promise<boolean> {
+    const flag = await this.getFeatureFlag(featureKey);
+    return flag?.enabled ?? true;
+  }
+
+  async updateFeatureFlag(
+    featureKey: string,
+    enabled: boolean,
+    updatedBy: string,
+  ): Promise<FeatureFlag> {
+    const [updatedFlag] = await db
+      .update(featureFlags)
+      .set({ enabled, updatedBy, updatedAt: new Date() })
+      .where(eq(featureFlags.featureKey, featureKey))
+      .returning();
+
+    if (!updatedFlag) {
+      throw new Error("Feature flag not found");
+    }
+
+    return updatedFlag;
+  }
+
+  async initializeFeatureFlags(): Promise<void> {
+    const existingFlags = await this.getAllFeatureFlags();
+    const existingKeys = new Set(existingFlags.map((f) => f.featureKey));
+
+    const defaultFlags = [
+      {
+        featureKey: "pets",
+        featureName: "Pet System",
+        description: "Enable or disable the pet adoption and management system",
+        enabled: true,
+      },
+      {
+        featureKey: "games",
+        featureName: "Game System",
+        description: "Enable or disable games like blackjack, slots, coinflip, etc.",
+        enabled: true,
+      },
+      {
+        featureKey: "economy",
+        featureName: "Economy System",
+        description: "Enable or disable economy features like work, daily, beg, etc.",
+        enabled: true,
+      },
+      {
+        featureKey: "chat",
+        featureName: "Chat System",
+        description: "Enable or disable the global chat feature",
+        enabled: true,
+      },
+      {
+        featureKey: "leaderboard",
+        featureName: "Leaderboard",
+        description: "Enable or disable the leaderboard feature",
+        enabled: true,
+      },
+      {
+        featureKey: "shop",
+        featureName: "Shop System",
+        description: "Enable or disable the shop and inventory features",
+        enabled: true,
+      },
+      {
+        featureKey: "freemium",
+        featureName: "Freemium Rewards",
+        description: "Enable or disable the freemium reward system",
+        enabled: true,
+      },
+    ];
+
+    for (const flag of defaultFlags) {
+      if (!existingKeys.has(flag.featureKey)) {
+        await db.insert(featureFlags).values(flag);
+        console.log(`Created feature flag: ${flag.featureKey}`);
+      }
+    }
   }
 }
 
