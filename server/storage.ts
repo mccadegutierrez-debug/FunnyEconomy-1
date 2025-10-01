@@ -1285,6 +1285,34 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async checkAndHandlePetDeath(pet: Pet): Promise<boolean> {
+    if (pet.isDead) return false;
+
+    const shouldDie = pet.hunger === 0 && pet.energy === 0;
+    
+    if (shouldDie) {
+      await this.updatePet(pet.id, {
+        isDead: true,
+        deathReason: "Starvation and exhaustion",
+        diedAt: new Date(),
+      });
+
+      const user = await this.getUser(pet.userId);
+      if (user) {
+        await this.createNotification({
+          user: user.username,
+          type: "system",
+          message: `💀 ${pet.name} has passed away from starvation and exhaustion. Remember to feed and rest your pets!`,
+          read: false,
+        });
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
   async feedPet(petId: string): Promise<Pet> {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");

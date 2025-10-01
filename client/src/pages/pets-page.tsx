@@ -538,16 +538,23 @@ export default function PetsPage() {
                 return (
                   <Card
                     key={pet.id}
-                    className="relative overflow-hidden"
+                    className={`relative overflow-hidden ${pet.isDead ? 'opacity-60 bg-gray-100 dark:bg-gray-900 border-red-500' : ''}`}
                     data-testid={`card-pet-${pet.id}`}
                   >
+                    {pet.isDead && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <Badge variant="destructive" className="text-xs">
+                          💀 Deceased
+                        </Badge>
+                      </div>
+                    )}
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
                           <img
                             src={`/PetIcons/${petTypeData?.iconPath || "futureupdate.png"}`}
                             alt={petTypeData?.name || "Pet"}
-                            className="w-16 h-16 object-contain"
+                            className={`w-16 h-16 object-contain ${pet.isDead ? 'grayscale' : ''}`}
                             data-testid={`img-pet-icon-${pet.id}`}
                           />
                           <div>
@@ -672,7 +679,7 @@ export default function PetsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => feedMutation.mutate(pet.id)}
-                          disabled={feedMutation.isPending || pet.hunger >= 100}
+                          disabled={pet.isDead || feedMutation.isPending || pet.hunger >= 100}
                           data-testid={`button-feed-${pet.id}`}
                         >
                           <Heart className="w-3 h-3 mr-1" /> Feed
@@ -681,7 +688,7 @@ export default function PetsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => cleanMutation.mutate(pet.id)}
-                          disabled={cleanMutation.isPending || pet.hygiene >= 100}
+                          disabled={pet.isDead || cleanMutation.isPending || pet.hygiene >= 100}
                           data-testid={`button-clean-${pet.id}`}
                         >
                           <Droplets className="w-3 h-3 mr-1" /> Clean
@@ -690,7 +697,7 @@ export default function PetsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => playMutation.mutate(pet.id)}
-                          disabled={playMutation.isPending || pet.fun >= 100}
+                          disabled={pet.isDead || playMutation.isPending || pet.fun >= 100}
                           data-testid={`button-play-${pet.id}`}
                         >
                           <Smile className="w-3 h-3 mr-1" /> Play
@@ -699,7 +706,7 @@ export default function PetsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => restMutation.mutate(pet.id)}
-                          disabled={restMutation.isPending || pet.energy >= 100}
+                          disabled={pet.isDead || restMutation.isPending || pet.energy >= 100}
                           data-testid={`button-rest-${pet.id}`}
                         >
                           <Zap className="w-3 h-3 mr-1" /> Rest
@@ -740,6 +747,7 @@ export default function PetsPage() {
                             setSelectedPet(pet);
                             setTrainingDialogOpen(true);
                           }}
+                          disabled={pet.isDead}
                           data-testid={`button-train-${pet.id}`}
                         >
                           <Trophy className="w-3 h-3 mr-1" /> Train
@@ -751,6 +759,7 @@ export default function PetsPage() {
                             setSelectedPet(pet);
                             setSkillsDialogOpen(true);
                           }}
+                          disabled={pet.isDead}
                           data-testid={`button-skills-${pet.id}`}
                         >
                           <Sparkles className="w-3 h-3 mr-1" /> Skills
@@ -768,7 +777,7 @@ export default function PetsPage() {
                             huntType: "short",
                           })
                         }
-                        disabled={startHuntMutation.isPending}
+                        disabled={pet.isDead || startHuntMutation.isPending}
                         data-testid={`button-hunt-${pet.id}`}
                       >
                         🏹 Send Hunting
@@ -780,7 +789,7 @@ export default function PetsPage() {
                           size="sm"
                           className="w-full"
                           onClick={() => prestigeMutation.mutate(pet.id)}
-                          disabled={prestigeMutation.isPending}
+                          disabled={pet.isDead || prestigeMutation.isPending}
                           data-testid={`button-prestige-${pet.id}`}
                         >
                           <Star className="w-3 h-3 mr-1" /> Prestige

@@ -1808,7 +1808,34 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/pets", requireAuth, async (req, res) => {
     try {
       const pets = await storage.getUserPets(req.user!.id);
-      res.json(pets);
+      const petTypes = await storage.getAllPetTypes();
+      
+      const petsWithDecay = await Promise.all(
+        pets.map(async (pet) => {
+          const petType = petTypes.find((pt) => pt.id === pet.petTypeId);
+          if (!petType) return pet;
+          
+          const decayedPet = storage.calculateStatDecay(pet, petType);
+          
+          if (decayedPet.hunger !== pet.hunger || 
+              decayedPet.hygiene !== pet.hygiene || 
+              decayedPet.fun !== pet.fun || 
+              decayedPet.energy !== pet.energy) {
+            await storage.updatePet(pet.id, {
+              hunger: decayedPet.hunger,
+              hygiene: decayedPet.hygiene,
+              fun: decayedPet.fun,
+              energy: decayedPet.energy,
+            });
+          }
+          
+          await storage.checkAndHandlePetDeath(decayedPet);
+          
+          return await storage.getPet(pet.id);
+        })
+      );
+      
+      res.json(petsWithDecay);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }
