@@ -13,9 +13,12 @@ export async function seedPetData(): Promise<void> {
 
     let seededCount = 0;
 
-    if (existingPetTypes.length === 0) {
-      console.log("Seeding pet types...");
-      for (const petType of STATIC_PET_TYPES) {
+    const existingPetIds = new Set(existingPetTypes.map(p => p.petId));
+    const missingPetTypes = STATIC_PET_TYPES.filter(p => !existingPetIds.has(p.petId));
+    
+    if (missingPetTypes.length > 0) {
+      console.log(`Seeding ${missingPetTypes.length} missing pet types...`);
+      for (const petType of missingPetTypes) {
         await db.insert(petTypes).values({
           petId: petType.petId,
           name: petType.name,
@@ -31,7 +34,7 @@ export async function seedPetData(): Promise<void> {
         });
         seededCount++;
       }
-      console.log(`Seeded ${STATIC_PET_TYPES.length} pet types`);
+      console.log(`Seeded ${missingPetTypes.length} pet types`);
     }
 
     if (existingPetSkills.length === 0) {
