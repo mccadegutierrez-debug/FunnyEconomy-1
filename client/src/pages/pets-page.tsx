@@ -151,15 +151,20 @@ export default function PetsPage() {
     enabled: isPetsEnabled,
   });
 
+  // Create a map of pet types by ID for efficient lookup
+  const petTypesMap = useMemo(() => {
+    const map = new Map<string, PetType>();
+    petTypes.forEach((pt) => map.set(pt.id, pt));
+    return map;
+  }, [petTypes]);
+
   // Combine pets with their types
   const petsWithTypes: PetWithType[] = useMemo(() => {
     return pets.map((pet) => {
-      const petType =
-        petTypes.find((pt) => pt.id === pet.petTypeId) ||
-        STATIC_PET_TYPES.find((pt) => pt.petId === pet.petTypeId);
+      const petType = petTypesMap.get(pet.petTypeId);
       return { ...pet, petType };
     });
-  }, [pets, petTypes]);
+  }, [pets, petTypesMap]);
 
   // Adopt pet mutation
   const adoptMutation = useMutation({
@@ -482,12 +487,14 @@ export default function PetsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {petsWithTypes.map((pet) => {
-                const petTypeData = pet.petType || STATIC_PET_TYPES.find(
-                  (pt) => pt.petId === pet.petTypeId,
-                );
+                const petTypeData = pet.petType;
                 const xpProgress =
                   (pet.xp / getXPForNextLevel(pet.level)) * 100;
                 const learnedSkills = (pet.skills as string[]) || [];
+
+                if (!petTypeData) {
+                  return null;
+                }
 
                 return (
                   <Card
@@ -618,7 +625,7 @@ export default function PetsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => feedMutation.mutate(pet.id)}
-                          disabled={feedMutation.isPending}
+                          disabled={feedMutation.isPending || pet.hunger >= 100}
                           data-testid={`button-feed-${pet.id}`}
                         >
                           <Heart className="w-3 h-3 mr-1" /> Feed
@@ -627,7 +634,7 @@ export default function PetsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => cleanMutation.mutate(pet.id)}
-                          disabled={cleanMutation.isPending}
+                          disabled={cleanMutation.isPending || pet.hygiene >= 100}
                           data-testid={`button-clean-${pet.id}`}
                         >
                           <Droplets className="w-3 h-3 mr-1" /> Clean
@@ -636,7 +643,7 @@ export default function PetsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => playMutation.mutate(pet.id)}
-                          disabled={playMutation.isPending}
+                          disabled={playMutation.isPending || pet.fun >= 100}
                           data-testid={`button-play-${pet.id}`}
                         >
                           <Smile className="w-3 h-3 mr-1" /> Play
@@ -645,7 +652,7 @@ export default function PetsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => restMutation.mutate(pet.id)}
-                          disabled={restMutation.isPending}
+                          disabled={restMutation.isPending || pet.energy >= 100}
                           data-testid={`button-rest-${pet.id}`}
                         >
                           <Zap className="w-3 h-3 mr-1" /> Rest
