@@ -332,6 +332,20 @@ export const petHunts = pgTable("pet_hunts", {
     .notNull(),
 });
 
+export const featureFlags = pgTable("feature_flags", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  featureKey: varchar("feature_key").notNull().unique(),
+  featureName: varchar("feature_name").notNull(),
+  description: text("description").notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  updatedAt: timestamp("updated_at")
+    .default(sql`now()`)
+    .notNull(),
+  updatedBy: varchar("updated_by"),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
@@ -487,6 +501,11 @@ export const insertPetHuntSchema = createInsertSchema(petHunts).omit({
   startedAt: true,
 });
 export const selectPetHuntSchema = createSelectSchema(petHunts);
+export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
+  id: true,
+  updatedAt: true,
+});
+export const selectFeatureFlagSchema = createSelectSchema(featureFlags);
 
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -516,3 +535,5 @@ export type InsertPetActivity = z.infer<typeof insertPetActivitySchema>;
 export type PetActivity = typeof petActivities.$inferSelect;
 export type InsertPetHunt = z.infer<typeof insertPetHuntSchema>;
 export type PetHunt = typeof petHunts.$inferSelect;
+export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
+export type FeatureFlag = typeof featureFlags.$inferSelect;
