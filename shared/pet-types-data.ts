@@ -464,7 +464,7 @@ export const STATIC_PET_TYPES: PetTypeData[] = [
     description:
       "The legendary Christmas demon. Better behave or face the consequences!",
     emoji: "👹",
-    iconPath: "kracken.png",
+    iconPath: "tbd.png",
     rarity: "legendary",
     hungerDecay: 1,
     hygieneDecay: 1,
@@ -1022,7 +1022,7 @@ export const STATIC_PET_TYPES: PetTypeData[] = [
     name: "Octopus",
     description: "An intelligent eight-armed cephalopod. Master of disguise!",
     emoji: "🐙",
-    iconPath: "tbd.png",
+    iconPath: ".png",
     rarity: "rare",
     hungerDecay: 3,
     hygieneDecay: 3,
