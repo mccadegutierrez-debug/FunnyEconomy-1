@@ -198,6 +198,7 @@ export const petTypes = pgTable("pet_types", {
   name: varchar("name").notNull(),
   description: text("description").notNull(),
   emoji: varchar("emoji").notNull(),
+  iconPath: varchar("icon_path").notNull(),
   rarity: varchar("rarity", {
     enum: ["common", "uncommon", "rare", "epic", "legendary"],
   }).notNull(),

@@ -24,6 +24,7 @@ export async function seedPetData(): Promise<void> {
           name: petType.name,
           description: petType.description,
           emoji: petType.emoji,
+          iconPath: petType.iconPath,
           rarity: petType.rarity,
           hungerDecay: petType.hungerDecay,
           hygieneDecay: petType.hygieneDecay,
