@@ -346,6 +346,21 @@ export default function PetsPage() {
     },
   });
 
+  // Delete room mutation
+  const deleteRoomMutation = useMutation({
+    mutationFn: (roomId: string) =>
+      apiRequest("DELETE", `/api/pets/rooms/${roomId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pets/rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pets"] });
+      setRoomDialogOpen(false);
+      toast({
+        title: "🗑️ Room Deleted",
+        description: "The room has been deleted. Pets have been moved out.",
+      });
+    },
+  });
+
   // Start breeding mutation
   const startBreedingMutation = useMutation({
     mutationFn: ({ petId1, petId2 }: { petId1: string; petId2: string }) =>
@@ -411,6 +426,14 @@ export default function PetsPage() {
 
   // Calculate XP needed for next level
   const getXPForNextLevel = (level: number) => level * 100;
+
+  // Get color class based on stat value
+  const getStatColor = (value: number): string => {
+    if (value >= 70) return "bg-green-500";
+    if (value >= 40) return "bg-yellow-500";
+    if (value >= 20) return "bg-orange-500";
+    return "bg-red-500";
+  };
 
   // Show maintenance screen if feature is disabled
   if (featureFlagLoading) {
@@ -587,52 +610,60 @@ export default function PetsPage() {
                             <Heart className="w-4 h-4 text-red-500" />
                             <span>Hunger</span>
                           </div>
-                          <span className="text-xs">{pet.hunger}%</span>
+                          <span className={`text-xs font-bold ${pet.hunger < 20 ? 'text-red-600' : ''}`}>{pet.hunger}%</span>
                         </div>
-                        <Progress
-                          value={pet.hunger}
-                          className="h-1.5 bg-red-100"
-                          data-testid={`progress-hunger-${pet.id}`}
-                        />
+                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${getStatColor(pet.hunger)} transition-all duration-300`}
+                            style={{ width: `${pet.hunger}%` }}
+                            data-testid={`progress-hunger-${pet.id}`}
+                          />
+                        </div>
 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-sm">
                             <Droplets className="w-4 h-4 text-blue-500" />
                             <span>Hygiene</span>
                           </div>
-                          <span className="text-xs">{pet.hygiene}%</span>
+                          <span className={`text-xs font-bold ${pet.hygiene < 20 ? 'text-red-600' : ''}`}>{pet.hygiene}%</span>
                         </div>
-                        <Progress
-                          value={pet.hygiene}
-                          className="h-1.5 bg-blue-100"
-                          data-testid={`progress-hygiene-${pet.id}`}
-                        />
+                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${getStatColor(pet.hygiene)} transition-all duration-300`}
+                            style={{ width: `${pet.hygiene}%` }}
+                            data-testid={`progress-hygiene-${pet.id}`}
+                          />
+                        </div>
 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-sm">
                             <Zap className="w-4 h-4 text-yellow-500" />
                             <span>Energy</span>
                           </div>
-                          <span className="text-xs">{pet.energy}%</span>
+                          <span className={`text-xs font-bold ${pet.energy < 20 ? 'text-red-600' : ''}`}>{pet.energy}%</span>
                         </div>
-                        <Progress
-                          value={pet.energy}
-                          className="h-1.5 bg-yellow-100"
-                          data-testid={`progress-energy-${pet.id}`}
-                        />
+                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${getStatColor(pet.energy)} transition-all duration-300`}
+                            style={{ width: `${pet.energy}%` }}
+                            data-testid={`progress-energy-${pet.id}`}
+                          />
+                        </div>
 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-sm">
                             <Smile className="w-4 h-4 text-green-500" />
                             <span>Fun</span>
                           </div>
-                          <span className="text-xs">{pet.fun}%</span>
+                          <span className={`text-xs font-bold ${pet.fun < 20 ? 'text-red-600' : ''}`}>{pet.fun}%</span>
                         </div>
-                        <Progress
-                          value={pet.fun}
-                          className="h-1.5 bg-green-100"
-                          data-testid={`progress-fun-${pet.id}`}
-                        />
+                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${getStatColor(pet.fun)} transition-all duration-300`}
+                            style={{ width: `${pet.fun}%` }}
+                            data-testid={`progress-fun-${pet.id}`}
+                          />
+                        </div>
                       </div>
 
                       {/* Care Actions */}
@@ -1933,6 +1964,32 @@ export default function PetsPage() {
                       ))}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Delete Room */}
+              <Card className="border-red-500">
+                <CardHeader>
+                  <CardTitle className="text-red-600">Danger Zone</CardTitle>
+                  <CardDescription>
+                    Permanently delete this room. All pets will be moved out.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => {
+                      if (selectedRoom && confirm(`Are you sure you want to delete "${selectedRoom.name}"? This cannot be undone.`)) {
+                        deleteRoomMutation.mutate(selectedRoom.id);
+                      }
+                    }}
+                    disabled={deleteRoomMutation.isPending}
+                    data-testid="button-delete-room"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Delete Room
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

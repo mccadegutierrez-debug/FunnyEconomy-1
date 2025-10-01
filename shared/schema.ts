@@ -240,6 +240,9 @@ export const pets = pgTable("pets", {
     .notNull(),
   isSick: boolean("is_sick").default(false).notNull(),
   sicknessType: varchar("sickness_type"),
+  isDead: boolean("is_dead").default(false).notNull(),
+  deathReason: varchar("death_reason"),
+  diedAt: timestamp("died_at"),
 });
 
 export const petRooms = pgTable("pet_rooms", {

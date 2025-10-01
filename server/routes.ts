@@ -1885,6 +1885,15 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.delete("/api/pets/rooms/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deletePetRoom(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   app.post("/api/pets/rooms/:id/assign-pet", requireAuth, async (req, res) => {
     try {
       const assignSchema = z.object({

@@ -135,6 +135,7 @@ export interface IStorage {
   createPetRoom(userId: string, name: string): Promise<PetRoom>;
   getUserPetRooms(userId: string): Promise<PetRoom[]>;
   updatePetRoom(roomId: string, updates: Partial<PetRoom>): Promise<PetRoom>;
+  deletePetRoom(roomId: string): Promise<void>;
   assignPetToRoom(petId: string, roomId: string): Promise<Pet>;
   hireSitter(roomId: string, sitterId: string, hours: number): Promise<PetRoom>;
 
@@ -1447,6 +1448,12 @@ export class DatabaseStorage implements IStorage {
     }
 
     return updatedRoom;
+  }
+
+  async deletePetRoom(roomId: string): Promise<void> {
+    await db.update(pets).set({ roomId: null }).where(eq(pets.roomId, roomId));
+    
+    await db.delete(petRooms).where(eq(petRooms.id, roomId));
   }
 
   async assignPetToRoom(petId: string, roomId: string): Promise<Pet> {
