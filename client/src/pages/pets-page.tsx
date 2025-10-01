@@ -69,6 +69,9 @@ import {
   FLOOR_STYLES,
   WALL_STYLES,
 } from "@shared/pet-decorations-data";
+import MaintenanceScreen from "@/components/maintenance-screen";
+import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 
 type PetWithType = Pet & { petType?: PetType };
 
@@ -95,39 +98,57 @@ export default function PetsPage() {
     hunting: 0,
   });
 
+  // Check if pets feature is enabled
+  const {
+    data: petsFeatureFlag,
+    isLoading: featureFlagLoading,
+    isError: featureFlagError,
+  } = useQuery<{ enabled: boolean; description?: string }>({
+    queryKey: ["/api/feature-flags/pets"],
+  });
+
+  const isPetsEnabled = petsFeatureFlag?.enabled ?? false;
+
   // Fetch user profile for coin balance
   const { data: userProfile } = useQuery({
     queryKey: ["/api/user/profile"],
+    enabled: isPetsEnabled,
   });
 
   // Fetch user's pets
   const { data: pets = [], isLoading: petsLoading } = useQuery<Pet[]>({
     queryKey: ["/api/pets"],
+    enabled: isPetsEnabled,
   });
 
   // Fetch pet types
   const { data: petTypes = [] } = useQuery<PetType[]>({
     queryKey: ["/api/pets/types"],
+    enabled: isPetsEnabled,
   });
 
   // Fetch pet skills
   const { data: petSkills = [] } = useQuery<PetSkill[]>({
     queryKey: ["/api/pets/skills"],
+    enabled: isPetsEnabled,
   });
 
   // Fetch pet rooms
   const { data: rooms = [] } = useQuery<PetRoom[]>({
     queryKey: ["/api/pets/rooms"],
+    enabled: isPetsEnabled,
   });
 
   // Fetch breeding attempts
   const { data: breedings = [] } = useQuery<PetBreeding[]>({
     queryKey: ["/api/pets/breeding"],
+    enabled: isPetsEnabled,
   });
 
   // Fetch active hunts
   const { data: hunts = [] } = useQuery<PetHunt[]>({
     queryKey: ["/api/pets/hunts"],
+    enabled: isPetsEnabled,
   });
 
   // Combine pets with their types
@@ -369,6 +390,40 @@ export default function PetsPage() {
 
   // Calculate XP needed for next level
   const getXPForNextLevel = (level: number) => level * 100;
+
+  // Show maintenance screen if feature is disabled
+  if (featureFlagLoading) {
+    return (
+      <div>
+        <Header />
+        <div
+          className="flex items-center justify-center min-h-[60vh]"
+          data-testid="status-loading-feature-flag"
+        >
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (featureFlagError || (petsFeatureFlag && !petsFeatureFlag.enabled)) {
+    return (
+      <div>
+        <Header />
+        <MaintenanceScreen
+          featureName="Pet System"
+          message={
+            petsFeatureFlag?.description ||
+            "The pet system is currently under maintenance. Please check back later!"
+          }
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
