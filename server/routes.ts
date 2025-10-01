@@ -1814,122 +1814,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/pets/:id", requireAuth, async (req, res) => {
-    try {
-      const pet = await storage.getPet(req.params.id);
-      if (!pet) {
-        return res.status(404).json({ error: "Pet not found" });
-      }
-      res.json(pet);
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
-  app.post("/api/pets/:id/feed", requireAuth, async (req, res) => {
-    try {
-      const pet = await storage.feedPet(req.params.id);
-      await storage.logPetActivity(req.params.id, "feed", "Fed the pet", {
-        xp: 5,
-      });
-      res.json({ success: true, pet });
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
-  app.post("/api/pets/:id/clean", requireAuth, async (req, res) => {
-    try {
-      const pet = await storage.cleanPet(req.params.id);
-      await storage.logPetActivity(req.params.id, "clean", "Cleaned the pet", {
-        xp: 5,
-      });
-      res.json({ success: true, pet });
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
-  app.post("/api/pets/:id/play", requireAuth, async (req, res) => {
-    try {
-      const pet = await storage.playWithPet(req.params.id);
-      await storage.logPetActivity(
-        req.params.id,
-        "play",
-        "Played with the pet",
-        { xp: 10 },
-      );
-      res.json({ success: true, pet });
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
-  app.post("/api/pets/:id/rest", requireAuth, async (req, res) => {
-    try {
-      const pet = await storage.restPet(req.params.id);
-      await storage.logPetActivity(req.params.id, "rest", "Pet took a rest", {
-        xp: 3,
-      });
-      res.json({ success: true, pet });
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
-  app.post("/api/pets/:id/train", requireAuth, async (req, res) => {
-    try {
-      const trainSchema = z.object({
-        stat: z.enum(["attack", "defense", "sustainability", "hunting"]),
-        points: z.number().min(1).max(100),
-      });
-
-      const { stat, points } = trainSchema.parse(req.body);
-      const pet = await storage.trainPetStat(req.params.id, stat, points);
-      await storage.logPetActivity(
-        req.params.id,
-        "train",
-        `Trained ${stat} by ${points} points`,
-      );
-      res.json({ success: true, pet });
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
-  app.post("/api/pets/:id/learn-skill", requireAuth, async (req, res) => {
-    try {
-      const skillSchema = z.object({
-        skillId: z.string(),
-      });
-
-      const { skillId } = skillSchema.parse(req.body);
-      const pet = await storage.learnSkill(req.params.id, skillId);
-      await storage.logPetActivity(
-        req.params.id,
-        "learn_skill",
-        `Learned skill: ${skillId}`,
-      );
-      res.json({ success: true, pet });
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
-  app.post("/api/pets/:id/prestige", requireAuth, async (req, res) => {
-    try {
-      const pet = await storage.prestigePet(req.params.id);
-      await storage.logPetActivity(
-        req.params.id,
-        "prestige",
-        "Pet has prestiged!",
-      );
-      res.json({ success: true, pet });
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
+  // Specific routes must come before parameterized routes
   app.get("/api/pets/types", requireAuth, async (req, res) => {
     try {
       const types = await storage.getAllPetTypes();
@@ -2062,25 +1947,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/pets/:id/hunt", requireAuth, async (req, res) => {
-    try {
-      const huntSchema = z.object({
-        huntType: z.enum(["short", "medium", "long"]),
-      });
-
-      const { huntType } = huntSchema.parse(req.body);
-      const hunt = await storage.startHunt(req.params.id, huntType);
-      await storage.logPetActivity(
-        req.params.id,
-        "hunt",
-        `Started ${huntType} hunt`,
-      );
-      res.json({ success: true, hunt });
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
-
   app.get("/api/pets/hunts", requireAuth, async (req, res) => {
     try {
       const hunts = await storage.getActiveHunts(req.user!.id);
@@ -2100,6 +1966,142 @@ export function registerRoutes(app: Express): Server {
         result.rewards,
       );
       res.json({ success: true, ...result });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Parameterized :id route comes after all specific routes
+  app.get("/api/pets/:id", requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.getPet(req.params.id);
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+      res.json(pet);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/pets/:id/feed", requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.feedPet(req.params.id);
+      await storage.logPetActivity(req.params.id, "feed", "Fed the pet", {
+        xp: 5,
+      });
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/pets/:id/clean", requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.cleanPet(req.params.id);
+      await storage.logPetActivity(req.params.id, "clean", "Cleaned the pet", {
+        xp: 5,
+      });
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/pets/:id/play", requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.playWithPet(req.params.id);
+      await storage.logPetActivity(
+        req.params.id,
+        "play",
+        "Played with the pet",
+        { xp: 10 },
+      );
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/pets/:id/rest", requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.restPet(req.params.id);
+      await storage.logPetActivity(req.params.id, "rest", "Pet took a rest", {
+        xp: 3,
+      });
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/pets/:id/train", requireAuth, async (req, res) => {
+    try {
+      const trainSchema = z.object({
+        stat: z.enum(["attack", "defense", "sustainability", "hunting"]),
+        points: z.number().min(1).max(100),
+      });
+
+      const { stat, points } = trainSchema.parse(req.body);
+      const pet = await storage.trainPetStat(req.params.id, stat, points);
+      await storage.logPetActivity(
+        req.params.id,
+        "train",
+        `Trained ${stat} by ${points} points`,
+      );
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/pets/:id/learn-skill", requireAuth, async (req, res) => {
+    try {
+      const skillSchema = z.object({
+        skillId: z.string(),
+      });
+
+      const { skillId } = skillSchema.parse(req.body);
+      const pet = await storage.learnSkill(req.params.id, skillId);
+      await storage.logPetActivity(
+        req.params.id,
+        "learn_skill",
+        `Learned skill: ${skillId}`,
+      );
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/pets/:id/prestige", requireAuth, async (req, res) => {
+    try {
+      const pet = await storage.prestigePet(req.params.id);
+      await storage.logPetActivity(
+        req.params.id,
+        "prestige",
+        "Pet has prestiged!",
+      );
+      res.json({ success: true, pet });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/pets/:id/hunt", requireAuth, async (req, res) => {
+    try {
+      const huntSchema = z.object({
+        huntType: z.enum(["short", "medium", "long"]),
+      });
+
+      const { huntType } = huntSchema.parse(req.body);
+      const hunt = await storage.startHunt(req.params.id, huntType);
+      await storage.logPetActivity(
+        req.params.id,
+        "hunt",
+        `Started ${huntType} hunt`,
+      );
+      res.json({ success: true, hunt });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }
