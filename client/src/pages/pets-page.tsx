@@ -482,8 +482,8 @@ export default function PetsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {petsWithTypes.map((pet) => {
-                const petTypeData = STATIC_PET_TYPES.find(
-                  (pt) => pt.petId === pet.petType?.petId,
+                const petTypeData = pet.petType || STATIC_PET_TYPES.find(
+                  (pt) => pt.petId === pet.petTypeId,
                 );
                 const xpProgress =
                   (pet.xp / getXPForNextLevel(pet.level)) * 100;
@@ -978,9 +978,8 @@ export default function PetsPage() {
                         )}
                         <div className="pt-2 flex gap-2">
                           {roomPets.slice(0, 5).map((pet) => {
-                            const petTypeData = STATIC_PET_TYPES.find(
-                              (pt) => pt.petId === pet.petTypeId,
-                            );
+                            const petTypeData = petTypes.find((pt) => pt.id === pet.petTypeId) || 
+                              STATIC_PET_TYPES.find((pt) => pt.petId === pet.petTypeId);
                             return (
                               <img
                                 key={pet.id}
