@@ -1493,52 +1493,110 @@ export default function PetsPage() {
                   <CardTitle>Room Preview</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg p-8 min-h-[300px] border-4 border-slate-700">
-                    {/* Wall Style Background */}
-                    <div className="absolute inset-0 rounded-lg opacity-20 text-8xl flex items-start justify-center pt-4">
-                      {WALL_STYLES.find(s => s.id === selectedRoom?.wallStyle)?.emoji}
-                    </div>
-                    
-                    {/* Floor Style */}
-                    <div className="absolute bottom-0 left-0 right-0 h-24 rounded-b-lg opacity-30 text-6xl flex items-center justify-center">
-                      {FLOOR_STYLES.find(s => s.id === selectedRoom?.floorStyle)?.emoji}
-                    </div>
-
-                    {/* Wall Decorations */}
-                    <div className="absolute top-4 left-0 right-0 flex justify-around px-8">
-                      {(selectedRoom?.wallDecorations as string[] || []).slice(0, 5).map((decId, i) => (
-                        <div key={i} className="text-4xl">
-                          {getDecorationById(decId)?.emoji}
+                  <div className="flex items-center justify-center p-8 bg-black rounded-lg overflow-hidden" style={{ perspective: '1200px' }}>
+                    <div className="relative" style={{ 
+                      transformStyle: 'preserve-3d',
+                      transform: 'rotateX(50deg) rotateZ(-45deg)',
+                      width: '280px',
+                      height: '280px'
+                    }}>
+                      {/* Floor */}
+                      <div 
+                        className="absolute w-full h-full flex items-center justify-center"
+                        style={{
+                          transform: 'translateZ(0px)',
+                          background: selectedRoom?.floorStyle === 'carpet' ? 
+                            'repeating-linear-gradient(0deg, #d4b896 0px, #d4b896 8px, #c9ad8b 8px, #c9ad8b 16px)' :
+                            selectedRoom?.floorStyle === 'tile' ? 
+                            'repeating-conic-gradient(#e8e8e8 0% 25%, #d8d8d8 0% 50%) 0 0 / 40px 40px' :
+                            selectedRoom?.floorStyle === 'marble' ? 
+                            'linear-gradient(135deg, #f5f5f5 25%, #e0e0e0 25%, #e0e0e0 50%, #f5f5f5 50%, #f5f5f5 75%, #e0e0e0 75%, #e0e0e0)' :
+                            selectedRoom?.floorStyle === 'grass' ? '#8bc34a' : 
+                            'repeating-linear-gradient(90deg, #cd853f 0px, #cd853f 20px, #d2691e 20px, #d2691e 40px)',
+                          border: '2px solid #8b7355',
+                          boxShadow: 'inset 0 0 50px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        {/* Floor Decorations */}
+                        <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-2 p-4">
+                          {(selectedRoom?.floorDecorations as string[] || []).slice(0, 6).map((decId, i) => (
+                            <div key={i} className="text-2xl" style={{ transform: 'rotateZ(45deg) rotateX(-50deg)' }}>
+                              {getDecorationById(decId)?.emoji}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
 
-                    {/* Floor Decorations */}
-                    <div className="absolute bottom-20 left-0 right-0 flex justify-around px-8">
-                      {(selectedRoom?.floorDecorations as string[] || []).slice(0, 5).map((decId, i) => (
-                        <div key={i} className="text-4xl">
-                          {getDecorationById(decId)?.emoji}
+                        {/* Pets in Room */}
+                        <div className="absolute inset-0 flex items-center justify-center gap-2">
+                          {pets
+                            .filter((p) => p.roomId === selectedRoom?.id)
+                            .slice(0, 4)
+                            .map((pet) => {
+                              const petTypeData = petTypesMap.get(pet.petTypeId);
+                              return (
+                                <img
+                                  key={pet.id}
+                                  src={`/PetIcons/${petTypeData?.iconPath || "futureupdate.png"}`}
+                                  alt={pet.name}
+                                  className="w-10 h-10 object-contain"
+                                  title={pet.name}
+                                  style={{ transform: 'rotateZ(45deg) rotateX(-50deg)' }}
+                                />
+                              );
+                            })}
                         </div>
-                      ))}
-                    </div>
+                      </div>
 
-                    {/* Pets in Room */}
-                    <div className="absolute bottom-28 left-0 right-0 flex justify-center gap-4">
-                      {pets
-                        .filter((p) => p.roomId === selectedRoom?.id)
-                        .slice(0, 5)
-                        .map((pet) => {
-                          const petTypeData = petTypesMap.get(pet.petTypeId);
-                          return (
-                            <img
-                              key={pet.id}
-                              src={`/PetIcons/${petTypeData?.iconPath || "futureupdate.png"}`}
-                              alt={pet.name}
-                              className="w-16 h-16 object-contain"
-                              title={pet.name}
-                            />
-                          );
-                        })}
+                      {/* Back Wall */}
+                      <div 
+                        className="absolute w-full flex items-center justify-center"
+                        style={{
+                          height: '200px',
+                          transform: 'rotateX(90deg) translateZ(-200px)',
+                          transformOrigin: 'bottom',
+                          background: selectedRoom?.wallStyle === 'brick' ? 
+                            'repeating-linear-gradient(0deg, #a0522d 0px, #a0522d 15px, #8b4513 15px, #8b4513 30px), repeating-linear-gradient(90deg, transparent 0px, transparent 40px, #8b4513 40px, #8b4513 42px)' :
+                            selectedRoom?.wallStyle === 'wood' ? 
+                            'repeating-linear-gradient(90deg, #8b6f47 0px, #8b6f47 8px, #7a5f3a 8px, #7a5f3a 16px)' :
+                            selectedRoom?.wallStyle === 'stone' ? 
+                            'repeating-linear-gradient(45deg, #708090 0px, #708090 20px, #5f6f7f 20px, #5f6f7f 40px)' :
+                            selectedRoom?.wallStyle === 'wallpaper' ? 
+                            'repeating-linear-gradient(0deg, #f0e68c 0px, #f0e68c 15px, #e6d970 15px, #e6d970 30px)' : 
+                            'linear-gradient(180deg, #e8dcc4 0%, #d4c8b0 100%)',
+                          border: '2px solid #8b7355',
+                          boxShadow: 'inset 0 0 50px rgba(0,0,0,0.4)'
+                        }}
+                      >
+                        {/* Wall Decorations */}
+                        <div className="absolute inset-0 flex items-center justify-around px-8">
+                          {(selectedRoom?.wallDecorations as string[] || []).slice(0, 3).map((decId, i) => (
+                            <div key={i} className="text-2xl" style={{ transform: 'rotateX(-90deg) rotateZ(45deg)' }}>
+                              {getDecorationById(decId)?.emoji}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Left Wall */}
+                      <div 
+                        className="absolute h-full"
+                        style={{
+                          width: '200px',
+                          transform: 'rotateY(90deg) translateZ(-200px)',
+                          transformOrigin: 'right',
+                          background: selectedRoom?.wallStyle === 'brick' ? 
+                            'repeating-linear-gradient(0deg, #a0522d 0px, #a0522d 15px, #8b4513 15px, #8b4513 30px), repeating-linear-gradient(90deg, transparent 0px, transparent 40px, #8b4513 40px, #8b4513 42px)' :
+                            selectedRoom?.wallStyle === 'wood' ? 
+                            'repeating-linear-gradient(90deg, #8b6f47 0px, #8b6f47 8px, #7a5f3a 8px, #7a5f3a 16px)' :
+                            selectedRoom?.wallStyle === 'stone' ? 
+                            'repeating-linear-gradient(45deg, #708090 0px, #708090 20px, #5f6f7f 20px, #5f6f7f 40px)' :
+                            selectedRoom?.wallStyle === 'wallpaper' ? 
+                            'repeating-linear-gradient(0deg, #f0e68c 0px, #f0e68c 15px, #e6d970 15px, #e6d970 30px)' : 
+                            'linear-gradient(180deg, #e8dcc4 0%, #d4c8b0 100%)',
+                          border: '2px solid #8b7355',
+                          boxShadow: 'inset 0 0 50px rgba(0,0,0,0.5)'
+                        }}
+                      />
                     </div>
                   </div>
                 </CardContent>
