@@ -1777,10 +1777,30 @@ export function registerRoutes(app: Express): Server {
       });
 
       const { petTypeId, customName } = adoptSchema.parse(req.body);
-      const pet = await storage.adoptPet(req.user!.id, petTypeId, customName);
-      res.json({ success: true, pet });
+      
+      const result = await storage.adoptPetWithPayment(
+        req.user!.username,
+        petTypeId,
+        customName
+      );
+      
+      res.json({ 
+        success: true, 
+        pet: result.pet,
+        newBalance: result.newBalance 
+      });
     } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
+      const errorMessage = (error as Error).message;
+      if (errorMessage.includes("Pet type not found") || errorMessage.includes("User not found")) {
+        return res.status(404).json({ error: errorMessage });
+      }
+      if (errorMessage.includes("Insufficient coins")) {
+        return res.status(400).json({ error: errorMessage });
+      }
+      if (errorMessage.includes("Invalid pet adoption cost")) {
+        return res.status(400).json({ error: errorMessage });
+      }
+      res.status(500).json({ error: "An unexpected error occurred" });
     }
   });
 

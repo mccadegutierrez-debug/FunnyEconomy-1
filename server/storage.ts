@@ -37,7 +37,7 @@ import {
   type InsertPetActivity,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, lt, gte } from "drizzle-orm";
+import { eq, desc, and, isNull, lt, gte, sql } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -102,6 +102,11 @@ export interface IStorage {
     petTypeId: string,
     customName?: string,
   ): Promise<Pet>;
+  adoptPetWithPayment(
+    username: string,
+    petTypeId: string,
+    customName?: string,
+  ): Promise<{ pet: Pet; newBalance: number; transaction: Transaction }>;
   getUserPets(userId: string): Promise<Pet[]>;
   getPet(petId: string): Promise<Pet | undefined>;
   updatePet(petId: string, updates: Partial<Pet>): Promise<Pet>;
@@ -1124,6 +1129,83 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return pet;
+  }
+
+  async adoptPetWithPayment(
+    username: string,
+    petTypeId: string,
+    customName?: string,
+  ): Promise<{ pet: Pet; newBalance: number; transaction: Transaction }> {
+    return await db.transaction(async (tx) => {
+      const [petType] = await tx
+        .select()
+        .from(petTypes)
+        .where(eq(petTypes.petId, petTypeId));
+      
+      if (!petType) {
+        throw new Error("Pet type not found");
+      }
+
+      if (!Number.isFinite(petType.adoptionCost) || petType.adoptionCost < 0) {
+        throw new Error("Invalid pet adoption cost");
+      }
+
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.username, username));
+      
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const updatedUsers = await tx
+        .update(users)
+        .set({ coins: sql`${users.coins} - ${petType.adoptionCost}` })
+        .where(
+          and(
+            eq(users.id, user.id),
+            gte(users.coins, petType.adoptionCost)
+          )
+        )
+        .returning();
+
+      if (updatedUsers.length === 0) {
+        throw new Error(
+          `Insufficient coins. You need ${petType.adoptionCost} coins to adopt this pet.`
+        );
+      }
+
+      const updatedUser = updatedUsers[0];
+
+      const name = customName || petType.name;
+      const [pet] = await tx
+        .insert(pets)
+        .values({
+          userId: user.id,
+          petTypeId: petType.id,
+          name,
+        })
+        .returning();
+
+      const [transactionRecord] = await tx
+        .insert(transactions)
+        .values({
+          user: username,
+          type: "spend",
+          amount: petType.adoptionCost,
+          description: `Adopted ${petType.name} for ${petType.adoptionCost} coins`,
+          targetUser: null,
+          timestamp: new Date(),
+        })
+        .returning();
+
+      return {
+        pet,
+        newBalance: updatedUser.coins,
+        transaction: transactionRecord,
+      };
+    });
   }
 
   async getUserPets(userId: string): Promise<Pet[]> {
