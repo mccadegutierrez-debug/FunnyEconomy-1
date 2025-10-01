@@ -1,8 +1,23 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useState } from "react";
+
+const pepeImages = [
+  "/Pepes/404.png",
+  "/Pepes/cursedpepe.png",
+  "/Pepes/pepe.png",
+  "/Pepes/toony.gif"
+];
 
 export default function NotFound() {
+  const [currentImage, setCurrentImage] = useState("/Pepes/404.png");
+
+  const handleImageClick = () => {
+    const randomImage = pepeImages[Math.floor(Math.random() * pepeImages.length)];
+    setCurrentImage(randomImage);
+  };
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0f14] relative overflow-hidden">
       {/* Subtle gradient overlay */}
@@ -11,9 +26,10 @@ export default function NotFound() {
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
         {/* 404 Image */}
         <img 
-          src="/Pepes/404.png" 
+          src={currentImage}
           alt="404 Error" 
-          className="w-32 h-32 mb-6 object-contain"
+          className="w-32 h-32 mb-6 object-contain cursor-pointer hover:scale-110 transition-transform"
+          onClick={handleImageClick}
         />
         
         {/* 404 Text */}
