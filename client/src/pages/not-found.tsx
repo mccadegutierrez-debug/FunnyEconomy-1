@@ -1,23 +1,42 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              404 Page Not Found
-            </h1>
-          </div>
-
-          <p className="mt-4 text-sm text-gray-600">
-            WELL WHAT DID YOU EXPECT?
-          </p>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0f14] relative overflow-hidden">
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-primary/5" />
+      
+      <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
+        {/* 404 Image */}
+        <img 
+          src="/Random/404.png" 
+          alt="404 Error" 
+          className="w-32 h-32 mb-6 object-contain"
+        />
+        
+        {/* 404 Text */}
+        <h1 className="text-5xl md:text-6xl font-bold text-white mb-3">
+          404
+        </h1>
+        
+        {/* Error Message */}
+        <p className="text-gray-400 text-lg mb-8">
+          Sorry, this page was not here.
+        </p>
+        
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <Button 
+            asChild
+            variant="secondary"
+            className="bg-gray-800 hover:bg-gray-700 text-white px-6"
+          >
+            <Link href="/">Go Home</Link>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
