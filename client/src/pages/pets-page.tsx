@@ -68,6 +68,8 @@ import {
   WALL_DECORATIONS,
   FLOOR_STYLES,
   WALL_STYLES,
+  calculateRoomBonuses,
+  getDecorationById,
 } from "@shared/pet-decorations-data";
 import MaintenanceScreen from "@/components/maintenance-screen";
 import Header from "@/components/layout/header";
@@ -89,6 +91,7 @@ export default function PetsPage() {
   const [roomDialogOpen, setRoomDialogOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<PetRoom | null>(null);
   const [newRoomName, setNewRoomName] = useState("");
+  const [roomTab, setRoomTab] = useState("overview");
 
   // Training state
   const [trainingPoints, setTrainingPoints] = useState({
@@ -326,6 +329,19 @@ export default function PetsPage() {
       toast({
         title: "🐾 Pet Assigned!",
         description: "Your pet has moved to the room!",
+      });
+    },
+  });
+
+  // Hire sitter mutation
+  const hireSitterMutation = useMutation({
+    mutationFn: ({ roomId, sitterId, hours }: { roomId: string; sitterId: string; hours: number }) =>
+      apiRequest("POST", `/api/pets/rooms/${roomId}/hire-sitter`, { sitterId, hours }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pets/rooms"] });
+      toast({
+        title: "👤 Sitter Hired!",
+        description: "Your pet sitter will now care for pets in this room!",
       });
     },
   });
@@ -1406,93 +1422,521 @@ export default function PetsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Room Dialog */}
-      <Dialog open={roomDialogOpen} onOpenChange={setRoomDialogOpen}>
-        <DialogContent className="max-w-3xl" data-testid="dialog-room">
+      {/* Enhanced Room Dialog */}
+      <Dialog open={roomDialogOpen} onOpenChange={(open) => {
+        setRoomDialogOpen(open);
+        if (!open) setRoomTab("overview");
+      }}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="dialog-room">
           <DialogHeader>
-            <DialogTitle>Manage Room - {selectedRoom?.name}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Home className="w-5 h-5" />
+              {selectedRoom?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Customize your pet room with decorations and bonuses
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Floor Style</Label>
-              <Select
-                value={selectedRoom?.floorStyle}
-                onValueChange={(value) => {
-                  if (selectedRoom) {
-                    updateRoomMutation.mutate({
-                      roomId: selectedRoom.id,
-                      updates: { floorStyle: value },
-                    });
-                  }
-                }}
-              >
-                <SelectTrigger data-testid="select-floor-style">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FLOOR_STYLES.map((style) => (
-                    <SelectItem key={style.id} value={style.id}>
-                      {style.emoji} {style.name} - {style.cost} 🪙
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          
+          <Tabs value={roomTab} onValueChange={setRoomTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="decorations">Decorations</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
 
-            <div>
-              <Label>Wall Style</Label>
-              <Select
-                value={selectedRoom?.wallStyle}
-                onValueChange={(value) => {
-                  if (selectedRoom) {
-                    updateRoomMutation.mutate({
-                      roomId: selectedRoom.id,
-                      updates: { wallStyle: value },
-                    });
-                  }
-                }}
-              >
-                <SelectTrigger data-testid="select-wall-style">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {WALL_STYLES.map((style) => (
-                    <SelectItem key={style.id} value={style.id}>
-                      {style.emoji} {style.name} - {style.cost} 🪙
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-4">
+              {/* Visual Room Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Room Preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg p-8 min-h-[300px] border-4 border-slate-700">
+                    {/* Wall Style Background */}
+                    <div className="absolute inset-0 rounded-lg opacity-20 text-8xl flex items-start justify-center pt-4">
+                      {WALL_STYLES.find(s => s.id === selectedRoom?.wallStyle)?.emoji}
+                    </div>
+                    
+                    {/* Floor Style */}
+                    <div className="absolute bottom-0 left-0 right-0 h-24 rounded-b-lg opacity-30 text-6xl flex items-center justify-center">
+                      {FLOOR_STYLES.find(s => s.id === selectedRoom?.floorStyle)?.emoji}
+                    </div>
 
-            <div>
-              <Label>Assign Pets</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {pets
-                  .filter((p) => !p.roomId || p.roomId === selectedRoom?.id)
-                  .map((pet) => (
-                    <Button
-                      key={pet.id}
-                      size="sm"
-                      variant={
-                        pet.roomId === selectedRoom?.id ? "default" : "outline"
-                      }
-                      onClick={() => {
-                        if (selectedRoom) {
-                          assignPetMutation.mutate({
-                            roomId: selectedRoom.id,
-                            petId: pet.id,
-                          });
-                        }
-                      }}
-                      data-testid={`button-assign-pet-${pet.id}`}
-                    >
-                      {pet.name}
-                    </Button>
-                  ))}
-              </div>
-            </div>
-          </div>
+                    {/* Wall Decorations */}
+                    <div className="absolute top-4 left-0 right-0 flex justify-around px-8">
+                      {(selectedRoom?.wallDecorations as string[] || []).slice(0, 5).map((decId, i) => (
+                        <div key={i} className="text-4xl">
+                          {getDecorationById(decId)?.emoji}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Floor Decorations */}
+                    <div className="absolute bottom-20 left-0 right-0 flex justify-around px-8">
+                      {(selectedRoom?.floorDecorations as string[] || []).slice(0, 5).map((decId, i) => (
+                        <div key={i} className="text-4xl">
+                          {getDecorationById(decId)?.emoji}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pets in Room */}
+                    <div className="absolute bottom-28 left-0 right-0 flex justify-center gap-4">
+                      {pets
+                        .filter((p) => p.roomId === selectedRoom?.id)
+                        .slice(0, 5)
+                        .map((pet) => {
+                          const petTypeData = petTypesMap.get(pet.petTypeId);
+                          return (
+                            <img
+                              key={pet.id}
+                              src={`/PetIcons/${petTypeData?.iconPath || "futureupdate.png"}`}
+                              alt={pet.name}
+                              className="w-16 h-16 object-contain"
+                              title={pet.name}
+                            />
+                          );
+                        })}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Room Stats & Bonuses */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Room Bonuses</CardTitle>
+                  <CardDescription>
+                    Active bonuses affecting all pets in this room
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const bonuses = calculateRoomBonuses(
+                      selectedRoom?.floorStyle || 'wooden',
+                      selectedRoom?.wallStyle || 'plain',
+                      (selectedRoom?.floorDecorations as string[]) || [],
+                      (selectedRoom?.wallDecorations as string[]) || []
+                    );
+                    
+                    return bonuses.size > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {Array.from(bonuses.entries()).map(([type, value]) => (
+                          <div
+                            key={type}
+                            className="flex items-center gap-2 p-3 bg-muted rounded-lg"
+                          >
+                            {type === 'hygiene' && <Droplets className="w-4 h-4 text-blue-500" />}
+                            {type === 'fun' && <Smile className="w-4 h-4 text-purple-500" />}
+                            {type === 'energy' && <Zap className="w-4 h-4 text-yellow-500" />}
+                            {type === 'hunger' && <Heart className="w-4 h-4 text-red-500" />}
+                            {type === 'exp' && <Star className="w-4 h-4 text-orange-500" />}
+                            {type === 'decay_reduction' && <Sparkles className="w-4 h-4 text-green-500" />}
+                            <div className="flex-1">
+                              <div className="text-sm font-medium capitalize">
+                                {type.replace('_', ' ')}
+                              </div>
+                              <div className="text-lg font-bold text-green-600">
+                                +{value}%
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No bonuses active. Add decorations to boost your pets' stats!
+                      </p>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Pets in Room */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pets ({pets.filter(p => p.roomId === selectedRoom?.id).length}/5)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-2">
+                    {pets
+                      .filter((p) => !p.roomId || p.roomId === selectedRoom?.id)
+                      .map((pet) => (
+                        <Button
+                          key={pet.id}
+                          size="sm"
+                          variant={
+                            pet.roomId === selectedRoom?.id ? "default" : "outline"
+                          }
+                          onClick={() => {
+                            if (selectedRoom) {
+                              assignPetMutation.mutate({
+                                roomId: selectedRoom.id,
+                                petId: pet.id,
+                              });
+                            }
+                          }}
+                          data-testid={`button-assign-pet-${pet.id}`}
+                        >
+                          {pet.name} {pet.roomId === selectedRoom?.id && "✓"}
+                        </Button>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Decorations Tab */}
+            <TabsContent value="decorations" className="space-y-4">
+              {/* Floor Decorations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Floor Decorations ({(selectedRoom?.floorDecorations as string[] || []).length}/10)</CardTitle>
+                  <CardDescription>
+                    Purchase and place floor decorations to boost room bonuses
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {FLOOR_DECORATIONS.map((dec) => {
+                      const owned = (selectedRoom?.floorDecorations as string[] || []).includes(dec.id);
+                      const canAfford = (userProfile?.coins || 0) >= dec.cost;
+                      
+                      return (
+                        <Card key={dec.id} className={owned ? "bg-green-50 dark:bg-green-950 border-green-500" : ""}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-3xl">{dec.emoji}</span>
+                                <div>
+                                  <CardTitle className="text-sm">{dec.name}</CardTitle>
+                                  <p className="text-xs text-muted-foreground">{dec.description}</p>
+                                </div>
+                              </div>
+                              {owned && <CheckCircle className="w-5 h-5 text-green-500" />}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            <div className="text-xs space-y-1">
+                              {dec.bonuses.map((bonus, i) => (
+                                <div key={i} className="text-green-600 font-medium">
+                                  {bonus.description}
+                                </div>
+                              ))}
+                            </div>
+                            {!owned && (
+                              <Button
+                                size="sm"
+                                className="w-full"
+                                onClick={() => {
+                                  if (selectedRoom) {
+                                    const newDecorations = [...(selectedRoom.floorDecorations as string[] || []), dec.id];
+                                    updateRoomMutation.mutate({
+                                      roomId: selectedRoom.id,
+                                      updates: { floorDecorations: newDecorations },
+                                    });
+                                  }
+                                }}
+                                disabled={!canAfford || (selectedRoom?.floorDecorations as string[] || []).length >= 10}
+                                data-testid={`button-buy-floor-${dec.id}`}
+                              >
+                                {canAfford ? `Buy ${dec.cost} 🪙` : <><Lock className="w-3 h-3 mr-1" /> {dec.cost} 🪙</>}
+                              </Button>
+                            )}
+                            {owned && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="w-full"
+                                onClick={() => {
+                                  if (selectedRoom) {
+                                    const newDecorations = (selectedRoom.floorDecorations as string[] || []).filter(id => id !== dec.id);
+                                    updateRoomMutation.mutate({
+                                      roomId: selectedRoom.id,
+                                      updates: { floorDecorations: newDecorations },
+                                    });
+                                  }
+                                }}
+                                data-testid={`button-remove-floor-${dec.id}`}
+                              >
+                                Remove
+                              </Button>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Wall Decorations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Wall Decorations ({(selectedRoom?.wallDecorations as string[] || []).length}/10)</CardTitle>
+                  <CardDescription>
+                    Purchase and place wall decorations to boost room bonuses
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {WALL_DECORATIONS.map((dec) => {
+                      const owned = (selectedRoom?.wallDecorations as string[] || []).includes(dec.id);
+                      const canAfford = (userProfile?.coins || 0) >= dec.cost;
+                      
+                      return (
+                        <Card key={dec.id} className={owned ? "bg-green-50 dark:bg-green-950 border-green-500" : ""}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-3xl">{dec.emoji}</span>
+                                <div>
+                                  <CardTitle className="text-sm">{dec.name}</CardTitle>
+                                  <p className="text-xs text-muted-foreground">{dec.description}</p>
+                                </div>
+                              </div>
+                              {owned && <CheckCircle className="w-5 h-5 text-green-500" />}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            <div className="text-xs space-y-1">
+                              {dec.bonuses.map((bonus, i) => (
+                                <div key={i} className="text-green-600 font-medium">
+                                  {bonus.description}
+                                </div>
+                              ))}
+                            </div>
+                            {!owned && (
+                              <Button
+                                size="sm"
+                                className="w-full"
+                                onClick={() => {
+                                  if (selectedRoom) {
+                                    const newDecorations = [...(selectedRoom.wallDecorations as string[] || []), dec.id];
+                                    updateRoomMutation.mutate({
+                                      roomId: selectedRoom.id,
+                                      updates: { wallDecorations: newDecorations },
+                                    });
+                                  }
+                                }}
+                                disabled={!canAfford || (selectedRoom?.wallDecorations as string[] || []).length >= 10}
+                                data-testid={`button-buy-wall-${dec.id}`}
+                              >
+                                {canAfford ? `Buy ${dec.cost} 🪙` : <><Lock className="w-3 h-3 mr-1" /> {dec.cost} 🪙</>}
+                              </Button>
+                            )}
+                            {owned && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="w-full"
+                                onClick={() => {
+                                  if (selectedRoom) {
+                                    const newDecorations = (selectedRoom.wallDecorations as string[] || []).filter(id => id !== dec.id);
+                                    updateRoomMutation.mutate({
+                                      roomId: selectedRoom.id,
+                                      updates: { wallDecorations: newDecorations },
+                                    });
+                                  }
+                                }}
+                                data-testid={`button-remove-wall-${dec.id}`}
+                              >
+                                Remove
+                              </Button>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings" className="space-y-4">
+              {/* Floor & Wall Styles */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Room Styles</CardTitle>
+                  <CardDescription>
+                    Change the floor and wall styles of your room
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Floor Style</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                      {FLOOR_STYLES.map((style) => {
+                        const selected = selectedRoom?.floorStyle === style.id;
+                        const canAfford = (userProfile?.coins || 0) >= style.cost;
+                        
+                        return (
+                          <Card key={style.id} className={selected ? "bg-blue-50 dark:bg-blue-950 border-blue-500" : ""}>
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-2xl">{style.emoji}</span>
+                                  <div>
+                                    <CardTitle className="text-sm">{style.name}</CardTitle>
+                                    <p className="text-xs text-muted-foreground">{style.description}</p>
+                                  </div>
+                                </div>
+                                {selected && <CheckCircle className="w-5 h-5 text-blue-500" />}
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              {style.bonuses.length > 0 && (
+                                <div className="text-xs space-y-1 mb-2">
+                                  {style.bonuses.map((bonus, i) => (
+                                    <div key={i} className="text-green-600 font-medium">
+                                      {bonus.description}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {!selected && (
+                                <Button
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => {
+                                    if (selectedRoom) {
+                                      updateRoomMutation.mutate({
+                                        roomId: selectedRoom.id,
+                                        updates: { floorStyle: style.id },
+                                      });
+                                    }
+                                  }}
+                                  disabled={!canAfford && style.cost > 0}
+                                  data-testid={`button-floor-style-${style.id}`}
+                                >
+                                  {style.cost === 0 ? "Select" : canAfford ? `Buy ${style.cost} 🪙` : <><Lock className="w-3 h-3 mr-1" /> {style.cost} 🪙</>}
+                                </Button>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Wall Style</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                      {WALL_STYLES.map((style) => {
+                        const selected = selectedRoom?.wallStyle === style.id;
+                        const canAfford = (userProfile?.coins || 0) >= style.cost;
+                        
+                        return (
+                          <Card key={style.id} className={selected ? "bg-blue-50 dark:bg-blue-950 border-blue-500" : ""}>
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-2xl">{style.emoji}</span>
+                                  <div>
+                                    <CardTitle className="text-sm">{style.name}</CardTitle>
+                                    <p className="text-xs text-muted-foreground">{style.description}</p>
+                                  </div>
+                                </div>
+                                {selected && <CheckCircle className="w-5 h-5 text-blue-500" />}
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              {style.bonuses.length > 0 && (
+                                <div className="text-xs space-y-1 mb-2">
+                                  {style.bonuses.map((bonus, i) => (
+                                    <div key={i} className="text-green-600 font-medium">
+                                      {bonus.description}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {!selected && (
+                                <Button
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => {
+                                    if (selectedRoom) {
+                                      updateRoomMutation.mutate({
+                                        roomId: selectedRoom.id,
+                                        updates: { wallStyle: style.id },
+                                      });
+                                    }
+                                  }}
+                                  disabled={!canAfford && style.cost > 0}
+                                  data-testid={`button-wall-style-${style.id}`}
+                                >
+                                  {style.cost === 0 ? "Select" : canAfford ? `Buy ${style.cost} 🪙` : <><Lock className="w-3 h-3 mr-1" /> {style.cost} 🪙</>}
+                                </Button>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pet Sitter */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hire Pet Sitter</CardTitle>
+                  <CardDescription>
+                    Hire a sitter to automatically care for pets in this room
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {selectedRoom?.sitterId ? (
+                    <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+                      <p className="text-sm font-medium">
+                        Sitter: {AVAILABLE_SITTERS.find(s => s.sitterId === selectedRoom.sitterId)?.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Active until: {selectedRoom.sitterUntil ? new Date(selectedRoom.sitterUntil).toLocaleString() : 'N/A'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {AVAILABLE_SITTERS.map((sitter) => (
+                        <Card key={sitter.sitterId}>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm">{sitter.name}</CardTitle>
+                            <p className="text-xs text-muted-foreground">{sitter.description}</p>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-xs space-y-1 mb-2">
+                              <div>Cost: {sitter.costPerHour} 🪙/hr</div>
+                              <div className="text-green-600">Effectiveness: {sitter.effectiveness}%</div>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              onClick={() => {
+                                if (selectedRoom) {
+                                  hireSitterMutation.mutate({
+                                    roomId: selectedRoom.id,
+                                    sitterId: sitter.sitterId,
+                                    hours: 24,
+                                  });
+                                }
+                              }}
+                              disabled={!userProfile || userProfile.coins < sitter.costPerHour * 24}
+                              data-testid={`button-hire-sitter-${sitter.sitterId}`}
+                            >
+                              Hire (24h)
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </div>
