@@ -12,6 +12,7 @@ export class FreemiumService {
     const now = Date.now();
     const freemiumCooldown = 12 * 60 * 60 * 1000; // 12 hours
 
+    // Always check cooldown first, even if pending rewards exist
     if (user.lastFreemiumClaim) {
       const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
       if (now - lastClaimTime < freemiumCooldown) {
@@ -23,7 +24,7 @@ export class FreemiumService {
       }
     }
 
-    // Check if user already has pending rewards
+    // Check if user already has pending rewards (only if cooldown passed)
     const existing = pendingRewards.get(username);
     if (existing && existing.expiresAt > now) {
       return existing.rewards;
