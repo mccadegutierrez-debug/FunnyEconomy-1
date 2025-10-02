@@ -432,10 +432,14 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/freemium/claim", requireAuth, async (req, res) => {
     try {
-      const { rewardIndex } = req.body;
+      let { rewardIndex } = req.body;
+      
+      // If no rewardIndex provided, auto-generate rewards and pick the first one
       if (typeof rewardIndex !== "number") {
-        throw new Error("rewardIndex is required");
+        const rewards = await FreemiumService.generateRewards(req.user!.username);
+        rewardIndex = 0; // Auto-select first reward
       }
+      
       const result = await FreemiumService.claimReward(
         req.user!.username,
         rewardIndex,
