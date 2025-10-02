@@ -124,9 +124,6 @@ export default function ShopPage() {
     if (nameLower.includes("bank note") || nameLower.includes("banknote")) {
       return <img src="/ShopIcons/BankNote.png" alt={name} className="w-12 h-12 object-contain" />;
     }
-    if (nameLower.includes("ant")) {
-      return <img src="/ShopIcons/Ant.png" alt={name} className="w-12 h-12 object-contain" />;
-    }
     if (nameLower.includes("barrel") || nameLower.includes("sludge")) {
       return <img src="/ShopIcons/BarrelofSludge.gif" alt={name} className="w-12 h-12 object-contain" />;
     }
