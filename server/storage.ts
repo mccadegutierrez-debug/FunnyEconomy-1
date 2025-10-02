@@ -524,7 +524,7 @@ export class DatabaseStorage implements IStorage {
       // Consumables (One-time use items with temporary effects)
       {
         name: "Luck Potion",
-        description: "+10% win rate for 1 hour",
+        description: "+17.5% win rate for 1 hour",
         price: 2500,
         type: "consumable" as const,
         rarity: "uncommon" as const,
@@ -1038,13 +1038,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
-    if (addedCount > 0 || updatedCount > 0) {
-      console.log(
-        `Database initialized: ${addedCount} new items added, ${updatedCount} items updated`,
-      );
-    } else {
-      console.log("All sample items are up to date in database");
-    }
+    // Database initialization completed silently
 
     // Ensure critical users have owners badge and owner admin role
     const criticalUsers = ["deez", "savage"];
@@ -1072,7 +1066,7 @@ export class DatabaseStorage implements IStorage {
 
         if (needsUpdate) {
           await this.updateUser(user.id, updateData);
-          console.log(`Granted owners badge and owner role to ${username}`);
+          // Granted owners badge and owner role
         }
       }
     }
@@ -1841,7 +1835,7 @@ export class DatabaseStorage implements IStorage {
     for (const flag of defaultFlags) {
       if (!existingKeys.has(flag.featureKey)) {
         await db.insert(featureFlags).values(flag);
-        console.log(`Created feature flag: ${flag.featureKey}`);
+        // Created feature flag
       }
     }
   }

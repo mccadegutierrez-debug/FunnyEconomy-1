@@ -51,7 +51,7 @@ Preferred communication style: Simple, everyday language.
 - **Gaming**: Multiple game implementations (Blackjack, Slots, Coinflip, Trivia) with server-side logic
 - **Freemium Model**: Daily rewards system with 12-hour cooldown, loot tables, and item rewards with inventory management
 - **Pet System**: Pet actions (hunt, search, dig, fish) with 1-hour cooldowns between actions
-- **Item Effects**: Luck Potion provides +10% win rate boost for 1 hour
+- **Item Effects**: Luck Potion provides +17.5% win rate boost for 1 hour
 - **Transaction Logging**: Comprehensive transaction history with type categorization
 
 ### API Architecture

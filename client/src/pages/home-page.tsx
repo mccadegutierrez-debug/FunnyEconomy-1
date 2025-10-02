@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -319,6 +320,22 @@ export default function HomePage() {
   });
 
   // Stream form schema and mutation
+  const allStreamGames = [
+    { value: "among-us", label: "Among Us 👨‍🚀" },
+    { value: "fortnite", label: "Fortnite 🔫" },
+    { value: "minecraft", label: "Minecraft ⛏️" },
+    { value: "fall-guys", label: "Fall Guys 🎪" },
+    { value: "valorant", label: "Valorant 💥" },
+    { value: "apex-legends", label: "Apex Legends 🏆" },
+  ];
+
+  const getRandomGames = () => {
+    const shuffled = [...allStreamGames].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 5);
+  };
+
+  const [availableGames] = useState(getRandomGames());
+
   const streamSchema = z.object({
     gameChoice: z.enum([
       "among-us",
@@ -332,7 +349,7 @@ export default function HomePage() {
 
   const streamForm = useForm<z.infer<typeof streamSchema>>({
     resolver: zodResolver(streamSchema),
-    defaultValues: { gameChoice: "among-us" },
+    defaultValues: { gameChoice: (availableGames[0]?.value as any) || "among-us" },
   });
 
   const streamMutation = useMutation({
@@ -1048,24 +1065,11 @@ export default function HomePage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="among-us">
-                                  Among Us 👨‍🚀
-                                </SelectItem>
-                                <SelectItem value="fortnite">
-                                  Fortnite 🔫 (Trending!)
-                                </SelectItem>
-                                <SelectItem value="minecraft">
-                                  Minecraft ⛏️
-                                </SelectItem>
-                                <SelectItem value="fall-guys">
-                                  Fall Guys 🎪
-                                </SelectItem>
-                                <SelectItem value="valorant">
-                                  Valorant 💥 (Trending!)
-                                </SelectItem>
-                                <SelectItem value="apex-legends">
-                                  Apex Legends 🏆
-                                </SelectItem>
+                                {availableGames.map((game) => (
+                                  <SelectItem key={game.value} value={game.value}>
+                                    {game.label}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />

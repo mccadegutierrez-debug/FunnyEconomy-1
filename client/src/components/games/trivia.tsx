@@ -48,9 +48,11 @@ export default function Trivia() {
     onSuccess: (data) => {
       setGameResult(data);
       toast({
-        title: data.win ? "Correct Answer! 🧠" : "Wrong Answer 😔",
+        title: data.win ? "Correct Answer! 🧠" : data.timeout ? "Time's Up! ⏰" : "Wrong Answer 😔",
         description: data.win
           ? `+${data.amount} coins, +${data.newXP - (data.newXP - 20)} XP!`
+          : data.timeout
+          ? `Timeout penalty: ${data.amount} coins. The correct answer was: ${data.correctAnswer}`
           : `The correct answer was: ${data.correctAnswer}`,
         variant: data.win ? "default" : "destructive",
       });
@@ -115,11 +117,11 @@ export default function Trivia() {
       variant: "destructive",
     });
     
-    // Submit with -1 to indicate no answer
+    // Submit with -1 to indicate timeout (always -1, regardless of selected answer)
     if (currentQuestion) {
       answerMutation.mutate({
         questionId: currentQuestion.questionId,
-        answer: selectedAnswer ?? -1,
+        answer: -1,
       });
     }
   };
@@ -324,6 +326,14 @@ export default function Trivia() {
                   </div>
                 )}
 
+                {gameResult.timeout && (
+                  <div className="space-y-2 mb-4">
+                    <p className="text-lg font-semibold text-destructive">
+                      {gameResult.amount} coins (timeout penalty)
+                    </p>
+                  </div>
+                )}
+
                 <p className="text-muted-foreground mb-4">
                   New Balance: {gameResult.newBalance.toLocaleString()} coins
                 </p>
@@ -363,7 +373,8 @@ export default function Trivia() {
               <p>• Answer questions about memes and internet culture</p>
               <p>• <span className="text-primary font-bold">30 seconds</span> to answer each question</p>
               <p>• Correct answers earn 100 coins and 20 XP</p>
-              <p>• No penalty for wrong answers</p>
+              <p>• <span className="text-destructive font-bold">-75 coins penalty</span> if you run out of time</p>
+              <p>• No penalty for wrong answers (only timeouts)</p>
               <p>• Skip questions if you're unsure</p>
               <p>• Questions cover various difficulties</p>
             </CardContent>

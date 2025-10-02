@@ -2426,12 +2426,12 @@ export function registerRoutes(app: Express): Server {
             break;
         }
       } catch (error) {
-        console.error("WebSocket message error:", error);
+        // WebSocket message error handled silently
       }
     });
 
     ws.on("close", () => {
-      console.log("Client disconnected");
+      // Client disconnected
     });
   });
 

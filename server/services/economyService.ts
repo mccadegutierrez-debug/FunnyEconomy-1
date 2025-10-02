@@ -192,7 +192,7 @@ export class EconomyService {
     const luckPotion = user.inventory.find(
       (item) => item.itemId.includes("luck") && item.equipped,
     );
-    if (luckPotion) successChance += 0.10;
+    if (luckPotion) successChance += 0.175;
 
     successChance = Math.max(0.1, Math.min(0.8, successChance)); // Clamp between 10% and 80%
 
@@ -1800,34 +1800,30 @@ export class EconomyService {
       };
     }
 
-    const games = {
-      "among-us": {
-        name: "Among Us",
-        viewers: 500,
-        coins: 200,
-        trending: false,
-      },
-      fortnite: { name: "Fortnite", viewers: 1000, coins: 300, trending: true },
-      minecraft: {
-        name: "Minecraft",
-        viewers: 800,
-        coins: 250,
-        trending: false,
-      },
-      "fall-guys": {
-        name: "Fall Guys",
-        viewers: 600,
-        coins: 220,
-        trending: false,
-      },
-      valorant: { name: "Valorant", viewers: 1200, coins: 350, trending: true },
-      "apex-legends": {
-        name: "Apex Legends",
-        viewers: 900,
-        coins: 280,
-        trending: false,
-      },
-    };
+    const allGames = [
+      { key: "among-us", name: "Among Us", viewers: 500, coins: 200 },
+      { key: "fortnite", name: "Fortnite", viewers: 1000, coins: 300 },
+      { key: "minecraft", name: "Minecraft", viewers: 800, coins: 250 },
+      { key: "fall-guys", name: "Fall Guys", viewers: 600, coins: 220 },
+      { key: "valorant", name: "Valorant", viewers: 1200, coins: 350 },
+      { key: "apex-legends", name: "Apex Legends", viewers: 900, coins: 280 },
+    ];
+
+    const trendingCount = Math.floor(Math.random() * 3);
+    const trendingIndices = new Set<number>();
+    while (trendingIndices.size < trendingCount) {
+      trendingIndices.add(Math.floor(Math.random() * allGames.length));
+    }
+
+    const games: Record<string, any> = {};
+    allGames.forEach((game, index) => {
+      games[game.key] = {
+        name: game.name,
+        viewers: game.viewers,
+        coins: game.coins,
+        trending: trendingIndices.has(index),
+      };
+    });
 
     const selectedGameKey =
       gameChoice ||

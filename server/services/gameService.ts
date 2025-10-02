@@ -272,8 +272,9 @@ export class GameService {
       throw new Error("Invalid question");
     }
 
+    const isTimeout = answer === -1;
     const win = answer === question.correct;
-    const amount = win ? 100 : 0; // Fixed reward for trivia
+    let amount = win ? 100 : 0;
 
     // Parse gameStats
     const gameStats =
@@ -298,6 +299,34 @@ export class GameService {
         targetUser: null,
         description: `Trivia correct answer: +${amount} coins, +20 XP`,
       });
+    } else if (isTimeout) {
+      amount = -75;
+      const penaltyAmount = Math.min(75, user.coins);
+      
+      await storage.updateUser(user.id, {
+        coins: user.coins - penaltyAmount,
+        gameStats: {
+          ...gameStats,
+          triviaLosses: (gameStats.triviaLosses || 0) + 1,
+        },
+      });
+
+      await storage.createTransaction({
+        user: username,
+        type: "spend",
+        amount: penaltyAmount,
+        targetUser: null,
+        description: `Trivia timeout penalty: -${penaltyAmount} coins`,
+      });
+
+      return {
+        win: false,
+        amount: -penaltyAmount,
+        correctAnswer: question.options[question.correct],
+        newBalance: user.coins - penaltyAmount,
+        newXP: user.xp,
+        timeout: true,
+      };
     } else {
       await storage.updateUser(user.id, {
         gameStats: {

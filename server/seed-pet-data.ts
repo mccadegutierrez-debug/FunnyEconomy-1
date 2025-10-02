@@ -17,7 +17,6 @@ export async function seedPetData(): Promise<void> {
     const missingPetTypes = STATIC_PET_TYPES.filter(p => !existingPetIds.has(p.petId));
     
     if (missingPetTypes.length > 0) {
-      console.log(`Seeding ${missingPetTypes.length} missing pet types...`);
       for (const petType of missingPetTypes) {
         await db.insert(petTypes).values({
           petId: petType.petId,
@@ -35,11 +34,9 @@ export async function seedPetData(): Promise<void> {
         });
         seededCount++;
       }
-      console.log(`Seeded ${missingPetTypes.length} pet types`);
     }
 
     if (existingPetSkills.length === 0) {
-      console.log("Seeding pet skills...");
       for (const skill of AVAILABLE_SKILLS) {
         await db.insert(petSkills).values({
           skillId: skill.skillId,
@@ -51,11 +48,9 @@ export async function seedPetData(): Promise<void> {
         });
         seededCount++;
       }
-      console.log(`Seeded ${AVAILABLE_SKILLS.length} pet skills`);
     }
 
     if (existingPetSitters.length === 0) {
-      console.log("Seeding pet sitters...");
       for (const sitter of AVAILABLE_SITTERS) {
         await db.insert(petSitters).values({
           sitterId: sitter.sitterId,
@@ -67,13 +62,6 @@ export async function seedPetData(): Promise<void> {
         });
         seededCount++;
       }
-      console.log(`Seeded ${AVAILABLE_SITTERS.length} pet sitters`);
-    }
-
-    if (seededCount > 0) {
-      console.log(
-        `Pet data seeding complete: ${seededCount} total items seeded`,
-      );
     }
   } catch (error) {
     console.error("Error seeding pet data:", error);

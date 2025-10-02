@@ -42,10 +42,8 @@ export function useWebSocket() {
           // Handle authentication response
           if (message.type === "auth_success") {
             setAuthenticated(true);
-            console.log("WebSocket authenticated successfully");
           } else if (message.type === "auth_error") {
             setAuthenticated(false);
-            console.warn("WebSocket authentication failed:", message.message);
             // Try to reconnect after a short delay in case session was just loading
             setTimeout(() => {
               if (ws.current?.readyState === WebSocket.CLOSED) {
@@ -56,10 +54,10 @@ export function useWebSocket() {
             // Only add chat messages to the messages array
             setMessages((prev) => [...prev.slice(-99), message]); // Keep last 100 messages
           } else if (message.type === "error") {
-            console.error("WebSocket error:", message.message);
+            // WebSocket error handled silently
           }
         } catch (error) {
-          console.error("WebSocket message parse error:", error);
+          // WebSocket parse error handled silently
         }
       };
 
@@ -68,8 +66,8 @@ export function useWebSocket() {
         setAuthenticated(false);
       };
 
-      ws.current.onerror = (error) => {
-        console.error("WebSocket connection error:", error);
+      ws.current.onerror = () => {
+        // WebSocket connection error handled silently
       };
     };
 
