@@ -199,6 +199,18 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(users)
       .where(eq(users.username, username));
+    
+    if (user) {
+      // Ensure inventory is always an array
+      if (!Array.isArray(user.inventory)) {
+        user.inventory = [];
+      }
+      // Ensure achievements is always an array
+      if (!Array.isArray(user.achievements)) {
+        user.achievements = [];
+      }
+    }
+    
     return user || undefined;
   }
 
