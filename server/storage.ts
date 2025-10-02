@@ -199,7 +199,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(users)
       .where(eq(users.username, username));
-    
+
     if (user) {
       // Ensure inventory is always an array
       if (!Array.isArray(user.inventory)) {
@@ -210,7 +210,7 @@ export class DatabaseStorage implements IStorage {
         user.achievements = [];
       }
     }
-    
+
     return user || undefined;
   }
 
@@ -524,19 +524,19 @@ export class DatabaseStorage implements IStorage {
       // Consumables (One-time use items with temporary effects)
       {
         name: "Luck Potion",
-        description: "+17.5% win rate for 1 hour",
+        description: "Increases win rate for 1 hour",
         price: 2500,
         type: "consumable" as const,
-        rarity: "uncommon" as const,
+        rarity: "rare" as const,
         effects: {
-          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          passive: { winRateBoost: 0.2, coinsPerHour: 0 },
           active: {
             useCooldown: 3600000,
             duration: 3600000,
             effect: "luck_boost",
           },
         },
-        stock: 50,
+        stock: 25,
         currentPrice: 2500,
       },
       {
@@ -1015,6 +1015,32 @@ export class DatabaseStorage implements IStorage {
         stock: 250,
         currentPrice: 2500,
       },
+      {
+        name: "Lucky Charm",
+        description: "Permanent +20% win rate boost",
+        price: 5000,
+        type: "equipment" as const,
+        rarity: "epic" as const,
+        effects: {
+          passive: { winRateBoost: 0.2, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "none" },
+        },
+        stock: 10,
+        currentPrice: 5000,
+      },
+      {
+        name: "Four Leaf Clover",
+        description: "Permanent +20% win rate boost",
+        price: 3000,
+        type: "equipment" as const,
+        rarity: "rare" as const,
+        effects: {
+          passive: { winRateBoost: 0.2, coinsPerHour: 0 },
+          active: { useCooldown: 0, duration: 0, effect: "none" },
+        },
+        stock: 20,
+        currentPrice: 3000,
+      },
     ];
 
     // Upsert items - add new ones and update existing ones to ensure consistency
@@ -1161,7 +1187,7 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(petTypes)
         .where(eq(petTypes.petId, petTypeId));
-      
+
       if (!petType) {
         throw new Error("Pet type not found");
       }
@@ -1174,7 +1200,7 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(users)
         .where(eq(users.username, username));
-      
+
       if (!user) {
         throw new Error("User not found");
       }
@@ -1295,7 +1321,7 @@ export class DatabaseStorage implements IStorage {
     if (pet.isDead) return false;
 
     const shouldDie = pet.hunger === 0 && pet.energy === 0;
-    
+
     if (shouldDie) {
       await this.updatePet(pet.id, {
         isDead: true,
@@ -1486,7 +1512,7 @@ export class DatabaseStorage implements IStorage {
 
   async deletePetRoom(roomId: string): Promise<void> {
     await db.update(pets).set({ roomId: null }).where(eq(pets.roomId, roomId));
-    
+
     await db.delete(petRooms).where(eq(petRooms.id, roomId));
   }
 
