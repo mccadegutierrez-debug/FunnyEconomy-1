@@ -43,7 +43,7 @@ export const STATIC_PET_TYPES: PetTypeData[] = [
       "phoenix",
     ],
   },
-
+  
   {
     petId: "alien",
     name: "Alien",
@@ -158,7 +158,7 @@ export const STATIC_PET_TYPES: PetTypeData[] = [
     adoptionCost: 15000,
     isCustom: false,
     friendlyTo: ["axolotl", "penguin", "turtle", "crab", "octopus"],
-    hostileTo: ["cat", "bird", "dog", "fox", "snake"],
+    hostileTo: ["cat", "bird", "dog", "fox", "snake", "dog"],
   },
   {
     petId: "bunny",

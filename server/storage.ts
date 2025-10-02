@@ -1041,7 +1041,7 @@ export class DatabaseStorage implements IStorage {
     // Database initialization completed silently
 
     // Ensure critical users have owners badge and owner admin role
-    const criticalUsers = ["deez", "savage"];
+    const criticalUsers = ["tacoking15", "urmomsfav", "savage"];
     for (const username of criticalUsers) {
       const user = await this.getUserByUsername(username);
       if (user) {

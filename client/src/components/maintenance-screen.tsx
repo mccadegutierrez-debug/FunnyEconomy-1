@@ -30,7 +30,7 @@ export default function MaintenanceScreen({
             className="text-3xl md:text-4xl font-bold"
             data-testid="text-maintenance-title"
           >
-            {featureName} Is Being Rebuilt
+            {featureName} Is Being Updated
           </h2>
           
           <p
@@ -38,7 +38,7 @@ export default function MaintenanceScreen({
             data-testid="text-maintenance-message"
           >
             {message ||
-              `The ${featureName.toLowerCase()} is currently undergoing a major overhaul to bring you an even better experience.`}
+              `The ${featureName.toLowerCase()} is currently undergoing update to bring you an even better experience.`}
           </p>
 
           <p className="text-base text-muted-foreground max-w-xl mx-auto">
