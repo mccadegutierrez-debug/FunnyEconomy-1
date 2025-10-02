@@ -118,6 +118,21 @@ export default function ShopPage() {
     if (nameLower.includes("shovel")) {
       return <img src="/ShopIcons/Shovel.png" alt={name} className="w-12 h-12 object-contain" />;
     }
+    if (nameLower.includes("laptop")) {
+      return <img src="/ShopIcons/Laptop.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("bank note") || nameLower.includes("banknote")) {
+      return <img src="/ShopIcons/BankNote.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("ant")) {
+      return <img src="/ShopIcons/Ant.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("barrel") || nameLower.includes("sludge")) {
+      return <img src="/ShopIcons/BarrelofSludge.gif" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("meme trophy") || (nameLower.includes("trophy") && nameLower.includes("pepe"))) {
+      return <img src="/ShopIcons/PepeTrophy.webp" alt={name} className="w-12 h-12 object-contain" />;
+    }
     
     // Lootbox items
     if (type === "lootbox" || nameLower.includes("box") || nameLower.includes("chest") || nameLower.includes("pack")) {
