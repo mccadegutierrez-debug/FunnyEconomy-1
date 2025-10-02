@@ -236,21 +236,30 @@ export default function FreemiumPage() {
   }
 
   if (error) {
+    const errorMessage = (error as Error).message || "";
+    const hoursMatch = errorMessage.match(/(\d+)\s*hours?\s*remaining/i);
+    const hoursRemaining = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+    
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
-            <Card className="p-8">
-              <div className="text-6xl mb-4">⏰</div>
-              <h2 className="text-3xl font-bold mb-4">Rewards On Cooldown</h2>
-              <p className="text-xl text-muted-foreground mb-6">
-                {(error as Error).message ||
-                  "You need to wait before claiming more rewards."}
+            <Card className="p-8 bg-card/50 border-border/50">
+              <div className="text-7xl mb-6">⏰</div>
+              <h2 className="text-4xl font-bold mb-4">Come Back Later!</h2>
+              <p className="text-xl text-muted-foreground mb-4">
+                Your next reward will be ready in about{" "}
+                <span className="text-primary font-bold">{hoursRemaining} hours</span>.
+              </p>
+              <p className="text-base text-muted-foreground mb-6">
+                Daily rewards refresh every 12 hours. Check back soon for your next chance to claim awesome prizes!
               </p>
               <Button
                 onClick={() => refetch()}
                 data-testid="button-retry-rewards"
+                variant="outline"
+                className="mt-4"
               >
                 Check Again
               </Button>

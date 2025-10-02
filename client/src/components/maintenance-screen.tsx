@@ -1,11 +1,8 @@
-import { Construction, Home } from "lucide-react";
+import { Wrench, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -23,43 +20,39 @@ export default function MaintenanceScreen({
       className="flex items-center justify-center min-h-[60vh] p-4"
       data-testid="status-maintenance"
     >
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Construction className="w-16 h-16 text-yellow-500" />
+      <Card className="w-full max-w-2xl bg-card/50 border-border/50">
+        <CardContent className="text-center space-y-6 py-12 px-8">
+          <div className="flex justify-center mb-6">
+            <Wrench className="w-20 h-20 text-muted-foreground" />
           </div>
-          <CardTitle
-            className="text-2xl font-impact"
+          
+          <h2
+            className="text-3xl md:text-4xl font-bold"
             data-testid="text-maintenance-title"
           >
-            Feature Under Maintenance
-          </CardTitle>
-          <CardDescription
-            className="text-base"
-            data-testid="text-maintenance-feature"
-          >
-            {featureName} is currently disabled
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
+            {featureName} Is Being Rebuilt
+          </h2>
+          
           <p
-            className="text-muted-foreground"
+            className="text-lg text-muted-foreground max-w-xl mx-auto"
             data-testid="text-maintenance-message"
           >
             {message ||
-              "This feature is temporarily unavailable while we perform maintenance. Please check back later."}
+              `The ${featureName.toLowerCase()} is currently undergoing a major overhaul to bring you an even better experience.`}
           </p>
-          <div className="pt-4 border-t">
-            <p className="text-sm text-muted-foreground">
-              Thank you for your patience!
-            </p>
+
+          <p className="text-base text-muted-foreground max-w-xl mx-auto">
+            We appreciate your patience as we work on exciting new features and improvements. Check back soon for updates!
+          </p>
+
+          <div className="pt-4">
+            <Button asChild className="px-6" data-testid="button-go-home">
+              <Link href="/">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Return to Home
+              </Link>
+            </Button>
           </div>
-          <Button asChild className="w-full" data-testid="button-go-home">
-            <Link href="/">
-              <Home className="w-4 h-4 mr-2" />
-              Back to Home
-            </Link>
-          </Button>
         </CardContent>
       </Card>
     </div>

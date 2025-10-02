@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Clock } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -17,6 +18,8 @@ export default function Trivia() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [gameResult, setGameResult] = useState<any>(null);
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(30);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const { refetch: getQuestion, isFetching: loadingQuestion } = useQuery({
@@ -82,9 +85,50 @@ export default function Trivia() {
     }
   };
 
+  // Timer effect
+  useEffect(() => {
+    if (currentQuestion && !gameResult) {
+      setTimeLeft(30);
+      
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            // Time's up! Auto-submit with no answer
+            if (timerRef.current) clearInterval(timerRef.current);
+            handleTimeUp();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
+    }
+  }, [currentQuestion, gameResult]);
+
+  const handleTimeUp = () => {
+    toast({
+      title: "Time's Up! ⏰",
+      description: "You ran out of time to answer the question!",
+      variant: "destructive",
+    });
+    
+    // Submit with -1 to indicate no answer
+    if (currentQuestion) {
+      answerMutation.mutate({
+        questionId: currentQuestion.questionId,
+        answer: selectedAnswer ?? -1,
+      });
+    }
+  };
+
   const startNewQuestion = async () => {
+    if (timerRef.current) clearInterval(timerRef.current);
     setSelectedAnswer(null);
     setGameResult(null);
+    setTimeLeft(30);
     const result = await getQuestion();
     if (result.data) {
       setCurrentQuestion(result.data);
@@ -101,6 +145,8 @@ export default function Trivia() {
       return;
     }
 
+    if (timerRef.current) clearInterval(timerRef.current);
+    
     answerMutation.mutate({
       questionId: currentQuestion.questionId,
       answer: selectedAnswer,
@@ -164,6 +210,25 @@ export default function Trivia() {
             </div>
           ) : currentQuestion && !gameResult ? (
             <div className="space-y-6">
+              {/* Timer */}
+              <Card className={`${timeLeft <= 10 ? "border-destructive animate-pulse" : "border-primary/50"}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className={`w-5 h-5 ${timeLeft <= 10 ? "text-destructive" : "text-primary"}`} />
+                      <span className="font-bold">Time Remaining:</span>
+                    </div>
+                    <Badge variant={timeLeft <= 10 ? "destructive" : "default"} className="text-lg px-4 py-1">
+                      {timeLeft}s
+                    </Badge>
+                  </div>
+                  <Progress 
+                    value={(timeLeft / 30) * 100} 
+                    className={`mt-2 ${timeLeft <= 10 ? "bg-destructive/20" : ""}`}
+                  />
+                </CardContent>
+              </Card>
+
               {/* Question */}
               <Card className="bg-muted p-6">
                 <h3
@@ -296,6 +361,7 @@ export default function Trivia() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>• Answer questions about memes and internet culture</p>
+              <p>• <span className="text-primary font-bold">30 seconds</span> to answer each question</p>
               <p>• Correct answers earn 100 coins and 20 XP</p>
               <p>• No penalty for wrong answers</p>
               <p>• Skip questions if you're unsure</p>

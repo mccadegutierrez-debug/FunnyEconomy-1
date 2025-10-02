@@ -186,25 +186,68 @@ export class GameService {
     };
   }
 
+  // Trivia questions bank
+  private static getTriviaQuestions() {
+    return [
+      { question: "In what year did 'Rickrolling' become a widespread internet phenomenon?", options: ["2005", "2007", "2009", "2011"], correct: 1 },
+      { question: "What is the name of the 'Distracted Boyfriend' meme model?", options: ["Antonio Guillem", "Mario Testino", "Hans Moleman", "Rick Astley"], correct: 0 },
+      { question: "Which dog breed is Doge?", options: ["Akita", "Shiba Inu", "Corgi", "Husky"], correct: 1 },
+      { question: "What does 'F' mean when typed in chat?", options: ["Follow", "Pay respects", "Fail", "Friend"], correct: 1 },
+      { question: "Who created the 'Loss' webcomic meme?", options: ["Tim Buckley", "Randall Munroe", "Matt Groening", "Scott Adams"], correct: 0 },
+      { question: "What was the original name of the 'Hide the Pain Harold' meme subject?", options: ["Harold Schmidt", "András Arató", "Wilhelm Scream", "Boris Yeltsin"], correct: 1 },
+      { question: "In which year was Pepe the Frog first created?", options: ["2003", "2005", "2008", "2010"], correct: 1 },
+      { question: "What is the 'Tide Pod Challenge' an example of?", options: ["Viral dance", "Dangerous internet challenge", "Gaming trend", "Cooking meme"], correct: 1 },
+      { question: "Who is the creator of Wojak (Feels Guy)?", options: ["Unknown", "Christian Weston Chandler", "4chan collectively", "Zach Braff"], correct: 0 },
+      { question: "What does 'YEET' primarily express?", options: ["Agreement", "Excitement/force", "Sadness", "Confusion"], correct: 1 },
+      { question: "The 'This is Fine' dog is from which webcomic?", options: ["Cyanide & Happiness", "Gunshow", "XKCD", "Penny Arcade"], correct: 1 },
+      { question: "What year did the 'Harlem Shake' meme trend peak?", options: ["2011", "2013", "2015", "2017"], correct: 1 },
+      { question: "Who originally sang 'Never Gonna Give You Up'?", options: ["Rick James", "Rick Springfield", "Rick Astley", "Ricky Martin"], correct: 2 },
+      { question: "What does 'SMH' stand for?", options: ["So Much Hate", "Shaking My Head", "Send Me Help", "Super Mario Head"], correct: 1 },
+      { question: "The 'Woman Yelling at Cat' meme features a cat named what?", options: ["Grumpy Cat", "Smudge", "Nyan Cat", "Keyboard Cat"], correct: 1 },
+      { question: "What is the real name of the 'Overly Attached Girlfriend'?", options: ["Laina Morris", "Emma Watson", "Sarah Anderson", "Kate McKinnon"], correct: 0 },
+      { question: "In what year was the first Tweet posted?", options: ["2004", "2006", "2008", "2010"], correct: 1 },
+      { question: "What does 'NPC' stand for in meme culture?", options: ["New Pop Culture", "Non-Player Character", "Not Properly Cool", "National Pet Convention"], correct: 1 },
+      { question: "Which platform did TikTok merge with in 2018?", options: ["Vine", "Musical.ly", "Dubsmash", "Snapchat"], correct: 1 },
+      { question: "What is the 'OK Boomer' meme a response to?", options: ["Good ideas", "Out-of-touch comments", "Greetings", "Agreement"], correct: 1 },
+      { question: "Who is the 'Dat Boi' meme character?", options: ["A frog on a unicycle", "A boy dabbing", "A dancing baby", "A surprised cat"], correct: 0 },
+      { question: "What does 'FOMO' stand for?", options: ["Fear Of Missing Out", "Fans Of Meme Origins", "Forever On My Own", "First Of Many Outbursts"], correct: 0 },
+      { question: "The 'Stonks' meme is intentionally misspelled from what word?", options: ["Stocks", "Strengths", "Stones", "Stunks"], correct: 0 },
+      { question: "What was Vine's maximum video length?", options: ["3 seconds", "6 seconds", "10 seconds", "15 seconds"], correct: 1 },
+      { question: "Which meme format uses 'Is this a pigeon?'?", options: ["Anime butterfly", "Bird watching", "Pokemon identification", "Nature documentary"], correct: 0 },
+      { question: "What does 'GOAT' stand for in internet slang?", options: ["Going Over All Topics", "Greatest Of All Time", "Got Only A Trophy", "Good Old American Tradition"], correct: 1 },
+      { question: "The 'Dab' dance move originated from which city?", options: ["New York", "Los Angeles", "Atlanta", "Miami"], correct: 2 },
+      { question: "What is 'Copypasta'?", options: ["Italian cuisine", "Repeated text blocks", "Copy-paste software", "A type of noodle"], correct: 1 },
+      { question: "Big Chungus is a meme featuring which character?", options: ["Mickey Mouse", "Bugs Bunny", "Scooby Doo", "Tom Cat"], correct: 1 },
+      { question: "What does 'TFW' mean?", options: ["Thanks For Waiting", "That Face When", "Too Fast Walking", "The Final Word"], correct: 1 },
+      { question: "The 'Coffin Dance' meme originated from which country?", options: ["Brazil", "Nigeria", "Ghana", "Kenya"], correct: 2 },
+      { question: "What is the name of the 'Disaster Girl' in the famous meme?", options: ["Zoë Roth", "Chloe Clem", "Sammy Griner", "Success Kid"], correct: 0 },
+      { question: "Which year did 'Harambe' memes become popular?", options: ["2014", "2016", "2018", "2020"], correct: 1 },
+      { question: "What does 'Stan' mean in internet culture?", options: ["Standard", "Stand alone", "Obsessive fan", "Stay and dance"], correct: 2 },
+      { question: "The 'Expanding Brain' meme shows how many brain levels typically?", options: ["2", "4", "6", "8"], correct: 1 },
+      { question: "What is a 'Karen' meme stereotype known for?", options: ["Being tech-savvy", "Asking for managers", "Cooking skills", "Fashion sense"], correct: 1 },
+      { question: "What does 'Salty' mean in gaming/meme culture?", options: ["Tasty", "Upset/bitter", "Sweaty", "Skilled"], correct: 1 },
+      { question: "The 'Surprised Pikachu' face is from which Pokémon episode?", options: ["Episode 1", "Episode 10", "Episode 39", "Episode 100"], correct: 0 },
+      { question: "What does 'Bruh' typically express?", options: ["Happiness", "Disbelief/dismay", "Agreement", "Confusion"], correct: 1 },
+      { question: "Which meme cat is known for looking perpetually grumpy?", options: ["Keyboard Cat", "Grumpy Cat", "Nyan Cat", "Business Cat"], correct: 1 },
+      { question: "What is 'Poggers' used to express?", options: ["Sadness", "Excitement", "Anger", "Sleep"], correct: 1 },
+      { question: "The 'Drake' meme template shows Drake doing what?", options: ["Dancing", "Rejecting/approving", "Singing", "Gaming"], correct: 1 },
+      { question: "What does 'Ratio' mean on Twitter?", options: ["Math problem", "Getting more likes on reply", "Following ratio", "Tweet frequency"], correct: 1 },
+      { question: "Which animal is associated with the 'Press F' meme?", options: ["Dog", "Cat", "None", "Bird"], correct: 2 },
+      { question: "What is 'Sheesh' used for?", options: ["To express awe", "To show disgust", "To say hello", "To end conversations"], correct: 0 },
+      { question: "The 'Mocking SpongeBob' meme uses which typing style?", options: ["ALL CAPS", "all lowercase", "aLtErNaTiNg CaPs", "no spaces"], correct: 2 },
+      { question: "What does 'Cap' mean when someone says 'No cap'?", options: ["Hat", "Lie", "Limit", "Cap lock"], correct: 1 },
+      { question: "Which game popularized the 'Victory Royale' phrase?", options: ["PUBG", "Apex Legends", "Fortnite", "Warzone"], correct: 2 },
+      { question: "What is the 'Dank' in 'Dank Memes'?", options: ["Wet", "Dark", "High quality/cool", "Database"], correct: 2 },
+      { question: "The 'Bernie Sanders mittens' meme came from which event?", options: ["2016 DNC", "2020 Inauguration", "2021 Inauguration", "Vermont Rally"], correct: 2 },
+    ];
+  }
+
   // Trivia implementation
   static async playTrivia(username: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    const questions = [
-      {
-        question: "What is the capital of France?",
-        options: ["London", "Paris", "Berlin", "Madrid"],
-        correct: 1,
-      },
-      {
-        question: "Who painted the Mona Lisa?",
-        options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"],
-        correct: 2,
-      },
-      { question: "What is 2 + 2?", options: ["3", "4", "5", "6"], correct: 1 },
-    ];
-
+    const questions = this.getTriviaQuestions();
     const question = questions[this.getSecureRandom() % questions.length];
 
     return {
@@ -222,19 +265,7 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    const questions = [
-      {
-        question: "What is the capital of France?",
-        options: ["London", "Paris", "Berlin", "Madrid"],
-        correct: 1,
-      },
-      {
-        question: "Who painted the Mona Lisa?",
-        options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"],
-        correct: 2,
-      },
-      { question: "What is 2 + 2?", options: ["3", "4", "5", "6"], correct: 1 },
-    ];
+    const questions = this.getTriviaQuestions();
     const question = questions[questionId];
 
     if (!question) {
