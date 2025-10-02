@@ -10,6 +10,18 @@ export class FreemiumService {
     if (!user) throw new Error("User not found");
 
     const now = Date.now();
+    const freemiumCooldown = 12 * 60 * 60 * 1000; // 12 hours
+
+    if (user.lastFreemiumClaim) {
+      const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
+      if (now - lastClaimTime < freemiumCooldown) {
+        const remaining = freemiumCooldown - (now - lastClaimTime);
+        const hoursRemaining = Math.ceil(remaining / (60 * 60 * 1000));
+        throw new Error(
+          `Freemium cooldown: ${hoursRemaining} hours remaining`,
+        );
+      }
+    }
 
     // Check if user already has pending rewards
     const existing = pendingRewards.get(username);
@@ -153,14 +165,15 @@ export class FreemiumService {
 
       selectedReward.newBalance = user.coins + selectedReward.amount;
     } else {
-      // Item reward
-      const existingItem = user.inventory.find(
+      // Item reward - ensure inventory is an array
+      const inventory = Array.isArray(user.inventory) ? user.inventory : [];
+      const existingItem = inventory.find(
         (item) => item.itemId === selectedReward.item.id,
       );
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
-        user.inventory.push({
+        inventory.push({
           itemId: selectedReward.item.id,
           quantity: 1,
           equipped: false,
@@ -168,7 +181,7 @@ export class FreemiumService {
       }
 
       await storage.updateUser(user.id, {
-        inventory: user.inventory,
+        inventory: inventory,
         lastFreemiumClaim: new Date(now),
       });
 
@@ -193,6 +206,9 @@ export class FreemiumService {
     const numItems = 2 + Math.floor(Math.random() * 4); // 2-5 items
     const lootboxContents = [];
 
+    // Ensure inventory is an array
+    const inventory = Array.isArray(user.inventory) ? user.inventory : [];
+
     for (let i = 0; i < numItems; i++) {
       // Weighted selection favoring common items
       const random = Math.random();
@@ -212,13 +228,13 @@ export class FreemiumService {
         rarityItems[Math.floor(Math.random() * rarityItems.length)];
 
       // Add to user inventory
-      const existingItem = user.inventory.find(
+      const existingItem = inventory.find(
         (item: any) => item.itemId === selectedItem.id,
       );
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
-        user.inventory.push({
+        inventory.push({
           itemId: selectedItem.id,
           quantity: 1,
           equipped: false,
@@ -236,7 +252,14 @@ export class FreemiumService {
     const user = await storage.getUserByUsername(username);
     if (!user) return null;
 
-    return 0; // Can always claim
+    if (!user.lastFreemiumClaim) return 0; // Can claim now
+
+    const freemiumCooldown = 12 * 60 * 60 * 1000; // 12 hours
+    const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
+    const nextClaimTime = lastClaimTime + freemiumCooldown;
+    const now = Date.now();
+
+    return Math.max(0, nextClaimTime - now);
   }
 
   // Get pending rewards for a user
