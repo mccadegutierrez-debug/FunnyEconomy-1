@@ -4,6 +4,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import MaintenanceScreen from "@/components/maintenance-screen";
 import {
   Card,
   CardContent,
@@ -27,6 +28,15 @@ export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState<ItemType>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+
+  // Check if shop feature is enabled
+  const {
+    data: shopFeatureFlag,
+    isLoading: featureFlagLoading,
+    isError: featureFlagError,
+  } = useQuery<{ enabled: boolean; description?: string }>({
+    queryKey: ["/api/feature-flags/shop"],
+  });
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["/api/shop/items"],
@@ -128,6 +138,37 @@ export default function ShopPage() {
       item.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  // Show maintenance screen if feature is disabled
+  if (featureFlagLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]" data-testid="status-loading-feature-flag">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (featureFlagError || (shopFeatureFlag && !shopFeatureFlag.enabled)) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <MaintenanceScreen
+          featureName="Shop System"
+          message={
+            shopFeatureFlag?.description ||
+            "The shop is currently under maintenance. Please check back later!"
+          }
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

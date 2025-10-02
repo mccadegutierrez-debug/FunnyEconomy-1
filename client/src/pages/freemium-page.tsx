@@ -4,6 +4,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import MaintenanceScreen from "@/components/maintenance-screen";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import excitedImage from "/excited.png";
@@ -15,6 +16,15 @@ export default function FreemiumPage() {
   );
   const [claimed, setClaimed] = useState(false);
   const { toast } = useToast();
+
+  // Check if freemium feature is enabled
+  const {
+    data: freemiumFeatureFlag,
+    isLoading: featureFlagLoading,
+    isError: featureFlagError,
+  } = useQuery<{ enabled: boolean; description?: string }>({
+    queryKey: ["/api/feature-flags/freemium"],
+  });
 
   // Fetch or generate rewards
   const {
@@ -179,6 +189,37 @@ export default function FreemiumPage() {
         return "border-accent";
     }
   };
+
+  // Show maintenance screen if feature is disabled
+  if (featureFlagLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]" data-testid="status-loading-feature-flag">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (featureFlagError || (freemiumFeatureFlag && !freemiumFeatureFlag.enabled)) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <MaintenanceScreen
+          featureName="Freemium Rewards"
+          message={
+            freemiumFeatureFlag?.description ||
+            "The rewards system is currently under maintenance. Please check back later!"
+          }
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

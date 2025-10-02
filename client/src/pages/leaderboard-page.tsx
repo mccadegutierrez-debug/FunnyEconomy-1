@@ -3,6 +3,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import MaintenanceScreen from "@/components/maintenance-screen";
 import {
   Card,
   CardContent,
@@ -15,6 +16,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function LeaderboardPage() {
   const { user } = useAuth();
+
+  // Check if leaderboard feature is enabled
+  const {
+    data: leaderboardFeatureFlag,
+    isLoading: featureFlagLoading,
+    isError: featureFlagError,
+  } = useQuery<{ enabled: boolean; description?: string }>({
+    queryKey: ["/api/feature-flags/leaderboard"],
+  });
 
   const { data: leaderboard = [], isLoading } = useQuery({
     queryKey: ["/api/leaderboard"],
@@ -55,6 +65,37 @@ export default function LeaderboardPage() {
         return "from-muted to-muted";
     }
   };
+
+  // Show maintenance screen if feature is disabled
+  if (featureFlagLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]" data-testid="status-loading-feature-flag">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (featureFlagError || (leaderboardFeatureFlag && !leaderboardFeatureFlag.enabled)) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <MaintenanceScreen
+          featureName="Leaderboard"
+          message={
+            leaderboardFeatureFlag?.description ||
+            "The leaderboard is currently under maintenance. Please check back later!"
+          }
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

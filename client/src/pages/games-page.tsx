@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import MaintenanceScreen from "@/components/maintenance-screen";
 import Blackjack from "@/components/games/blackjack";
 import Slots from "@/components/games/slots";
 import Coinflip from "@/components/games/coinflip";
@@ -25,6 +27,15 @@ import { Badge } from "@/components/ui/badge";
 export default function GamesPage() {
   const { user } = useAuth();
   const [activeGame, setActiveGame] = useState<string | null>(null);
+
+  // Check if games feature is enabled
+  const {
+    data: gamesFeatureFlag,
+    isLoading: featureFlagLoading,
+    isError: featureFlagError,
+  } = useQuery<{ enabled: boolean; description?: string }>({
+    queryKey: ["/api/feature-flags/games"],
+  });
 
   const games = [
     {
@@ -130,6 +141,37 @@ export default function GamesPage() {
   ];
 
   const selectedGame = games.find((game) => game.id === activeGame);
+
+  // Show maintenance screen if feature is disabled
+  if (featureFlagLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]" data-testid="status-loading-feature-flag">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (featureFlagError || (gamesFeatureFlag && !gamesFeatureFlag.enabled)) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <MaintenanceScreen
+          featureName="Game System"
+          message={
+            gamesFeatureFlag?.description ||
+            "The games are currently under maintenance. Please check back later!"
+          }
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
