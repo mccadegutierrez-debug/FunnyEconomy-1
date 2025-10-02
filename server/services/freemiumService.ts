@@ -10,17 +10,6 @@ export class FreemiumService {
     if (!user) throw new Error("User not found");
 
     const now = Date.now();
-    const freemiumCooldown = 10 * 1000; // 10 seconds
-
-    if (user.lastFreemiumClaim) {
-      const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
-      if (now - lastClaimTime < freemiumCooldown) {
-        const remaining = freemiumCooldown - (now - lastClaimTime);
-        throw new Error(
-          `Freemium cooldown: ${Math.ceil(remaining / 1000)} seconds remaining`,
-        );
-      }
-    }
 
     // Check if user already has pending rewards
     const existing = pendingRewards.get(username);
@@ -247,14 +236,7 @@ export class FreemiumService {
     const user = await storage.getUserByUsername(username);
     if (!user) return null;
 
-    if (!user.lastFreemiumClaim) return 0; // Can claim now
-
-    const freemiumCooldown = 10 * 1000; // 10 seconds
-    const lastClaimTime = new Date(user.lastFreemiumClaim).getTime();
-    const nextClaimTime = lastClaimTime + freemiumCooldown;
-    const now = Date.now();
-
-    return Math.max(0, nextClaimTime - now);
+    return 0; // Can always claim
   }
 
   // Get pending rewards for a user
