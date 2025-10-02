@@ -49,7 +49,9 @@ Preferred communication style: Simple, everyday language.
 - **Core Services**: Modular service architecture with EconomyService, GameService, and FreemiumService
 - **Banking System**: Virtual bank with deposit/withdrawal functionality and transaction fees
 - **Gaming**: Multiple game implementations (Blackjack, Slots, Coinflip, Trivia) with server-side logic
-- **Freemium Model**: Daily rewards system with loot tables and cooldown management
+- **Freemium Model**: Daily rewards system with 12-hour cooldown, loot tables, and item rewards with inventory management
+- **Pet System**: Pet actions (hunt, search, dig, fish) with 1-hour cooldowns between actions
+- **Item Effects**: Luck Potion provides +10% win rate boost for 1 hour
 - **Transaction Logging**: Comprehensive transaction history with type categorization
 
 ### API Architecture

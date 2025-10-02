@@ -58,7 +58,8 @@ class ReplitDatabase {
   async list(prefix: string = ""): Promise<string[]> {
     try {
       const keys: string[] = [];
-      for (const key of this.store.keys()) {
+      const allKeys = Array.from(this.store.keys());
+      for (const key of allKeys) {
         if (key.startsWith(prefix)) {
           keys.push(key);
         }
@@ -73,7 +74,8 @@ class ReplitDatabase {
   // Helper method to clear expired cache entries
   clearExpiredCache(): void {
     const now = Date.now();
-    for (const [key, expiry] of this.cacheExpiry.entries()) {
+    const entries = Array.from(this.cacheExpiry.entries());
+    for (const [key, expiry] of entries) {
       if (now >= expiry) {
         this.cache.delete(key);
         this.cacheExpiry.delete(key);

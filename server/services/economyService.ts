@@ -192,7 +192,7 @@ export class EconomyService {
     const luckPotion = user.inventory.find(
       (item) => item.itemId.includes("luck") && item.equipped,
     );
-    if (luckPotion) successChance += 0.25;
+    if (luckPotion) successChance += 0.10;
 
     successChance = Math.max(0.1, Math.min(0.8, successChance)); // Clamp between 10% and 80%
 

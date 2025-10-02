@@ -1,5 +1,6 @@
 import { storage } from "../storage";
 import { randomBytes } from "crypto";
+import { db } from "../database";
 
 export class GameService {
   // Blackjack implementation
@@ -595,8 +596,8 @@ export class GameService {
     };
   }
 
-  // Mines game - 5x5 grid with 5 mines, reveal tiles one by one
-  static async playMines(username: string, bet: number, tilesRevealed: number) {
+  // Mines game - Start a new interactive game
+  static async startMines(username: string, bet: number) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -608,8 +609,10 @@ export class GameService {
       throw new Error("Insufficient coins");
     }
 
-    if (tilesRevealed < 1 || tilesRevealed > 20) {
-      throw new Error("Must reveal between 1 and 20 tiles");
+    // Check if user already has an active game
+    const existingGame = await db.get(`mines:${username}`);
+    if (existingGame) {
+      throw new Error("You already have an active mines game. Cash out or finish it first.");
     }
 
     // Generate mine positions (5 mines in 25 tiles)
@@ -621,33 +624,143 @@ export class GameService {
       }
     }
 
-    // Simulate revealing tiles
-    const revealedPositions: number[] = [];
-    let hitMine = false;
+    // Deduct bet from user's coins
+    await storage.updateUser(user.id, {
+      coins: user.coins - bet,
+    });
 
-    for (let i = 0; i < tilesRevealed; i++) {
-      let pos = this.getSecureRandom() % 25;
-      let attempts = 0;
+    // Store game state
+    const gameState = {
+      username,
+      bet,
+      minePositions,
+      revealedTiles: [],
+      gameOver: false,
+      startTime: Date.now(),
+    };
 
-      // Find an unrevealed position
-      while (revealedPositions.includes(pos) && attempts < 100) {
-        pos = this.getSecureRandom() % 25;
-        attempts++;
-      }
+    await db.set(`mines:${username}`, gameState);
 
-      revealedPositions.push(pos);
+    return {
+      gameId: username,
+      bet,
+      revealedTiles: [],
+      multiplier: 1,
+      newBalance: user.coins - bet,
+    };
+  }
 
-      // Check if hit a mine
-      if (minePositions.includes(pos)) {
-        hitMine = true;
-        break;
-      }
+  // Mines game - Reveal a specific tile
+  static async revealMineTile(username: string, tileIndex: number) {
+    const gameState = await db.get(`mines:${username}`);
+    
+    if (!gameState) {
+      throw new Error("No active mines game found");
     }
 
-    const win = !hitMine;
-    // Each safe tile = 1.2x multiplier compounded
-    const multiplier = win ? Math.pow(1.2, revealedPositions.length) : 0;
-    const amount = win ? Math.floor(bet * multiplier) - bet : -bet;
+    if (gameState.gameOver) {
+      throw new Error("Game is already over");
+    }
+
+    if (tileIndex < 0 || tileIndex > 24) {
+      throw new Error("Invalid tile index");
+    }
+
+    if (gameState.revealedTiles.includes(tileIndex)) {
+      throw new Error("Tile already revealed");
+    }
+
+    // Reveal the tile
+    gameState.revealedTiles.push(tileIndex);
+
+    const hitMine = gameState.minePositions.includes(tileIndex);
+
+    if (hitMine) {
+      // Game over - lost
+      gameState.gameOver = true;
+      await db.delete(`mines:${username}`);
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) throw new Error("User not found");
+
+      const gameStats =
+        typeof user.gameStats === "object" && user.gameStats !== null
+          ? (user.gameStats as any)
+          : {};
+
+      await storage.updateUser(user.id, {
+        gameStats: {
+          ...gameStats,
+          minesLosses: (gameStats.minesLosses || 0) + 1,
+        },
+      });
+
+      await storage.createTransaction({
+        user: username,
+        type: "spend",
+        amount: gameState.bet,
+        targetUser: null,
+        description: `Mines loss: Hit mine at tile ${tileIndex + 1}`,
+      });
+
+      return {
+        revealed: true,
+        tileIndex,
+        isMine: true,
+        gameOver: true,
+        win: false,
+        revealedTiles: gameState.revealedTiles,
+        minePositions: gameState.minePositions,
+        amount: -gameState.bet,
+        multiplier: 0,
+        newBalance: user.coins,
+      };
+    }
+
+    // Safe tile - update game state
+    await db.set(`mines:${username}`, gameState);
+
+    // Calculate current multiplier
+    const multiplier = Math.pow(1.2, gameState.revealedTiles.length);
+
+    return {
+      revealed: true,
+      tileIndex,
+      isMine: false,
+      gameOver: false,
+      win: false,
+      revealedTiles: gameState.revealedTiles,
+      multiplier: parseFloat(multiplier.toFixed(2)),
+      potentialWin: Math.floor(gameState.bet * multiplier),
+    };
+  }
+
+  // Mines game - Cash out and collect winnings
+  static async cashoutMines(username: string) {
+    const gameState = await db.get(`mines:${username}`);
+    
+    if (!gameState) {
+      throw new Error("No active mines game found");
+    }
+
+    if (gameState.gameOver) {
+      throw new Error("Game is already over");
+    }
+
+    if (gameState.revealedTiles.length === 0) {
+      throw new Error("You must reveal at least one tile before cashing out");
+    }
+
+    // Game over - cashed out successfully
+    gameState.gameOver = true;
+    await db.delete(`mines:${username}`);
+
+    const user = await storage.getUserByUsername(username);
+    if (!user) throw new Error("User not found");
+
+    // Calculate winnings
+    const multiplier = Math.pow(1.2, gameState.revealedTiles.length);
+    const winnings = Math.floor(gameState.bet * multiplier);
 
     const gameStats =
       typeof user.gameStats === "object" && user.gameStats !== null
@@ -655,31 +768,51 @@ export class GameService {
         : {};
 
     await storage.updateUser(user.id, {
-      coins: user.coins + amount,
+      coins: user.coins + winnings,
       gameStats: {
         ...gameStats,
-        minesWins: (gameStats.minesWins || 0) + (win ? 1 : 0),
-        minesLosses: (gameStats.minesLosses || 0) + (win ? 0 : 1),
+        minesWins: (gameStats.minesWins || 0) + 1,
       },
     });
 
     await storage.createTransaction({
       user: username,
-      type: win ? "earn" : "spend",
-      amount: Math.abs(amount),
+      type: "earn",
+      amount: winnings - gameState.bet,
       targetUser: null,
-      description: `Mines ${win ? "win" : "loss"}: ${revealedPositions.length} tiles (${multiplier.toFixed(2)}x)`,
+      description: `Mines win: ${gameState.revealedTiles.length} tiles (${multiplier.toFixed(2)}x)`,
     });
 
     return {
-      win,
-      amount,
-      tilesRevealed: revealedPositions.length,
+      win: true,
+      gameOver: true,
+      revealedTiles: gameState.revealedTiles,
+      minePositions: gameState.minePositions,
       multiplier: parseFloat(multiplier.toFixed(2)),
-      minePositions,
-      revealedPositions,
-      hitMine,
-      newBalance: user.coins + amount,
+      amount: winnings - gameState.bet,
+      totalWinnings: winnings,
+      newBalance: user.coins + winnings,
+    };
+  }
+
+  // Get active mines game state
+  static async getMinesGame(username: string) {
+    const gameState = await db.get(`mines:${username}`);
+    
+    if (!gameState) {
+      return null;
+    }
+
+    const multiplier = gameState.revealedTiles.length > 0 
+      ? Math.pow(1.2, gameState.revealedTiles.length) 
+      : 1;
+
+    return {
+      active: true,
+      bet: gameState.bet,
+      revealedTiles: gameState.revealedTiles,
+      multiplier: parseFloat(multiplier.toFixed(2)),
+      potentialWin: Math.floor(gameState.bet * multiplier),
     };
   }
 

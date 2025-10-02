@@ -524,7 +524,7 @@ export class DatabaseStorage implements IStorage {
       // Consumables (One-time use items with temporary effects)
       {
         name: "Luck Potion",
-        description: "+25% win rate for 1 hour",
+        description: "+10% win rate for 1 hour",
         price: 2500,
         type: "consumable" as const,
         rarity: "uncommon" as const,
