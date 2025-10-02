@@ -186,6 +186,7 @@ export default function PetsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pets"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "🎉 Pet Adopted!",
         description: "Your new pet is ready to play!",

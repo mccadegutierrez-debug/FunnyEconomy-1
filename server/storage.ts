@@ -1622,6 +1622,29 @@ export class DatabaseStorage implements IStorage {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");
 
+    // Check for 1-hour cooldown
+    const recentHunts = await db
+      .select()
+      .from(petHunts)
+      .where(eq(petHunts.petId, petId))
+      .orderBy(desc(petHunts.createdAt))
+      .limit(1);
+
+    if (recentHunts.length > 0) {
+      const lastHunt = recentHunts[0];
+      const now = Date.now();
+      const lastHuntTime = new Date(lastHunt.createdAt).getTime();
+      const cooldown = 60 * 60 * 1000; // 1 hour
+
+      if (now - lastHuntTime < cooldown) {
+        const remaining = cooldown - (now - lastHuntTime);
+        const minutesRemaining = Math.ceil(remaining / (60 * 1000));
+        throw new Error(
+          `Hunt cooldown: ${minutesRemaining} minutes remaining`,
+        );
+      }
+    }
+
     const duration = huntType === "short" ? 1 : huntType === "medium" ? 4 : 8;
     const completesAt = new Date(Date.now() + duration * 60 * 60 * 1000);
 
