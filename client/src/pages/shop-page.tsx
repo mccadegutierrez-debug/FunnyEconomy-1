@@ -103,16 +103,32 @@ export default function ShopPage() {
   };
 
   const getItemIcon = (type: string, name: string) => {
-    if (name.toLowerCase().includes("fishing")) return "🎣";
-    if (name.toLowerCase().includes("pepe")) return "🐸";
-    if (
-      name.toLowerCase().includes("luck") ||
-      name.toLowerCase().includes("potion")
-    )
-      return "🧪";
-    if (name.toLowerCase().includes("box")) return "📦";
-    if (name.toLowerCase().includes("diamond")) return "💎";
-    if (name.toLowerCase().includes("trophy")) return "🏆";
+    const nameLower = name.toLowerCase();
+    
+    // Specific item image mappings
+    if (nameLower.includes("hunting rifle")) {
+      return <img src="/ShopIcons/HuntingRifle.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("ban hammer")) {
+      return <img src="/ShopIcons/BanHammer.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("fishing rod")) {
+      return <img src="/ShopIcons/FishingPole.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("shovel")) {
+      return <img src="/ShopIcons/Shovel.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    
+    // Lootbox items
+    if (type === "lootbox" || nameLower.includes("box") || nameLower.includes("chest") || nameLower.includes("pack")) {
+      return <img src="/ShopIcons/normbox.gif" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    
+    // Default emoji fallbacks
+    if (nameLower.includes("pepe")) return "🐸";
+    if (nameLower.includes("luck") || nameLower.includes("potion")) return "🧪";
+    if (nameLower.includes("diamond")) return "💎";
+    if (nameLower.includes("trophy")) return "🏆";
 
     switch (type) {
       case "tool":
@@ -123,8 +139,6 @@ export default function ShopPage() {
         return "⚡";
       case "consumable":
         return "🧪";
-      case "lootbox":
-        return "📦";
       default:
         return "🎁";
     }
@@ -240,10 +254,10 @@ export default function ShopPage() {
                 data-testid={`item-card-${item.id}`}
               >
                 <CardHeader className="text-center">
-                  <div className="text-3xl mb-2 relative">
+                  <div className="flex justify-center items-center mb-2 relative h-12">
                     {getItemIcon(item.type, item.name)}
                     {item.type === "lootbox" && (
-                      <span className="animate-pulse-glow">✨</span>
+                      <span className="absolute -top-2 -right-2 animate-pulse-glow">✨</span>
                     )}
                   </div>
                   <CardTitle className="font-bold text-primary">
