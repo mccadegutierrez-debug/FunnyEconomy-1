@@ -734,7 +734,7 @@ export class DatabaseStorage implements IStorage {
         type: "consumable" as const,
         rarity: "uncommon" as const,
         effects: {
-          passive: { winRateBoost: 0, coinsPerHour: 0 },
+          passive: { winRateBoost: 0.2, coinsPerHour: 0 },
           active: {
             useCooldown: 3600000,
             duration: 1800000,
