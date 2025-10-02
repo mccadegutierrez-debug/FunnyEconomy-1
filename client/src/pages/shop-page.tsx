@@ -136,24 +136,8 @@ export default function ShopPage() {
       return <img src="/ShopIcons/normbox.gif" alt={name} className="w-12 h-12 object-contain" />;
     }
     
-    // Default emoji fallbacks
-    if (nameLower.includes("pepe")) return "🐸";
-    if (nameLower.includes("luck") || nameLower.includes("potion")) return "🧪";
-    if (nameLower.includes("diamond")) return "💎";
-    if (nameLower.includes("trophy")) return "🏆";
-
-    switch (type) {
-      case "tool":
-        return "🔧";
-      case "collectible":
-        return "🎭";
-      case "powerup":
-        return "⚡";
-      case "consumable":
-        return "🧪";
-      default:
-        return "🎁";
-    }
+    // Default fallback for all other items without specific icons
+    return <img src="/PetIcons/tbd.png" alt={name} className="w-12 h-12 object-contain" />;
   };
 
   const filteredItems = items.filter((item: any) => {
