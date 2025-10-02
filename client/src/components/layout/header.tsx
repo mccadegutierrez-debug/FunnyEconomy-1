@@ -120,8 +120,6 @@ export default function Header() {
             </Link>
           </div>
 
-          <div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent text-primary-foreground hover:bg-primary/80 bg-blue-500" data-testid="badge-rarity-b1b69f62-07c1-495f-9387-a3cd52d0aa10">BETA v2.1.9</div>
-
           {/* Desktop Navigation */}
           <nav className="hidden md:flex itemfs-center space-x-6">
             {navItems.map((item) => (
