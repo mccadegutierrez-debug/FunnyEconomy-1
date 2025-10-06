@@ -39,14 +39,14 @@ export class GameService {
     const playerScore = this.getRandomCardValue();
 
     let win = playerScore > dealerScore && playerScore <= 21;
-    
+
     // Apply Friday boost to gambling luck
     if (isFriday && !win && Math.random() < 0.15) {
       win = true; // 15% chance to turn loss into win on Friday
     }
 
     let amount = win ? Math.floor(bet * 1.95) : -bet; // House edge
-    
+
     // Apply Friday coin boost
     if (isFriday && win) {
       amount = Math.floor(amount * boosts.coinsMultiplier);
@@ -134,10 +134,17 @@ export class GameService {
       multiplier = 2;
     }
 
-    const win = multiplier > 0;
+    let win = multiplier > 0;
+
+    // Apply Friday boost to gambling luck
+    if (isFriday && !win && Math.random() < 0.15) {
+      win = true;
+      multiplier = 2; // Give at least 2x on lucky boost
+    }
+
     let amount = win ? bet * multiplier - bet : -bet;
 
-    // Apply Friday boost
+    // Apply Friday coin boost
     if (isFriday && win) {
       amount = Math.floor(amount * boosts.coinsMultiplier);
     }
@@ -451,8 +458,8 @@ export class GameService {
 
     // Apply Friday boost to gambling luck
     if (isFriday && !win && Math.random() < 0.15) {
-      win = true; // 15% chance to turn loss into win on Friday
-      multiplier = 1.9;
+      win = true;
+      multiplier = 1.9; // Give at least 1.9x on lucky boost
     }
 
     let amount = win ? Math.floor(bet * multiplier) - bet : -bet;
