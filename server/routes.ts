@@ -2288,6 +2288,156 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Events Management
+  app.get("/api/admin/events", requireAdmin, async (req, res) => {
+    try {
+      const events = await storage.getAllEvents();
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/events/active", async (req, res) => {
+    try {
+      const events = await storage.getActiveEvents();
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/admin/events", requireAdmin, async (req, res) => {
+    try {
+      const eventSchema = z.object({
+        name: z.string().min(1).max(100),
+        description: z.string().min(1).max(500),
+        type: z.enum(["holiday", "double_xp", "double_luck", "double_money", "custom"]),
+        emoji: z.string().default("🎉"),
+        active: z.boolean().default(false),
+        startDate: z.string().transform((str) => new Date(str)),
+        endDate: z.string().transform((str) => new Date(str)),
+        multipliers: z.record(z.number()).default({}),
+        createdBy: z.string().optional(),
+      });
+
+      const data = eventSchema.parse(req.body);
+      const event = await storage.createEvent({
+        ...data,
+        createdBy: req.user!.username,
+      });
+
+      await logAdminAction(
+        req,
+        "create_event",
+        "event",
+        event.id,
+        event.name,
+        { event: data }
+      );
+
+      if (event.active) {
+        const allUsers = await storage.getAllUsers();
+        const notificationMessage = `${event.emoji} ${event.name}: ${event.description}`;
+        
+        for (const user of allUsers) {
+          if (user && !user.banned) {
+            await storage.createNotification({
+              user: user.username,
+              message: notificationMessage,
+              type: "event",
+              read: false,
+            });
+          }
+        }
+      }
+
+      res.json({ success: true, event });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.put("/api/admin/events/:id/activate", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const event = await storage.activateEvent(id);
+      
+      const allUsers = await storage.getAllUsers();
+      const notificationMessage = `${event.emoji} ${event.name}: ${event.description}`;
+      
+      for (const user of allUsers) {
+        if (user && !user.banned) {
+          await storage.createNotification({
+            user: user.username,
+            message: notificationMessage,
+            type: "event",
+            read: false,
+          });
+        }
+      }
+
+      await logAdminAction(
+        req,
+        "activate_event",
+        "event",
+        event.id,
+        event.name,
+        { eventType: event.type }
+      );
+
+      res.json({ success: true, event });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.put("/api/admin/events/:id/deactivate", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const event = await storage.deactivateEvent(id);
+
+      await logAdminAction(
+        req,
+        "deactivate_event",
+        "event",
+        event.id,
+        event.name,
+        { eventType: event.type }
+      );
+
+      res.json({ success: true, event });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.delete("/api/admin/events/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const event = await storage.getEvent(id);
+      
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+
+      await storage.deleteEvent(id);
+
+      await logAdminAction(
+        req,
+        "delete_event",
+        "event",
+        id,
+        event.name,
+        { eventType: event.type }
+      );
+
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   // Global notification sending
   app.post("/api/admin/notifications/global", requireAdmin, async (req, res) => {
     try {
