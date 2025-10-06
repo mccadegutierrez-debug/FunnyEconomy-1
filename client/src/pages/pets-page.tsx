@@ -545,7 +545,7 @@ export default function PetsPage() {
                     {pet.isDead && (
                       <div className="absolute top-2 right-2 z-10">
                         <Badge variant="destructive" className="text-xs">
-                          💀 Deceased
+                          💀 Dead
                         </Badge>
                       </div>
                     )}
