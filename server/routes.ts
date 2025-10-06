@@ -2528,6 +2528,95 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get event presets
+  app.get("/api/admin/events/presets", requireAdmin, async (req, res) => {
+    try {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const nextWeek = new Date(now);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+
+      const presets = [
+        {
+          id: "double_xp_weekend",
+          name: "Double XP Weekend",
+          description: "Earn 2x experience points on all activities this weekend!",
+          type: "double_xp" as const,
+          emoji: "⭐",
+          duration: "48h",
+          multipliers: { xp: 2 },
+        },
+        {
+          id: "christmas_event",
+          name: "Christmas Celebration",
+          description: "Celebrate the holidays with special rewards and bonuses!",
+          type: "holiday" as const,
+          emoji: "🎄",
+          duration: "7d",
+          multipliers: { coins: 1.5, xp: 1.5, luck: 1.25 },
+        },
+        {
+          id: "halloween_spooky",
+          name: "Halloween Spooktacular",
+          description: "Spooky rewards and treats await! Trick or treat for bonus coins!",
+          type: "holiday" as const,
+          emoji: "🎃",
+          duration: "3d",
+          multipliers: { coins: 2, luck: 1.5 },
+        },
+        {
+          id: "new_year_bash",
+          name: "New Year Celebration",
+          description: "Ring in the new year with explosive rewards!",
+          type: "holiday" as const,
+          emoji: "🎆",
+          duration: "24h",
+          multipliers: { coins: 3, xp: 2, luck: 2 },
+        },
+        {
+          id: "double_coins",
+          name: "Double Coins Event",
+          description: "All coin earnings are doubled for a limited time!",
+          type: "double_money" as const,
+          emoji: "💰",
+          duration: "12h",
+          multipliers: { coins: 2 },
+        },
+        {
+          id: "lucky_hour",
+          name: "Lucky Hour",
+          description: "Increased luck on all gambling games! Try your fortune!",
+          type: "double_luck" as const,
+          emoji: "🍀",
+          duration: "1h",
+          multipliers: { luck: 2.5 },
+        },
+        {
+          id: "summer_festival",
+          name: "Summer Festival",
+          description: "Celebrate summer with increased rewards on all activities!",
+          type: "holiday" as const,
+          emoji: "☀️",
+          duration: "5d",
+          multipliers: { coins: 1.5, xp: 1.5, luck: 1.3 },
+        },
+        {
+          id: "valentines_day",
+          name: "Valentine's Day Special",
+          description: "Spread the love with bonus rewards for transferring coins to friends!",
+          type: "holiday" as const,
+          emoji: "💝",
+          duration: "2d",
+          multipliers: { coins: 1.5, xp: 1.25 },
+        },
+      ];
+      res.json(presets);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
   // Check if Friday boost is active
   app.get("/api/friday-boost/status", async (req, res) => {
     try {

@@ -139,6 +139,16 @@ export default function AdminPage() {
     enabled: isAuthenticated,
   });
 
+  // Fetch event presets
+  const { data: eventPresets = [] } = useQuery({
+    queryKey: ["/api/admin/events/presets"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/events/presets");
+      return res.json();
+    },
+    enabled: isAuthenticated,
+  });
+
   // Fetch Friday boost status
   const { data: fridayBoostStatus } = useQuery({
     queryKey: ["/api/friday-boost/status"],
@@ -2477,6 +2487,87 @@ export default function AdminPage() {
 
             <TabsContent value="events" className="space-y-6 mt-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Event Presets */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-impact text-2xl text-secondary">
+                      📋 EVENT PRESETS
+                    </CardTitle>
+                    <CardDescription>
+                      Quick-fill preset events with common settings
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 max-h-96 overflow-y-auto">
+                    {eventPresets.map((preset: any) => (
+                      <div
+                        key={preset.id}
+                        className="flex items-start justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                        data-testid={`event-preset-${preset.id}`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl">{preset.emoji}</span>
+                            <h4 className="font-semibold text-sm">{preset.name}</h4>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {preset.description}
+                          </p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-xs">
+                              {preset.type}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {preset.duration}
+                            </Badge>
+                            {Object.entries(preset.multipliers).map(([key, value]) => (
+                              <Badge key={key} variant="secondary" className="text-xs">
+                                {key}: {value}x
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const now = new Date();
+                            const startDate = new Date(now);
+                            const endDate = new Date(now);
+                            
+                            // Parse duration
+                            const durationMatch = preset.duration.match(/(\d+)([dhm])/);
+                            if (durationMatch) {
+                              const value = parseInt(durationMatch[1]);
+                              const unit = durationMatch[2];
+                              
+                              if (unit === 'd') {
+                                endDate.setDate(endDate.getDate() + value);
+                              } else if (unit === 'h') {
+                                endDate.setHours(endDate.getHours() + value);
+                              } else if (unit === 'm') {
+                                endDate.setMinutes(endDate.getMinutes() + value);
+                              }
+                            }
+                            
+                            setNewEvent({
+                              name: preset.name,
+                              description: preset.description,
+                              type: preset.type,
+                              emoji: preset.emoji,
+                              startDate: startDate.toISOString().slice(0, 16),
+                              endDate: endDate.toISOString().slice(0, 16),
+                              multipliers: preset.multipliers,
+                            });
+                          }}
+                          data-testid={`button-use-event-preset-${preset.id}`}
+                        >
+                          Use
+                        </Button>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
                 {/* Create Event Form */}
                 <Card>
                   <CardHeader>
