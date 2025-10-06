@@ -83,10 +83,10 @@ export default function Mines() {
   };
 
   const handlePlay = () => {
-    if (bet < 10 || bet > 10000) {
+    if (bet < 10 || bet > 150000) {
       toast({
         title: "Invalid Bet",
-        description: "Bet must be between 10 and 10,000 coins",
+        description: "Bet must be between 10 and 150,000 coins",
         variant: "destructive",
       });
       return;
@@ -191,7 +191,7 @@ export default function Mines() {
                 id="bet-amount"
                 type="number"
                 min="10"
-                max="10000"
+                max="150000"
                 value={bet}
                 onChange={(e) => setBet(Number(e.target.value))}
                 className="text-center text-lg font-bold"
@@ -286,7 +286,7 @@ export default function Mines() {
               <p>• Each safe tile = 1.2x multiplier (compounded)</p>
               <p>• Hit a mine = lose everything</p>
               <p>• More tiles = higher risk, higher reward!</p>
-              <p>• Bet between 10 and 10,000 coins</p>
+              <p>• Bet between 10 and 150,000 coins</p>
             </CardContent>
           </Card>
         </CardContent>

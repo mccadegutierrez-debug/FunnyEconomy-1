@@ -97,10 +97,10 @@ export default function Lottery() {
       return;
     }
 
-    if (bet < 10 || bet > 10000) {
+    if (bet < 10 || bet > 150000) {
       toast({
         title: "Invalid Bet",
-        description: "Bet must be between 10 and 10,000 coins",
+        description: "Bet must be between 10 and 150,000 coins",
         variant: "destructive",
       });
       return;
@@ -240,7 +240,7 @@ export default function Lottery() {
                 id="bet-amount"
                 type="number"
                 min="10"
-                max="10000"
+                max="150000"
                 value={bet}
                 onChange={(e) => setBet(Number(e.target.value))}
                 className="text-center text-lg font-bold"
@@ -339,7 +339,7 @@ export default function Lottery() {
               <p>• Match 3 numbers = 2x payout</p>
               <p>• Match 4 numbers = 10x payout</p>
               <p>• Match 5 numbers = 100x JACKPOT!</p>
-              <p>• Bet between 10 and 10,000 coins</p>
+              <p>• Bet between 10 and 150,000 coins</p>
             </CardContent>
           </Card>
         </CardContent>

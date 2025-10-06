@@ -91,10 +91,10 @@ export default function Coinflip() {
       return;
     }
 
-    if (bet < 10 || bet > 10000) {
+    if (bet < 10 || bet > 150000) {
       toast({
         title: "Invalid Bet",
-        description: "Bet must be between 10 and 10,000 coins",
+        description: "Bet must be between 10 and 150,000 coins",
         variant: "destructive",
       });
       return;
@@ -197,7 +197,7 @@ export default function Coinflip() {
                 id="bet-amount"
                 type="number"
                 min="10"
-                max="10000"
+                max="150000"
                 value={bet}
                 onChange={(e) => setBet(Number(e.target.value))}
                 className="text-center text-lg font-bold"
@@ -315,7 +315,7 @@ export default function Coinflip() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>• Choose heads (👑) or tails (🎯)</p>
-              <p>• Place your bet (10 to 10,000 coins)</p>
+              <p>• Place your bet (10 to 150,000 coins)</p>
               <p>• Win: 1.95x payout (small house edge)</p>
               <p>• Simple 50/50 chance game</p>
             </CardContent>

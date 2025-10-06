@@ -8,8 +8,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (user.coins < bet) {
@@ -62,8 +62,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (user.coins < bet) {
@@ -142,8 +142,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (user.coins < bet) {
@@ -302,7 +302,7 @@ export class GameService {
     } else if (isTimeout) {
       amount = -75;
       const penaltyAmount = Math.min(75, user.coins);
-      
+
       await storage.updateUser(user.id, {
         coins: user.coins - penaltyAmount,
         gameStats: {
@@ -354,8 +354,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (user.coins < bet) {
@@ -425,8 +425,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (user.coins < bet) {
@@ -512,8 +512,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (cashoutAt < 1.1 || cashoutAt > 100) {
@@ -575,8 +575,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (user.coins < bet) {
@@ -661,8 +661,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (user.coins < bet) {
@@ -713,7 +713,7 @@ export class GameService {
   // Mines game - Reveal a specific tile
   static async revealMineTile(username: string, tileIndex: number) {
     const gameState = await db.get(`mines:${username}`);
-    
+
     if (!gameState) {
       throw new Error("No active mines game found");
     }
@@ -798,7 +798,7 @@ export class GameService {
   // Mines game - Cash out and collect winnings
   static async cashoutMines(username: string) {
     const gameState = await db.get(`mines:${username}`);
-    
+
     if (!gameState) {
       throw new Error("No active mines game found");
     }
@@ -808,7 +808,7 @@ export class GameService {
     }
 
     if (gameState.revealedTiles.length === 0) {
-      throw new Error("You must reveal at least one tile before cashing out");
+      throw new Error("You must reveal at least one tile before cashout");
     }
 
     // Game over - cashed out successfully
@@ -858,13 +858,13 @@ export class GameService {
   // Get active mines game state
   static async getMinesGame(username: string) {
     const gameState = await db.get(`mines:${username}`);
-    
+
     if (!gameState) {
       return null;
     }
 
-    const multiplier = gameState.revealedTiles.length > 0 
-      ? Math.pow(1.2, gameState.revealedTiles.length) 
+    const multiplier = gameState.revealedTiles.length > 0
+      ? Math.pow(1.2, gameState.revealedTiles.length)
       : 1;
 
     return {
@@ -885,8 +885,8 @@ export class GameService {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
-    if (bet < 10 || bet > 10000) {
-      throw new Error("Bet must be between 10 and 10,000 coins");
+    if (bet < 10 || bet > 150000) {
+      throw new Error("Bet must be between 10 and 150,000 coins");
     }
 
     if (user.coins < bet) {

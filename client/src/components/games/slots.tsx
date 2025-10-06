@@ -75,10 +75,10 @@ export default function Slots() {
 
   const handlePlay = (e: React.FormEvent) => {
     e.preventDefault();
-    if (bet < 10 || bet > 10000) {
+    if (bet < 10 || bet > 150000) {
       toast({
         title: "Invalid Bet",
-        description: "Bet must be between 10 and 10,000 coins",
+        description: "Bet must be between 10 and 150,000 coins",
         variant: "destructive",
       });
       return;
@@ -161,7 +161,7 @@ export default function Slots() {
                 id="bet-amount"
                 type="number"
                 min="10"
-                max="10000"
+                max="150000"
                 value={bet}
                 onChange={(e) => setBet(Number(e.target.value))}
                 className="text-center text-lg font-bold"
@@ -259,7 +259,7 @@ export default function Slots() {
               <p>• Different symbols have different multipliers</p>
               <p>• 💰 = 50x, 💎 = 25x, 🚀 = 15x, 🔥 = 10x, 🐸 = 5x</p>
               <p>• Two matching symbols = 2x multiplier</p>
-              <p>• Bet between 10 and 10,000 coins</p>
+              <p>• Bet between 10 and 150,000 coins</p>
             </CardContent>
           </Card>
         </CardContent>
