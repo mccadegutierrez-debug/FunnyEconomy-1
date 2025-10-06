@@ -14,6 +14,7 @@ import {
   petHunts,
   petActivities,
   featureFlags,
+  events,
   type User,
   type InsertUser,
   type Item,
@@ -37,6 +38,8 @@ import {
   type PetActivity,
   type InsertPetActivity,
   type FeatureFlag,
+  type InsertEvent,
+  type SelectEvent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, lt, gte, sql } from "drizzle-orm";
@@ -174,6 +177,16 @@ export interface IStorage {
     updatedBy: string,
   ): Promise<FeatureFlag>;
   initializeFeatureFlags(): Promise<void>;
+
+  // Events
+  getAllEvents(): Promise<SelectEvent[]>;
+  getActiveEvents(): Promise<SelectEvent[]>;
+  getEvent(id: string): Promise<SelectEvent | undefined>;
+  createEvent(event: InsertEvent): Promise<SelectEvent>;
+  updateEvent(id: string, updates: Partial<SelectEvent>): Promise<SelectEvent>;
+  deleteEvent(id: string): Promise<void>;
+  activateEvent(id: string): Promise<SelectEvent>;
+  deactivateEvent(id: string): Promise<SelectEvent>;
 
   // System
   initializeData(): Promise<void>;
@@ -1864,6 +1877,81 @@ export class DatabaseStorage implements IStorage {
         // Created feature flag
       }
     }
+  }
+
+  // Events Management
+  async getAllEvents(): Promise<SelectEvent[]> {
+    return await db.select().from(events).orderBy(desc(events.createdAt));
+  }
+
+  async getActiveEvents(): Promise<SelectEvent[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(events)
+      .where(
+        and(
+          eq(events.active, true),
+          lt(events.startDate, now),
+          gte(events.endDate, now)
+        )
+      );
+  }
+
+  async getEvent(id: string): Promise<SelectEvent | undefined> {
+    const [event] = await db.select().from(events).where(eq(events.id, id));
+    return event || undefined;
+  }
+
+  async createEvent(eventData: InsertEvent): Promise<SelectEvent> {
+    const [event] = await db.insert(events).values(eventData).returning();
+    if (!event) {
+      throw new Error("Failed to create event");
+    }
+    return event;
+  }
+
+  async updateEvent(id: string, updates: Partial<SelectEvent>): Promise<SelectEvent> {
+    const [event] = await db
+      .update(events)
+      .set(updates)
+      .where(eq(events.id, id))
+      .returning();
+    
+    if (!event) {
+      throw new Error("Event not found");
+    }
+    return event;
+  }
+
+  async deleteEvent(id: string): Promise<void> {
+    await db.delete(events).where(eq(events.id, id));
+  }
+
+  async activateEvent(id: string): Promise<SelectEvent> {
+    const [event] = await db
+      .update(events)
+      .set({ active: true })
+      .where(eq(events.id, id))
+      .returning();
+    
+    if (!event) {
+      throw new Error("Event not found");
+    }
+    return event;
+  }
+
+  async deactivateEvent(id: string): Promise<SelectEvent> {
+    const [event] = await db
+      .update(events)
+      .set({ active: false })
+      .where(eq(events.id, id))
+      .returning();
+    
+    if (!event) {
+      throw new Error("Event not found");
+    }
+    return event;
   }
 }
 
