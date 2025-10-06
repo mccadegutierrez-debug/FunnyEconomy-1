@@ -2530,32 +2530,13 @@ export default function AdminPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            const now = new Date();
-                            const startDate = new Date(now);
-                            const endDate = new Date(now);
-                            
-                            // Parse duration
-                            const durationMatch = preset.duration.match(/(\d+)([dhm])/);
-                            if (durationMatch) {
-                              const value = parseInt(durationMatch[1]);
-                              const unit = durationMatch[2];
-                              
-                              if (unit === 'd') {
-                                endDate.setDate(endDate.getDate() + value);
-                              } else if (unit === 'h') {
-                                endDate.setHours(endDate.getHours() + value);
-                              } else if (unit === 'm') {
-                                endDate.setMinutes(endDate.getMinutes() + value);
-                              }
-                            }
-                            
                             setNewEvent({
                               name: preset.name,
                               description: preset.description,
                               type: preset.type,
                               emoji: preset.emoji,
-                              startDate: startDate.toISOString().slice(0, 16),
-                              endDate: endDate.toISOString().slice(0, 16),
+                              startDate: preset.startDate,
+                              endDate: preset.endDate,
                               multipliers: preset.multipliers,
                             });
                           }}
