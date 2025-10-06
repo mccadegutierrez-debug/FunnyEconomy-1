@@ -104,13 +104,26 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.passwordHash))) {
+        if (!user) {
+          return done(null, false, { message: "Invalid username or password" });
+        }
+
+        const passwordMatch = await comparePasswords(password, user.passwordHash);
+        if (!passwordMatch) {
           return done(null, false, { message: "Invalid username or password" });
         }
 
         if (user.banned) {
           return done(null, false, {
             message: `Account banned: ${user.banReason}`,
+          });
+        }
+
+        // Check for temporary ban
+        if (user.tempBanUntil && new Date(user.tempBanUntil) > new Date()) {
+          const banUntil = new Date(user.tempBanUntil);
+          return done(null, false, {
+            message: `Account temporarily banned until ${banUntil.toISOString()}`,
           });
         }
 
@@ -122,6 +135,7 @@ export function setupAuth(app: Express) {
 
         return done(null, user);
       } catch (error) {
+        console.error("Login error:", error);
         return done(error);
       }
     }),
