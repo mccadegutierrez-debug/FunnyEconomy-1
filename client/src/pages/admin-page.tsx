@@ -54,6 +54,9 @@ import {
   Heart,
   Bell,
   Send,
+  Calendar,
+  Sparkles,
+  PartyPopper,
 } from "lucide-react";
 import { STATIC_PET_TYPES } from "@shared/pet-types-data";
 
@@ -115,6 +118,15 @@ export default function AdminPage() {
   });
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState<"system" | "event" | "warning" | "info">("system");
+  const [newEvent, setNewEvent] = useState({
+    name: "",
+    description: "",
+    type: "holiday",
+    emoji: "🎉",
+    startDate: "",
+    endDate: "",
+    multipliers: {} as Record<string, number>,
+  });
   const { toast } = useToast();
 
   // Fetch notification presets
@@ -587,6 +599,111 @@ export default function AdminPage() {
     },
   });
 
+  // Events queries and mutations
+  const { data: events = [] } = useQuery({
+    queryKey: ["/api/admin/events"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/events");
+      return res.json();
+    },
+    enabled: isAuthenticated,
+  });
+
+  const createEventMutation = useMutation({
+    mutationFn: async (eventData: any) => {
+      const res = await apiRequest("POST", "/api/admin/events", eventData);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Event Created! 🎉",
+        description: `${data.event.name} has been created successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/notifications"] });
+      setNewEvent({
+        name: "",
+        description: "",
+        type: "holiday",
+        emoji: "🎉",
+        startDate: "",
+        endDate: "",
+        multipliers: {},
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Create Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const activateEventMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      const res = await apiRequest("PUT", `/api/admin/events/${eventId}/activate`);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Event Activated! 🎊",
+        description: `${data.event.name} is now active!`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/notifications"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Activation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deactivateEventMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      const res = await apiRequest("PUT", `/api/admin/events/${eventId}/deactivate`);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Event Deactivated",
+        description: `${data.event.name} has been deactivated.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Deactivation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      const res = await apiRequest("DELETE", `/api/admin/events/${eventId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Event Deleted",
+        description: "The event has been deleted successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const createItemMutation = useMutation({
     mutationFn: async (itemData: any) => {
       const effectsData: any = {
@@ -975,6 +1092,14 @@ export default function AdminPage() {
               >
                 <Bell className="w-4 h-4 mr-2" />
                 Notifications
+              </TabsTrigger>
+              <TabsTrigger
+                value="events"
+                data-testid="tab-events"
+                className="flex-shrink-0"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Events
               </TabsTrigger>
             </TabsList>
 
@@ -2345,6 +2470,224 @@ export default function AdminPage() {
                     <p className="text-xs text-muted-foreground mt-2 text-center">
                       This will send a notification to all users and activate boost multipliers
                     </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="events" className="space-y-6 mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Create Event Form */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-impact text-2xl text-primary flex items-center gap-2">
+                      <Calendar className="w-6 h-6" />
+                      CREATE NEW EVENT
+                    </CardTitle>
+                    <CardDescription>
+                      Create holiday events or special boosts for users
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Event Name</Label>
+                      <Input
+                        value={newEvent.name}
+                        onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
+                        placeholder="Christmas Celebration"
+                        data-testid="input-event-name"
+                      />
+                    </div>
+                    <div>
+                      <Label>Description</Label>
+                      <Textarea
+                        value={newEvent.description}
+                        onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                        placeholder="Double XP and coins during the holiday season!"
+                        rows={3}
+                        data-testid="textarea-event-description"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Event Type</Label>
+                        <Select value={newEvent.type} onValueChange={(value) => setNewEvent({ ...newEvent, type: value })}>
+                          <SelectTrigger data-testid="select-event-type">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="holiday">🎄 Holiday</SelectItem>
+                            <SelectItem value="double_xp">⭐ Double XP</SelectItem>
+                            <SelectItem value="double_luck">🍀 Double Luck</SelectItem>
+                            <SelectItem value="double_money">💰 Double Money</SelectItem>
+                            <SelectItem value="custom">✨ Custom</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Emoji</Label>
+                        <Input
+                          value={newEvent.emoji}
+                          onChange={(e) => setNewEvent({ ...newEvent, emoji: e.target.value })}
+                          placeholder="🎉"
+                          maxLength={4}
+                          data-testid="input-event-emoji"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Start Date & Time</Label>
+                        <Input
+                          type="datetime-local"
+                          value={newEvent.startDate}
+                          onChange={(e) => setNewEvent({ ...newEvent, startDate: e.target.value })}
+                          data-testid="input-event-start"
+                        />
+                      </div>
+                      <div>
+                        <Label>End Date & Time</Label>
+                        <Input
+                          type="datetime-local"
+                          value={newEvent.endDate}
+                          onChange={(e) => setNewEvent({ ...newEvent, endDate: e.target.value })}
+                          data-testid="input-event-end"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => createEventMutation.mutate(newEvent)}
+                      disabled={!newEvent.name || !newEvent.description || !newEvent.startDate || !newEvent.endDate || createEventMutation.isPending}
+                      className="w-full"
+                      data-testid="button-create-event"
+                    >
+                      <PartyPopper className="w-4 h-4 mr-2" />
+                      {createEventMutation.isPending ? "Creating..." : "Create Event"}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Active Events */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-impact text-2xl text-accent flex items-center gap-2">
+                      <Sparkles className="w-6 h-6" />
+                      ACTIVE EVENTS
+                    </CardTitle>
+                    <CardDescription>
+                      Currently running events
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {events.filter((event: any) => event.active).length === 0 ? (
+                        <p className="text-muted-foreground text-center py-8">No active events</p>
+                      ) : (
+                        events
+                          .filter((event: any) => event.active)
+                          .map((event: any) => (
+                            <div
+                              key={event.id}
+                              className="p-4 border border-primary rounded-lg bg-primary/10"
+                              data-testid={`active-event-${event.id}`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h3 className="font-bold text-lg flex items-center gap-2">
+                                    {event.emoji} {event.name}
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {event.description}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <Badge>{event.type}</Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      Until: {new Date(event.endDate).toLocaleString()}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => deactivateEventMutation.mutate(event.id)}
+                                  disabled={deactivateEventMutation.isPending}
+                                  data-testid={`button-deactivate-${event.id}`}
+                                >
+                                  Deactivate
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* All Events List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-impact text-2xl text-secondary">
+                    📋 ALL EVENTS
+                  </CardTitle>
+                  <CardDescription>
+                    Manage all created events
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {events.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-8">No events created yet</p>
+                    ) : (
+                      events.map((event: any) => (
+                        <div
+                          key={event.id}
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                          data-testid={`event-${event.id}`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">{event.emoji}</span>
+                              <div>
+                                <h3 className="font-semibold">{event.name}</h3>
+                                <p className="text-sm text-muted-foreground">{event.description}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant={event.active ? "default" : "secondary"}>
+                                    {event.active ? "Active" : "Inactive"}
+                                  </Badge>
+                                  <Badge variant="outline">{event.type}</Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(event.startDate).toLocaleDateString()} - {new Date(event.endDate).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {!event.active && (
+                              <Button
+                                size="sm"
+                                onClick={() => activateEventMutation.mutate(event.id)}
+                                disabled={activateEventMutation.isPending}
+                                data-testid={`button-activate-${event.id}`}
+                              >
+                                <Sparkles className="w-4 h-4 mr-1" />
+                                Activate
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteEventMutation.mutate(event.id)}
+                              disabled={deleteEventMutation.isPending}
+                              data-testid={`button-delete-${event.id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
