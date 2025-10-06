@@ -2657,7 +2657,10 @@ export default function AdminPage() {
                     </Button>
                   </CardContent>
                 </Card>
+              </div>
 
+              {/* Active Events and All Events Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Active Events */}
                 <Card>
                   <CardHeader>
@@ -2713,75 +2716,75 @@ export default function AdminPage() {
                     </div>
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* All Events List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-impact text-2xl text-secondary">
-                    📋 ALL EVENTS
-                  </CardTitle>
-                  <CardDescription>
-                    Manage all created events
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {events.length === 0 ? (
-                      <p className="text-muted-foreground text-center py-8">No events created yet</p>
-                    ) : (
-                      events.map((event: any) => (
-                        <div
-                          key={event.id}
-                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                          data-testid={`event-${event.id}`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-2xl">{event.emoji}</span>
-                              <div>
-                                <h3 className="font-semibold">{event.name}</h3>
-                                <p className="text-sm text-muted-foreground">{event.description}</p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <Badge variant={event.active ? "default" : "secondary"}>
-                                    {event.active ? "Active" : "Inactive"}
-                                  </Badge>
-                                  <Badge variant="outline">{event.type}</Badge>
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(event.startDate).toLocaleDateString()} - {new Date(event.endDate).toLocaleDateString()}
-                                  </span>
+                {/* All Events */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-impact text-2xl text-secondary">
+                      📋 ALL EVENTS
+                    </CardTitle>
+                    <CardDescription>
+                      Manage all created events
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {events.length === 0 ? (
+                        <p className="text-muted-foreground text-center py-8">No events created yet</p>
+                      ) : (
+                        events.map((event: any) => (
+                          <div
+                            key={event.id}
+                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                            data-testid={`event-${event.id}`}
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">{event.emoji}</span>
+                                <div>
+                                  <h3 className="font-semibold">{event.name}</h3>
+                                  <p className="text-sm text-muted-foreground">{event.description}</p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <Badge variant={event.active ? "default" : "secondary"}>
+                                      {event.active ? "Active" : "Inactive"}
+                                    </Badge>
+                                    <Badge variant="outline">{event.type}</Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(event.startDate).toLocaleDateString()} - {new Date(event.endDate).toLocaleDateString()}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {!event.active && (
+                            <div className="flex items-center gap-2">
+                              {!event.active && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => activateEventMutation.mutate(event.id)}
+                                  disabled={activateEventMutation.isPending}
+                                  data-testid={`button-activate-${event.id}`}
+                                >
+                                  <Sparkles className="w-4 h-4 mr-1" />
+                                  Activate
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
-                                onClick={() => activateEventMutation.mutate(event.id)}
-                                disabled={activateEventMutation.isPending}
-                                data-testid={`button-activate-${event.id}`}
+                                variant="destructive"
+                                onClick={() => deleteEventMutation.mutate(event.id)}
+                                disabled={deleteEventMutation.isPending}
+                                data-testid={`button-delete-${event.id}`}
                               >
-                                <Sparkles className="w-4 h-4 mr-1" />
-                                Activate
+                                <Trash2 className="w-4 h-4" />
                               </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => deleteEventMutation.mutate(event.id)}
-                              disabled={deleteEventMutation.isPending}
-                              data-testid={`button-delete-${event.id}`}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            </div>
                           </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="feature-flags" className="space-y-4">
