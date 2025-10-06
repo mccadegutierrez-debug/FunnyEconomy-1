@@ -1094,7 +1094,7 @@ export default function HomePage() {
               {/* Fishing Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:scale-105 transition-transform glow-cyan cursor-pointer">
+                  <Card className="bg-gradient-to-r from-blue-600 to-blue-700 hover:scale-105 transition-transform glow-primary cursor-pointer">
                     <CardContent className="p-4 text-center">
                       <Fish className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">
@@ -1191,7 +1191,7 @@ export default function HomePage() {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-cyan-500 to-teal-500 hover:scale-105 transition-transform glow-cyan cursor-pointer">
+                  <Card className="bg-gradient-to-r from-blue-500 to-blue-600 hover:scale-105 transition-transform glow-primary cursor-pointer">
                     <CardContent className="p-4 text-center">
                       <TrendingUp className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">
