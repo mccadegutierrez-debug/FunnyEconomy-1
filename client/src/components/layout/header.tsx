@@ -163,26 +163,27 @@ export default function Header() {
             </div>
 
             {/* Notifications */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="relative overflow-visible"
-                  data-testid="button-notifications"
-                >
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-1 -right-1 h-5 w-5 text-xs rounded-full flex items-center justify-center p-0 min-w-[20px]"
-                      data-testid="notification-count"
-                    >
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
+            <div className="relative">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="relative"
+                    data-testid="button-notifications"
+                  >
+                    <Bell className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                {unreadCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1 -right-1 h-5 w-5 text-xs rounded-full flex items-center justify-center p-0 min-w-[20px] pointer-events-none"
+                    data-testid="notification-count"
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Badge>
+                )}
               <DropdownMenuContent align="end" className="w-80">
                 <div className="p-2">
                   <div className="flex items-center justify-between mb-2">
@@ -255,7 +256,8 @@ export default function Header() {
                   )}
                 </div>
               </DropdownMenuContent>
-            </DropdownMenu>
+              </DropdownMenu>
+            </div>
 
             {/* User Menu */}
             <DropdownMenu>
