@@ -1380,10 +1380,10 @@ export function registerRoutes(app: Express): Server {
           break;
 
         case "fixLevels":
-          const allUsers = await storage.getAllUsers();
+          const usersToFix = await storage.getAllUsers();
           let fixed = 0;
 
-          for (const user of allUsers) {
+          for (const user of usersToFix) {
             if (!user) continue;
 
             let currentLevel = 1;
