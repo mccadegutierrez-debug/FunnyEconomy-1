@@ -2259,6 +2259,153 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Global notification sending
+  app.post("/api/admin/notifications/global", requireAdmin, async (req, res) => {
+    try {
+      const notificationSchema = z.object({
+        message: z.string().min(1).max(500),
+        type: z.enum(["system", "event", "warning", "info"]),
+      });
+
+      const { message, type } = notificationSchema.parse(req.body);
+      const allUsers = await storage.getAllUsers();
+      let sent = 0;
+
+      for (const user of allUsers) {
+        if (user && !user.banned) {
+          await storage.createNotification({
+            user: user.username,
+            message,
+            type,
+            read: false,
+          });
+          sent++;
+        }
+      }
+
+      await logAdminAction(
+        req,
+        "send_global_notification",
+        "notification",
+        "global",
+        message,
+        { type, sentTo: sent }
+      );
+
+      res.json({
+        success: true,
+        message: `Notification sent to ${sent} users`,
+        sentTo: sent,
+      });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Get notification presets
+  app.get("/api/admin/notifications/presets", requireAdmin, async (req, res) => {
+    try {
+      const presets = [
+        {
+          id: "maintenance",
+          title: "Maintenance Notice",
+          message: "⚙️ Scheduled maintenance in 30 minutes. Save your progress!",
+          type: "warning" as const,
+        },
+        {
+          id: "event_start",
+          title: "Event Started",
+          message: "🎉 New event just started! Check it out for exclusive rewards!",
+          type: "event" as const,
+        },
+        {
+          id: "double_xp",
+          title: "Double XP Event",
+          message: "⭐ Double XP is now active for the next 2 hours! Get grinding!",
+          type: "event" as const,
+        },
+        {
+          id: "friday_boost",
+          title: "Friday Boost Active",
+          message: "🎊 Friday Boost is LIVE! Increased gambling luck, coins, and XP for 24 hours!",
+          type: "event" as const,
+        },
+        {
+          id: "update",
+          title: "New Update",
+          message: "🚀 New features just dropped! Check out the latest updates!",
+          type: "info" as const,
+        },
+        {
+          id: "giveaway",
+          title: "Giveaway Alert",
+          message: "💰 GIVEAWAY TIME! React to win exclusive prizes!",
+          type: "event" as const,
+        },
+      ];
+      res.json(presets);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  // Check if Friday boost is active
+  app.get("/api/friday-boost/status", async (req, res) => {
+    try {
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
+      const isFriday = dayOfWeek === 5;
+      
+      res.json({
+        active: isFriday,
+        boosts: {
+          gamblingLuck: 1.25, // 25% better odds
+          coinsMultiplier: 1.5, // 50% more coins
+          xpMultiplier: 2.0, // 2x XP
+        },
+        message: isFriday
+          ? "Friday Boost is ACTIVE! 🎊"
+          : "Friday Boost will be active on Fridays!",
+      });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  // Activate Friday boost manually (admin only)
+  app.post("/api/admin/friday-boost/activate", requireAdmin, async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      
+      for (const user of allUsers) {
+        if (user && !user.banned) {
+          await storage.createNotification({
+            user: user.username,
+            message: "🎊 Friday Boost is LIVE! Increased gambling luck, coins, and XP for 24 hours!",
+            type: "event",
+            read: false,
+          });
+        }
+      }
+
+      await logAdminAction(
+        req,
+        "activate_friday_boost",
+        "boost",
+        "friday_boost",
+        "Friday Boost activated",
+        {}
+      );
+
+      res.json({
+        success: true,
+        message: "Friday Boost activated and notifications sent!",
+      });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket setup for real-time features with session authentication

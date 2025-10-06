@@ -3,6 +3,21 @@ import { randomBytes } from "crypto";
 import { db } from "../database";
 
 export class GameService {
+  // Check if Friday boost is active
+  private static isFridayBoost(): boolean {
+    const now = new Date();
+    return now.getDay() === 5; // 0 = Sunday, 5 = Friday
+  }
+
+  // Get Friday boost multipliers
+  private static getFridayBoostMultipliers() {
+    return {
+      gamblingLuck: 1.25, // 25% better odds
+      coinsMultiplier: 1.5, // 50% more coins
+      xpMultiplier: 2.0, // 2x XP
+    };
+  }
+
   // Blackjack implementation
   static async playBlackjack(username: string, bet: number) {
     const user = await storage.getUserByUsername(username);
@@ -16,12 +31,26 @@ export class GameService {
       throw new Error("Insufficient coins");
     }
 
-    // Simple blackjack simulation
+    const isFriday = this.isFridayBoost();
+    const boosts = this.getFridayBoostMultipliers();
+
+    // Simple blackjack simulation with Friday boost
     const dealerScore = this.getRandomCardValue();
     const playerScore = this.getRandomCardValue();
 
-    const win = playerScore > dealerScore && playerScore <= 21;
-    const amount = win ? Math.floor(bet * 1.95) : -bet; // House edge
+    let win = playerScore > dealerScore && playerScore <= 21;
+    
+    // Apply Friday boost to gambling luck
+    if (isFriday && !win && Math.random() < 0.15) {
+      win = true; // 15% chance to turn loss into win on Friday
+    }
+
+    let amount = win ? Math.floor(bet * 1.95) : -bet; // House edge
+    
+    // Apply Friday coin boost
+    if (isFriday && win) {
+      amount = Math.floor(amount * boosts.coinsMultiplier);
+    }
 
     // Parse gameStats
     const gameStats =
@@ -29,9 +58,12 @@ export class GameService {
         ? (user.gameStats as any)
         : {};
 
+    const xpGain = win ? (isFriday ? 20 : 10) : 0; // Double XP on Friday
+
     // Update user coins and stats
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
+      xp: user.xp + xpGain,
       gameStats: {
         ...gameStats,
         blackjackWins: (gameStats.blackjackWins || 0) + (win ? 1 : 0),
@@ -45,7 +77,7 @@ export class GameService {
       type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Blackjack ${win ? "win" : "loss"}: ${playerScore} vs ${dealerScore}`,
+      description: `Blackjack ${win ? "win" : "loss"}: ${playerScore} vs ${dealerScore}${isFriday ? " [FRIDAY BOOST]" : ""}`,
     });
 
     return {
@@ -54,6 +86,8 @@ export class GameService {
       playerScore,
       dealerScore,
       newBalance: user.coins + amount,
+      fridayBoost: isFriday,
+      xpGained: xpGain,
     };
   }
 

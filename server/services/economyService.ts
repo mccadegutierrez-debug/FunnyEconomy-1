@@ -302,6 +302,12 @@ export class EconomyService {
     }
   }
 
+  // Check if Friday boost is active
+  private static isFridayBoost(): boolean {
+    const now = new Date();
+    return now.getDay() === 5; // 0 = Sunday, 5 = Friday
+  }
+
   // Daily commands
   static async claimDaily(username: string) {
     const user = await storage.getUserByUsername(username);
@@ -320,8 +326,15 @@ export class EconomyService {
       );
     }
 
-    const amount = 200 + Math.floor(Math.random() * 801); // 200-1000 coins
-    const xpGain = 50;
+    const isFriday = this.isFridayBoost();
+    let amount = 200 + Math.floor(Math.random() * 801); // 200-1000 coins
+    let xpGain = 50;
+
+    // Apply Friday boost
+    if (isFriday) {
+      amount = Math.floor(amount * 1.5); // 50% more coins
+      xpGain = Math.floor(xpGain * 2); // 2x XP
+    }
 
     // 5% chance for bonus item
     let bonusItem = null;
@@ -362,7 +375,7 @@ export class EconomyService {
       type: "earn",
       amount,
       targetUser: null,
-      description: `Daily reward: ${amount} coins, ${xpGain} XP${bonusItem ? ` + ${bonusItem.name}` : ""}`,
+      description: `Daily reward: ${amount} coins, ${xpGain} XP${bonusItem ? ` + ${bonusItem.name}` : ""}${isFriday ? " [FRIDAY BOOST]" : ""}`,
     });
 
     return {
@@ -372,6 +385,7 @@ export class EconomyService {
       bonusItem,
       newBalance: user.coins + amount,
       newXP: user.xp + xpGain,
+      fridayBoost: isFriday,
     };
   }
 

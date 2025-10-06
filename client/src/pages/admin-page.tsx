@@ -52,6 +52,8 @@ import {
   Database,
   Server,
   Heart,
+  Bell,
+  Send,
 } from "lucide-react";
 import { STATIC_PET_TYPES } from "@shared/pet-types-data";
 
@@ -111,7 +113,30 @@ export default function AdminPage() {
     energyDecay: "",
     funDecay: "",
   });
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState<"system" | "event" | "warning" | "info">("system");
   const { toast } = useToast();
+
+  // Fetch notification presets
+  const { data: notificationPresets = [] } = useQuery({
+    queryKey: ["/api/admin/notifications/presets"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/notifications/presets");
+      return res.json();
+    },
+    enabled: isAuthenticated,
+  });
+
+  // Fetch Friday boost status
+  const { data: fridayBoostStatus } = useQuery({
+    queryKey: ["/api/friday-boost/status"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/friday-boost/status");
+      return res.json();
+    },
+    enabled: isAuthenticated,
+    refetchInterval: 60000, // Refetch every minute
+  });
 
   // Helper function to toggle user actions expansion
   const toggleUserActions = (userId: string) => {
@@ -484,6 +509,48 @@ export default function AdminPage() {
       toast({
         title: "Create Pet Failed",
         description: error.message || "Unknown error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sendGlobalNotificationMutation = useMutation({
+    mutationFn: async (data: { message: string; type: string }) => {
+      const res = await apiRequest("POST", "/api/admin/notifications/global", data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Notification Sent! 📢",
+        description: data.message,
+      });
+      setNotificationMessage("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Send Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const activateFridayBoostMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/friday-boost/activate");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Friday Boost Activated! 🎊",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/friday-boost/status"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Activation Failed",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -884,6 +951,14 @@ export default function AdminPage() {
               >
                 <Heart className="w-4 h-4 mr-2" />
                 Pets
+              </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                data-testid="tab-notifications"
+                className="flex-shrink-0"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
               </TabsTrigger>
               <TabsTrigger
                 value="feature-flags"
@@ -2118,6 +2193,164 @@ export default function AdminPage() {
                   Total available pets: {STATIC_PET_TYPES.length}
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="notifications" className="space-y-6 mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Send Global Notification */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-impact text-2xl text-primary">
+                      📢 SEND GLOBAL NOTIFICATION
+                    </CardTitle>
+                    <CardDescription>
+                      Send a notification to all active users
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="notification-type">Type</Label>
+                      <Select value={notificationType} onValueChange={(value: any) => setNotificationType(value)}>
+                        <SelectTrigger data-testid="select-notification-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="system">System</SelectItem>
+                          <SelectItem value="event">Event</SelectItem>
+                          <SelectItem value="warning">Warning</SelectItem>
+                          <SelectItem value="info">Info</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="notification-message">Message</Label>
+                      <Textarea
+                        id="notification-message"
+                        value={notificationMessage}
+                        onChange={(e) => setNotificationMessage(e.target.value)}
+                        placeholder="Enter notification message..."
+                        maxLength={500}
+                        rows={4}
+                        data-testid="textarea-notification-message"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {notificationMessage.length}/500 characters
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() =>
+                        sendGlobalNotificationMutation.mutate({
+                          message: notificationMessage,
+                          type: notificationType,
+                        })
+                      }
+                      disabled={
+                        !notificationMessage.trim() ||
+                        sendGlobalNotificationMutation.isPending
+                      }
+                      className="w-full"
+                      data-testid="button-send-notification"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      {sendGlobalNotificationMutation.isPending
+                        ? "Sending..."
+                        : "Send Notification"}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Notification Presets */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-impact text-2xl text-secondary">
+                      📋 NOTIFICATION PRESETS
+                    </CardTitle>
+                    <CardDescription>
+                      Quick-send preset notifications
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {notificationPresets.map((preset: any) => (
+                      <div
+                        key={preset.id}
+                        className="flex items-start justify-between p-3 bg-muted rounded-lg"
+                        data-testid={`preset-${preset.id}`}
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm">{preset.title}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {preset.message}
+                          </p>
+                          <Badge variant="outline" className="mt-2 text-xs">
+                            {preset.type}
+                          </Badge>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setNotificationMessage(preset.message);
+                            setNotificationType(preset.type);
+                          }}
+                          data-testid={`button-use-preset-${preset.id}`}
+                        >
+                          Use
+                        </Button>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Friday Boost Section */}
+              <Card className="border-yellow-500/50 bg-yellow-950/20">
+                <CardHeader>
+                  <CardTitle className="font-impact text-2xl text-yellow-400">
+                    🎊 FRIDAY BOOST SYSTEM
+                  </CardTitle>
+                  <CardDescription>
+                    Manage the Friday boost event
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">Current Status</h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={fridayBoostStatus?.active ? "default" : "secondary"} className="text-lg py-1">
+                          {fridayBoostStatus?.active ? "🎊 ACTIVE" : "📅 Inactive"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {fridayBoostStatus?.message}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">Boost Multipliers</h3>
+                      <div className="space-y-1 text-sm">
+                        <p>🎰 Gambling Luck: +{((fridayBoostStatus?.boosts?.gamblingLuck - 1) * 100 || 25).toFixed(0)}%</p>
+                        <p>💰 Coins: +{((fridayBoostStatus?.boosts?.coinsMultiplier - 1) * 100 || 50).toFixed(0)}%</p>
+                        <p>⭐ XP: +{((fridayBoostStatus?.boosts?.xpMultiplier - 1) * 100 || 100).toFixed(0)}%</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Button
+                      onClick={() => activateFridayBoostMutation.mutate()}
+                      disabled={activateFridayBoostMutation.isPending}
+                      className="w-full bg-yellow-600 hover:bg-yellow-700"
+                      data-testid="button-activate-friday-boost"
+                    >
+                      🎊 {activateFridayBoostMutation.isPending ? "Activating..." : "Activate Friday Boost (Manual)"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      This will send a notification to all users and activate boost multipliers
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="feature-flags" className="space-y-4">
