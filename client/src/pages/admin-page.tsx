@@ -953,14 +953,6 @@ export default function AdminPage() {
                 Pets
               </TabsTrigger>
               <TabsTrigger
-                value="notifications"
-                data-testid="tab-notifications"
-                className="flex-shrink-0"
-              >
-                <Bell className="w-4 h-4 mr-2" />
-                Notifications
-              </TabsTrigger>
-              <TabsTrigger
                 value="feature-flags"
                 data-testid="tab-feature-flags"
                 className="flex-shrink-0"
@@ -975,6 +967,14 @@ export default function AdminPage() {
               >
                 <Command className="w-4 h-4 mr-2" />
                 System
+              </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                data-testid="tab-notifications"
+                className="flex-shrink-0"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
               </TabsTrigger>
             </TabsList>
 

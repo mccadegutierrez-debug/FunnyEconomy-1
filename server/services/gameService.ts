@@ -104,6 +104,9 @@ export class GameService {
       throw new Error("Insufficient coins");
     }
 
+    const isFriday = this.isFridayBoost();
+    const boosts = this.getFridayBoostMultipliers();
+
     // Slot symbols and their payouts
     const symbols = ["🐸", "💎", "🚀", "💰", "🔥"];
     const reels = [
@@ -132,7 +135,12 @@ export class GameService {
     }
 
     const win = multiplier > 0;
-    const amount = win ? bet * multiplier - bet : -bet;
+    let amount = win ? bet * multiplier - bet : -bet;
+
+    // Apply Friday boost
+    if (isFriday && win) {
+      amount = Math.floor(amount * boosts.coinsMultiplier);
+    }
 
     // Parse gameStats
     const gameStats =
@@ -140,9 +148,12 @@ export class GameService {
         ? (user.gameStats as any)
         : {};
 
+    const xpGain = win ? (isFriday ? 20 : 10) : 0;
+
     // Update user
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
+      xp: user.xp + xpGain,
       gameStats: {
         ...gameStats,
         slotsWins: (gameStats.slotsWins || 0) + (win ? 1 : 0),
@@ -155,7 +166,7 @@ export class GameService {
       type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Slots ${win ? "win" : "loss"}: ${reels.join(" ")} (${multiplier}x)`,
+      description: `Slots ${win ? "win" : "loss"}: ${reels.join(" ")} (${multiplier}x)${isFriday ? " [FRIDAY BOOST]" : ""}`,
     });
 
     return {
@@ -164,6 +175,8 @@ export class GameService {
       reels,
       multiplier,
       newBalance: user.coins + amount,
+      fridayBoost: isFriday,
+      xpGained: xpGain,
     };
   }
 
@@ -184,9 +197,23 @@ export class GameService {
       throw new Error("Insufficient coins");
     }
 
+    const isFriday = this.isFridayBoost();
+    const boosts = this.getFridayBoostMultipliers();
+
     const result = this.getSecureRandom() % 2 === 0 ? "heads" : "tails";
-    const win = choice === result;
-    const amount = win ? Math.floor(bet * 0.95) : -bet; // 1.95x payout with house edge
+    let win = choice === result;
+
+    // Apply Friday boost to gambling luck
+    if (isFriday && !win && Math.random() < 0.15) {
+      win = true; // 15% chance to turn loss into win on Friday
+    }
+
+    let amount = win ? Math.floor(bet * 0.95) : -bet; // 1.95x payout with house edge
+
+    // Apply Friday coin boost
+    if (isFriday && win) {
+      amount = Math.floor(amount * boosts.coinsMultiplier);
+    }
 
     // Parse gameStats
     const gameStats =
@@ -194,8 +221,11 @@ export class GameService {
         ? (user.gameStats as any)
         : {};
 
+    const xpGain = win ? (isFriday ? 20 : 10) : 0;
+
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
+      xp: user.xp + xpGain,
       gameStats: {
         ...gameStats,
         coinflipWins: (gameStats.coinflipWins || 0) + (win ? 1 : 0),
@@ -208,7 +238,7 @@ export class GameService {
       type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Coinflip ${win ? "win" : "loss"}: ${choice} vs ${result}`,
+      description: `Coinflip ${win ? "win" : "loss"}: ${choice} vs ${result}${isFriday ? " [FRIDAY BOOST]" : ""}`,
     });
 
     return {
@@ -217,6 +247,8 @@ export class GameService {
       result,
       choice,
       newBalance: user.coins + amount,
+      fridayBoost: isFriday,
+      xpGained: xpGain,
     };
   }
 
@@ -396,6 +428,9 @@ export class GameService {
       throw new Error("Insufficient coins");
     }
 
+    const isFriday = this.isFridayBoost();
+    const boosts = this.getFridayBoostMultipliers();
+
     const dice1 = (this.getSecureRandom() % 6) + 1;
     const dice2 = (this.getSecureRandom() % 6) + 1;
     const total = dice1 + dice2;
@@ -414,15 +449,29 @@ export class GameService {
       multiplier = 1.9; // 1.9x for under
     }
 
-    const amount = win ? Math.floor(bet * multiplier) - bet : -bet;
+    // Apply Friday boost to gambling luck
+    if (isFriday && !win && Math.random() < 0.15) {
+      win = true; // 15% chance to turn loss into win on Friday
+      multiplier = 1.9;
+    }
+
+    let amount = win ? Math.floor(bet * multiplier) - bet : -bet;
+
+    // Apply Friday coin boost
+    if (isFriday && win) {
+      amount = Math.floor(amount * boosts.coinsMultiplier);
+    }
 
     const gameStats =
       typeof user.gameStats === "object" && user.gameStats !== null
         ? (user.gameStats as any)
         : {};
 
+    const xpGain = win ? (isFriday ? 20 : 10) : 0;
+
     await storage.updateUser(user.id, {
       coins: user.coins + amount,
+      xp: user.xp + xpGain,
       gameStats: {
         ...gameStats,
         diceWins: (gameStats.diceWins || 0) + (win ? 1 : 0),
@@ -435,7 +484,7 @@ export class GameService {
       type: win ? "earn" : "spend",
       amount: Math.abs(amount),
       targetUser: null,
-      description: `Dice ${win ? "win" : "loss"}: ${dice1}+${dice2}=${total} (${prediction})`,
+      description: `Dice ${win ? "win" : "loss"}: ${dice1}+${dice2}=${total} (${prediction})${isFriday ? " [FRIDAY BOOST]" : ""}`,
     });
 
     return {
@@ -447,6 +496,8 @@ export class GameService {
       prediction,
       multiplier,
       newBalance: user.coins + amount,
+      fridayBoost: isFriday,
+      xpGained: xpGain,
     };
   }
 
