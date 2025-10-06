@@ -2541,8 +2541,11 @@ export function registerRoutes(app: Express): Server {
         if (holidayDate < now) {
           holidayDate.setFullYear(currentYear + 1);
         }
+        // Set to start of day for cleaner dates
+        holidayDate.setHours(0, 0, 0, 0);
         const endDate = new Date(holidayDate);
         endDate.setDate(endDate.getDate() + durationDays);
+        endDate.setHours(23, 59, 0, 0);
         return {
           startDate: holidayDate.toISOString().slice(0, 16),
           endDate: endDate.toISOString().slice(0, 16),
@@ -2557,6 +2560,7 @@ export function registerRoutes(app: Express): Server {
         saturday.setHours(0, 0, 0, 0);
         const sunday = new Date(saturday);
         sunday.setDate(sunday.getDate() + 2);
+        sunday.setHours(23, 59, 0, 0);
         return {
           startDate: saturday.toISOString().slice(0, 16),
           endDate: sunday.toISOString().slice(0, 16),

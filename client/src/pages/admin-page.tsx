@@ -2530,13 +2530,21 @@ export default function AdminPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
+                            // Ensure dates are in the correct format for datetime-local inputs
+                            const startDate = preset.startDate.includes('T') 
+                              ? preset.startDate.slice(0, 16)
+                              : new Date(preset.startDate).toISOString().slice(0, 16);
+                            const endDate = preset.endDate.includes('T')
+                              ? preset.endDate.slice(0, 16)
+                              : new Date(preset.endDate).toISOString().slice(0, 16);
+                            
                             setNewEvent({
                               name: preset.name,
                               description: preset.description,
                               type: preset.type,
                               emoji: preset.emoji,
-                              startDate: preset.startDate,
-                              endDate: preset.endDate,
+                              startDate: startDate,
+                              endDate: endDate,
                               multipliers: preset.multipliers,
                             });
                           }}
