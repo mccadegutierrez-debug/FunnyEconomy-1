@@ -2532,10 +2532,44 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/admin/events/presets", requireAdmin, async (req, res) => {
     try {
       const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const nextWeek = new Date(now);
-      nextWeek.setDate(nextWeek.getDate() + 7);
+      const currentYear = now.getFullYear();
+      
+      // Helper function to create date for this year or next year if passed
+      const getHolidayDate = (month: number, day: number, durationDays: number = 1) => {
+        const holidayDate = new Date(currentYear, month - 1, day);
+        // If holiday has passed, use next year
+        if (holidayDate < now) {
+          holidayDate.setFullYear(currentYear + 1);
+        }
+        const endDate = new Date(holidayDate);
+        endDate.setDate(endDate.getDate() + durationDays);
+        return {
+          startDate: holidayDate.toISOString().slice(0, 16),
+          endDate: endDate.toISOString().slice(0, 16),
+        };
+      };
+
+      // Calculate next weekend
+      const getNextWeekend = () => {
+        const daysUntilSaturday = (6 - now.getDay() + 7) % 7 || 7;
+        const saturday = new Date(now);
+        saturday.setDate(saturday.getDate() + daysUntilSaturday);
+        saturday.setHours(0, 0, 0, 0);
+        const sunday = new Date(saturday);
+        sunday.setDate(sunday.getDate() + 2);
+        return {
+          startDate: saturday.toISOString().slice(0, 16),
+          endDate: sunday.toISOString().slice(0, 16),
+        };
+      };
+
+      const weekend = getNextWeekend();
+      const christmas = getHolidayDate(12, 25, 7); // Dec 25 + 7 days
+      const halloween = getHolidayDate(10, 31, 3); // Oct 31 + 3 days
+      const newYear = getHolidayDate(1, 1, 1); // Jan 1 + 1 day
+      const valentines = getHolidayDate(2, 14, 2); // Feb 14 + 2 days
+      const summerStart = getHolidayDate(6, 21, 5); // Jun 21 (Summer Solstice) + 5 days
+      const stPatricks = getHolidayDate(3, 17, 1); // Mar 17 + 1 day
 
       const presets = [
         {
@@ -2546,6 +2580,8 @@ export function registerRoutes(app: Express): Server {
           emoji: "⭐",
           duration: "48h",
           multipliers: { xp: 2 },
+          startDate: weekend.startDate,
+          endDate: weekend.endDate,
         },
         {
           id: "christmas_event",
@@ -2555,6 +2591,8 @@ export function registerRoutes(app: Express): Server {
           emoji: "🎄",
           duration: "7d",
           multipliers: { coins: 1.5, xp: 1.5, luck: 1.25 },
+          startDate: christmas.startDate,
+          endDate: christmas.endDate,
         },
         {
           id: "halloween_spooky",
@@ -2564,6 +2602,8 @@ export function registerRoutes(app: Express): Server {
           emoji: "🎃",
           duration: "3d",
           multipliers: { coins: 2, luck: 1.5 },
+          startDate: halloween.startDate,
+          endDate: halloween.endDate,
         },
         {
           id: "new_year_bash",
@@ -2573,6 +2613,8 @@ export function registerRoutes(app: Express): Server {
           emoji: "🎆",
           duration: "24h",
           multipliers: { coins: 3, xp: 2, luck: 2 },
+          startDate: newYear.startDate,
+          endDate: newYear.endDate,
         },
         {
           id: "double_coins",
@@ -2582,6 +2624,8 @@ export function registerRoutes(app: Express): Server {
           emoji: "💰",
           duration: "12h",
           multipliers: { coins: 2 },
+          startDate: now.toISOString().slice(0, 16),
+          endDate: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 16),
         },
         {
           id: "lucky_hour",
@@ -2591,6 +2635,8 @@ export function registerRoutes(app: Express): Server {
           emoji: "🍀",
           duration: "1h",
           multipliers: { luck: 2.5 },
+          startDate: now.toISOString().slice(0, 16),
+          endDate: new Date(now.getTime() + 60 * 60 * 1000).toISOString().slice(0, 16),
         },
         {
           id: "summer_festival",
@@ -2600,6 +2646,8 @@ export function registerRoutes(app: Express): Server {
           emoji: "☀️",
           duration: "5d",
           multipliers: { coins: 1.5, xp: 1.5, luck: 1.3 },
+          startDate: summerStart.startDate,
+          endDate: summerStart.endDate,
         },
         {
           id: "valentines_day",
@@ -2609,6 +2657,19 @@ export function registerRoutes(app: Express): Server {
           emoji: "💝",
           duration: "2d",
           multipliers: { coins: 1.5, xp: 1.25 },
+          startDate: valentines.startDate,
+          endDate: valentines.endDate,
+        },
+        {
+          id: "st_patricks_day",
+          name: "St. Patrick's Day Luck",
+          description: "May the luck of the Irish be with you! Extra lucky gambling!",
+          type: "double_luck" as const,
+          emoji: "🍀",
+          duration: "24h",
+          multipliers: { luck: 2, coins: 1.5 },
+          startDate: stPatricks.startDate,
+          endDate: stPatricks.endDate,
         },
       ];
       res.json(presets);
