@@ -1379,6 +1379,35 @@ export function registerRoutes(app: Express): Server {
           res.json({ success: true, message: `Unbanned ${unbanned} users` });
           break;
 
+        case "fixLevels":
+          const allUsers = await storage.getAllUsers();
+          let fixed = 0;
+
+          for (const user of allUsers) {
+            if (!user) continue;
+
+            let currentLevel = 1;
+            let currentXP = user.xp;
+
+            // Calculate correct level based on XP
+            while (currentXP >= currentLevel * 1000) {
+              currentXP -= currentLevel * 1000;
+              currentLevel++;
+            }
+
+            // Update if level is wrong
+            if (currentLevel !== user.level || currentXP !== user.xp) {
+              await storage.updateUser(user.id, {
+                level: currentLevel,
+                xp: currentXP,
+              });
+              fixed++;
+            }
+          }
+
+          res.json({ success: true, message: `Fixed levels for ${fixed} users` });
+          break;
+
         case "serverMessage":
           const message = params.join(" ");
           if (!message) {

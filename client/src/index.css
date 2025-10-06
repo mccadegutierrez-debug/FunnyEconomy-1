@@ -15,7 +15,7 @@
   --secondary-foreground: hsl(0, 0%, 4%);
   --muted: hsl(215, 20%, 15%);
   --muted-foreground: hsl(215, 15%, 65%);
-  --accent: hsl(38, 92%, 50%);
+  --accent: hsl(180, 100%, 50%);
   --accent-foreground: hsl(0, 0%, 4%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 95%);
@@ -41,7 +41,7 @@
   --secondary-foreground: hsl(0, 0%, 4%);
   --muted: hsl(215, 20%, 15%);
   --muted-foreground: hsl(215, 15%, 65%);
-  --accent: hsl(38, 92%, 50%);
+  --accent: hsl(180, 100%, 50%);
   --accent-foreground: hsl(0, 0%, 4%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 95%);
@@ -82,7 +82,7 @@
   }
 
   .glow-accent {
-    box-shadow: 0 0 20px hsl(38 92% 50% / 0.3);
+    box-shadow: 0 0 20px hsl(180 100% 50% / 0.3);
   }
 
   .animate-bounce-slow {
@@ -97,7 +97,7 @@
     background: linear-gradient(
       90deg,
       hsl(217, 91%, 70%),
-      hsl(38, 92%, 50%),
+      hsl(180, 100%, 50%),
       hsl(317, 90%, 60%)
     );
     -webkit-background-clip: text;
@@ -106,7 +106,7 @@
     text-shadow:
       0 0 6px hsl(217 91% 60% / 0.8),
       0 0 12px hsl(217 91% 60% / 0.6),
-      0 0 18px hsl(38 92% 50% / 0.5);
+      0 0 18px hsl(180 100% 50% / 0.5);
     -webkit-text-stroke: 1px hsl(215, 25%, 6%);
     animation: glowPulse 3s ease-in-out infinite;
   }
@@ -169,13 +169,13 @@ a {
     text-shadow:
       0 0 6px hsl(217 91% 60% / 0.8),
       0 0 12px hsl(217 91% 60% / 0.6),
-      0 0 18px hsl(38 92% 50% / 0.5);
+      0 0 18px hsl(180 100% 50% / 0.5);
   }
   50% {
     text-shadow:
       0 0 12px hsl(217 91% 60% / 1),
       0 0 24px hsl(217 91% 60% / 0.8),
-      0 0 36px hsl(38 92% 50% / 0.7),
+      0 0 36px hsl(180 100% 50% / 0.7),
       0 0 48px hsl(317 90% 60% / 0.5);
   }
 }

@@ -399,7 +399,7 @@ export class EconomyService {
     if (user.lastWork && now - user.lastWork.getTime() < workCooldown) {
       const remaining = workCooldown - (now - user.lastWork.getTime());
       throw new Error(
-        `Work cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+        `Work cooldown: ${Math.ceil(remaining / 60000)} minutes remaining`,
       );
     }
 
@@ -454,7 +454,7 @@ export class EconomyService {
     if (user.lastBeg && now - user.lastBeg.getTime() < begCooldown) {
       const remaining = begCooldown - (now - user.lastBeg.getTime());
       throw new Error(
-        `Beg cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+        `Beg cooldown: ${Math.ceil(remaining / 60000)} minutes remaining`,
       );
     }
 
@@ -514,7 +514,7 @@ export class EconomyService {
     if (user.lastSearch && now - user.lastSearch.getTime() < searchCooldown) {
       const remaining = searchCooldown - (now - user.lastSearch.getTime());
       throw new Error(
-        `Search cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+        `Search cooldown: ${Math.ceil(remaining / 60000)} minutes remaining`,
       );
     }
 
@@ -557,7 +557,8 @@ export class EconomyService {
         Math.floor(Math.random() * Object.keys(searchLocations).length)
       ];
     const searchLocation =
-      searchLocations[selectedLocationKey] || searchLocations["couch"];
+      searchLocations[selectedLocationKey as keyof typeof searchLocations] ||
+      searchLocations.couch;
     const locationName = searchLocation.name;
 
     // Special handling for 'purse' location - 70% success, 30% failure
@@ -759,7 +760,7 @@ export class EconomyService {
     if (user.lastFish && now - user.lastFish.getTime() < fishCooldown) {
       const remaining = fishCooldown - (now - user.lastFish.getTime());
       throw new Error(
-        `Fishing cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+        `Fishing cooldown: ${Math.ceil(remaining / 60000)} minutes remaining`,
       );
     }
 
@@ -785,7 +786,8 @@ export class EconomyService {
 
     const selectedLocation = location || "pond";
     const fishTypes =
-      fishingLocations[selectedLocation] || fishingLocations["pond"];
+      fishingLocations[selectedLocation as keyof typeof fishingLocations] ||
+      fishingLocations.pond;
 
     // 20% failure chance
     const fishingFailed = Math.random() < 0.2;
@@ -820,7 +822,7 @@ export class EconomyService {
     let cumulativeChance = 0;
     let caughtFish = fishTypes[0]; // default fallback
 
-    for (const fish of fishTypes.reverse()) {
+    for (const fish of [...fishTypes].reverse()) {
       cumulativeChance += fish.chance;
       if (rand <= cumulativeChance) {
         caughtFish = fish;
@@ -873,7 +875,7 @@ export class EconomyService {
     if (user.lastMine && now - user.lastMine.getTime() < mineCooldown) {
       const remaining = mineCooldown - (now - user.lastMine.getTime());
       throw new Error(
-        `Mining cooldown: ${Math.ceil(remaining / (60 * 1000))} minutes remaining`,
+        `Mining cooldown: ${Math.ceil(remaining / 60000)} minutes remaining`,
       );
     }
 
@@ -889,7 +891,7 @@ export class EconomyService {
     let cumulativeChance = 0;
     let minedOre = ores[0];
 
-    for (const ore of ores.reverse()) {
+    for (const ore of [...ores].reverse()) {
       cumulativeChance += ore.chance;
       if (rand <= cumulativeChance) {
         minedOre = ore;
@@ -931,7 +933,7 @@ export class EconomyService {
     if (user.lastVote && now - user.lastVote.getTime() < voteCooldown) {
       const remaining = voteCooldown - (now - user.lastVote.getTime());
       throw new Error(
-        `Vote cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`,
+        `Vote cooldown: ${Math.ceil(remaining / 3600000)} hours remaining`,
       );
     }
 
@@ -978,7 +980,7 @@ export class EconomyService {
       const remaining =
         adventureCooldown - (now - user.lastAdventure.getTime());
       throw new Error(
-        `Adventure cooldown: ${Math.ceil(remaining / (60 * 60 * 1000))} hours remaining`,
+        `Adventure cooldown: ${Math.ceil(remaining / 3600000)} hours remaining`,
       );
     }
 
@@ -1266,7 +1268,8 @@ export class EconomyService {
       Object.keys(crimes)[
         Math.floor(Math.random() * Object.keys(crimes).length)
       ];
-    const selectedCrime = crimes[selectedCrimeKey] || crimes["steal-meme"];
+    const selectedCrime =
+      crimes[selectedCrimeKey as keyof typeof crimes] || crimes["steal-meme"];
     const success = Math.random() < selectedCrime.success;
 
     if (success) {
@@ -1366,7 +1369,9 @@ export class EconomyService {
     };
 
     const selectedArea = huntType || "forest";
-    const animals = huntingAreas[selectedArea] || huntingAreas["forest"];
+    const animals =
+      huntingAreas[selectedArea as keyof typeof huntingAreas] ||
+      huntingAreas.forest;
 
     // 15% failure chance
     const huntingFailed = Math.random() < 0.15;
@@ -1491,7 +1496,8 @@ export class EconomyService {
 
     const selectedLocation = location || "backyard";
     const treasures =
-      diggingLocations[selectedLocation] || diggingLocations["backyard"];
+      diggingLocations[selectedLocation as keyof typeof diggingLocations] ||
+      diggingLocations.backyard;
 
     // 20% failure chance
     const diggingFailed = Math.random() < 0.2;
@@ -1643,7 +1649,8 @@ export class EconomyService {
       Object.keys(memeTypes)[
         Math.floor(Math.random() * Object.keys(memeTypes).length)
       ];
-    const meme = memeTypes[selectedMemeKey] || memeTypes["normie"];
+    const meme =
+      memeTypes[selectedMemeKey as keyof typeof memeTypes] || memeTypes["normie"];
     const actualLikes = Math.floor(meme.likes * (0.5 + Math.random() * 0.5)); // 50-100% of expected likes
     const bonusCoins = Math.floor(actualLikes / 10); // Bonus based on likes
 
@@ -1965,5 +1972,35 @@ export class EconomyService {
           ? `You bought a ${ticket.name} for ${ticket.cost} coins and won ${prize} coins! Net: ${netGain > 0 ? "+" : ""}${netGain} coins! 🎫✨`
           : `You bought a ${ticket.name} for ${ticket.cost} coins but didn't win anything. Better luck next time! 🎫💸`,
     };
+  }
+
+  // Check for level up
+  static async checkLevelUp(username: string) {
+    const user = await storage.getUserByUsername(username);
+    if (!user) return;
+
+    let currentLevel = user.level;
+    let currentXP = user.xp;
+    let levelsGained = 0;
+
+    // Keep leveling up while user has enough XP
+    while (currentXP >= currentLevel * 1000) {
+      currentXP -= currentLevel * 1000;
+      currentLevel++;
+      levelsGained++;
+    }
+
+    // Update user if they leveled up
+    if (levelsGained > 0) {
+      await storage.updateUser(user.id, {
+        level: currentLevel,
+        xp: currentXP,
+      });
+
+      await storage.createNotification(
+        username,
+        `🎉 Level Up! You are now level ${currentLevel}!${levelsGained > 1 ? ` (+${levelsGained} levels)` : ''}`,
+      );
+    }
   }
 }

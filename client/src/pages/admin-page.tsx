@@ -1291,13 +1291,11 @@ export default function AdminPage() {
                                             ? "bg-purple-600 text-white"
                                             : user.adminRole === "lead_admin"
                                               ? "bg-red-600 text-white"
-                                              : user.adminRole ===
-                                                  "senior_admin"
+                                              : user.adminRole === "senior_admin"
                                                 ? "bg-orange-600 text-white"
                                                 : user.adminRole === "admin"
                                                   ? "bg-blue-600 text-white"
-                                                  : user.adminRole ===
-                                                      "junior_admin"
+                                                  : user.adminRole === "junior_admin"
                                                     ? "bg-green-600 text-white"
                                                     : ""
                                         }
@@ -1310,8 +1308,7 @@ export default function AdminPage() {
                                               ? "🟠 SENIOR ADMIN"
                                               : user.adminRole === "admin"
                                                 ? "🔵 ADMIN"
-                                                : user.adminRole ===
-                                                    "junior_admin"
+                                                : user.adminRole === "junior_admin"
                                                   ? "🟢 JUNIOR ADMIN"
                                                   : ""}
                                       </Badge>
@@ -2482,6 +2479,12 @@ export default function AdminPage() {
                         </code>{" "}
                         - Clear all transaction history
                       </li>
+                      <li>
+                        <code className="bg-background px-2 py-1 rounded">
+                          fixLevels
+                        </code>{" "}
+                        - Fix levels for users with enough XP and boost users over 1000 XP to level 2.
+                      </li>
                     </ul>
                   </div>
                 </CardContent>
@@ -3229,7 +3232,7 @@ export default function AdminPage() {
                   id="pet-description"
                   value={newPet.description}
                   onChange={(e) =>
-                    setNewPet({ ...newPet, description: e.target.value })
+                    setNewItem({ ...newPet, description: e.target.value })
                   }
                   placeholder="e.g., A majestic fire-breathing dragon"
                   data-testid="input-pet-description"
