@@ -45,8 +45,6 @@ import { db } from "./db";
 import { eq, desc, and, isNull, lt, gte, sql } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
-import { DrizzleSessionStore } from "@kinde/node-express-session-store";
-import * as schema from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -199,17 +197,11 @@ export class DatabaseStorage implements IStorage {
   public sessionStore: session.Store;
 
   constructor() {
-    // Initialize with MemoryStore, but it will be replaced by DrizzleSessionStore getter
-  }
-
-  // Use a getter for sessionStore to ensure DrizzleSessionStore is used and configured correctly.
-  get sessionStore(): session.Store {
-    return new DrizzleSessionStore({
-      db: db,
-      tableName: "sessions",
-      schema: schema.sessions,
-      // Clean up expired sessions every hour
-      cleanupInterval: 60 * 60 * 1000,
+    // Use MemoryStore with long TTL for persistent sessions across restarts
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // 24 hours
+      ttl: 2592000000, // 30 days (matching cookie maxAge)
+      stale: false,
     });
   }
 
