@@ -36,7 +36,19 @@ function initializeDatabase(index: number = 0) {
     throw new Error(`No database URL at index ${index}`);
   }
   
-  pool = new Pool({ connectionString: url });
+  pool = new Pool({ 
+    connectionString: url,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    allowExitOnIdle: false,
+  });
+  
+  // Handle pool errors
+  pool.on('error', (err) => {
+    console.error('Unexpected database pool error:', err);
+  });
+  
   db = drizzle({ client: pool, schema });
   currentDatabaseIndex = index;
   console.log(`Using database: ${DATABASE_LABELS[index] || `Database ${index}`}`);
@@ -77,7 +89,7 @@ export async function withDatabaseFailover<T>(
         const oldPool = pool;
         initializeDatabase(dbIndex);
         // Clean up old connection
-        oldPool.end().catch(() => {});
+        await oldPool.end().catch(() => {});
       }
       
       return await operation();
@@ -86,7 +98,20 @@ export async function withDatabaseFailover<T>(
       
       // Only try next database if it's a connection error
       if (isConnectionError(error)) {
-        console.error(`Database connection error on ${DATABASE_LABELS[dbIndex]}: ${error}`);
+        console.error(`Database connection error on ${DATABASE_LABELS[dbIndex]}: ${(error as Error).message}`);
+        
+        // If this is our current database, try reconnecting before failover
+        if (dbIndex === currentDatabaseIndex && i === 0) {
+          try {
+            const oldPool = pool;
+            await oldPool.end().catch(() => {});
+            initializeDatabase(dbIndex);
+            return await operation();
+          } catch (reconnectError) {
+            console.error(`Reconnection failed on ${DATABASE_LABELS[dbIndex]}`);
+            continue;
+          }
+        }
         continue;
       } else {
         // Application/validation error - don't retry
