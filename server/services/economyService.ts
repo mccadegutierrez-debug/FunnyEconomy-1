@@ -1149,6 +1149,24 @@ export class EconomyService {
     return true;
   }
 
+  // Manually remove owners badge from a user (admin only function)
+  static async removeOwnersBadge(username: string) {
+    const user = await storage.getUserByUsername(username);
+    if (!user) throw new Error("User not found");
+
+    const currentAchievements = user.achievements || [];
+    const updatedAchievements = currentAchievements.filter(
+      (achievement) => achievement !== "owners"
+    );
+    
+    if (currentAchievements.length !== updatedAchievements.length) {
+      await storage.updateUser(user.id, {
+        achievements: updatedAchievements,
+      });
+    }
+    return true;
+  }
+
   // Check if user has specific admin role badge
   static async hasAdminRoleBadge(
     username: string,
