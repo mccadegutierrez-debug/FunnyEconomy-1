@@ -1,0 +1,21 @@
+
+2025-10-07 12:03:40.33
+[vite] connecting...
+2025-10-07 12:03:42.56
+{message: "Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xlnS5ehBXO6R' is invalid.", stack: "SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xlnS5ehBXO6R' is invalid. at new t (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218737) at setupWebSocket (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:536:19) at fallback (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:509:16) at WebSocket.<anonymous> (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:555:7)"}
+2025-10-07 12:04:09.36
+[vite] connecting...
+2025-10-07 12:04:09.68
+{message: "Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xlnS5ehBXO6R' is invalid.", stack: "SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xlnS5ehBXO6R' is invalid. at new t (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218737) at setupWebSocket (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:536:19) at fallback (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:509:16) at WebSocket.<anonymous> (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:555:7)"}
+2025-10-07 12:08:01.40
+[vite] connecting...
+2025-10-07 12:08:01.69
+{message: "Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xlnS5ehBXO6R' is invalid.", stack: "SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xlnS5ehBXO6R' is invalid. at new t (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218737) at setupWebSocket (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:536:19) at fallback (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:509:16) at WebSocket.<anonymous> (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:555:7)"}
+2025-10-07 12:08:50.82
+[vite] connecting...
+2025-10-07 12:08:51.11
+{message: "Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xlnS5ehBXO6R' is invalid.", stack: "SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xlnS5ehBXO6R' is invalid. at new t (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218737) at setupWebSocket (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:536:19) at fallback (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:509:16) at WebSocket.<anonymous> (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:555:7)"}
+2025-10-07 12:12:11.18
+[vite] connecting...
+2025-10-07 12:12:11.99
+{message: "Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Ab8mqjV2CQmk' is invalid.", stack: "SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Ab8mqjV2CQmk' is invalid. at new t (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218737) at setupWebSocket (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:536:19) at fallback (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:509:16) at WebSocket.<anonymous> (https://f31e3a47-5269-4751-a3b2-23e7f054c1b0-00-1mp0ogx31kmye.worf.replit.dev/@vite/client:555:7)"}
