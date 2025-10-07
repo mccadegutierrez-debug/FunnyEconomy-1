@@ -31,12 +31,12 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     strictPort: false,
-    hmr: {
-      host: process.env.REPL_SLUG 
-        ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-        : 'localhost',
+    hmr: process.env.REPL_SLUG ? {
+      host: `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`,
       clientPort: 443,
       protocol: 'wss',
+    } : {
+      port: 5173,
     },
     fs: {
       strict: true,
