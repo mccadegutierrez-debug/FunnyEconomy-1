@@ -854,6 +854,16 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get all achievement definitions
+  app.get("/api/achievements", async (req, res) => {
+    try {
+      const achievements = EconomyService.getAllAchievements();
+      res.json(achievements);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Public profile route - accessible without authentication
   app.get("/api/user/profile/:username", async (req, res) => {
     try {

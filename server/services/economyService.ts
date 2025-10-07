@@ -1048,6 +1048,7 @@ export class EconomyService {
     const currentAchievements = user.achievements || [];
 
     const achievementDefinitions = [
+      // Beginner Achievements
       {
         id: "first_coin",
         name: "First Coin",
@@ -1055,6 +1056,22 @@ export class EconomyService {
         coins: 100,
         requirement: () => user.coins > 0,
       },
+      {
+        id: "first_work",
+        name: "First Day on the Job",
+        description: "Complete your first work shift",
+        coins: 50,
+        requirement: () => (user.gameStats?.workCount || 0) >= 1,
+      },
+      {
+        id: "first_bank",
+        name: "Saving Up",
+        description: "Deposit coins in the bank for the first time",
+        coins: 75,
+        requirement: () => user.bank > 0,
+      },
+      
+      // Level Achievements
       {
         id: "level_5",
         name: "Level Up!",
@@ -1070,33 +1087,386 @@ export class EconomyService {
         requirement: () => user.level >= 10,
       },
       {
+        id: "level_15",
+        name: "Veteran Player",
+        description: "Reach level 15",
+        coins: 2000,
+        requirement: () => user.level >= 15,
+      },
+      {
+        id: "level_20",
+        name: "Master",
+        description: "Reach level 20",
+        coins: 3500,
+        requirement: () => user.level >= 20,
+      },
+      {
+        id: "level_25",
+        name: "Elite",
+        description: "Reach level 25",
+        coins: 5000,
+        requirement: () => user.level >= 25,
+      },
+      {
+        id: "level_30",
+        name: "Champion",
+        description: "Reach level 30",
+        coins: 7500,
+        requirement: () => user.level >= 30,
+      },
+      {
+        id: "level_50",
+        name: "Legend",
+        description: "Reach level 50",
+        coins: 15000,
+        requirement: () => user.level >= 50,
+      },
+      
+      // Economy Achievements
+      {
         id: "rich_1k",
-        name: "Rich!",
+        name: "Getting Rich",
         description: "Have 1,000 coins",
         coins: 250,
         requirement: () => user.coins >= 1000,
       },
       {
         id: "rich_10k",
-        name: "Very Rich!",
+        name: "Very Rich",
         description: "Have 10,000 coins",
         coins: 1000,
         requirement: () => user.coins >= 10000,
       },
       {
+        id: "rich_50k",
+        name: "Wealthy",
+        description: "Have 50,000 coins",
+        coins: 5000,
+        requirement: () => user.coins >= 50000,
+      },
+      {
+        id: "rich_100k",
+        name: "Six Figures",
+        description: "Have 100,000 coins",
+        coins: 10000,
+        requirement: () => user.coins >= 100000,
+      },
+      {
+        id: "rich_500k",
+        name: "Half a Million",
+        description: "Have 500,000 coins",
+        coins: 25000,
+        requirement: () => user.coins >= 500000,
+      },
+      {
+        id: "millionaire",
+        name: "Millionaire",
+        description: "Have 1,000,000 coins",
+        coins: 50000,
+        requirement: () => user.coins >= 1000000,
+      },
+      {
+        id: "multi_millionaire",
+        name: "Multi-Millionaire",
+        description: "Have 5,000,000 coins",
+        coins: 100000,
+        requirement: () => user.coins >= 5000000,
+      },
+      
+      // Bank Achievements
+      {
+        id: "bank_10k",
+        name: "Safe Keeper",
+        description: "Have 10,000 coins in the bank",
+        coins: 1500,
+        requirement: () => user.bank >= 10000,
+      },
+      {
+        id: "bank_100k",
+        name: "Bank Vault",
+        description: "Have 100,000 coins in the bank",
+        coins: 10000,
+        requirement: () => user.bank >= 100000,
+      },
+      {
+        id: "bank_500k",
+        name: "Secure Fortune",
+        description: "Have 500,000 coins in the bank",
+        coins: 30000,
+        requirement: () => user.bank >= 500000,
+      },
+      
+      // Work Achievements
+      {
         id: "worker",
         name: "Hard Worker",
         description: "Work 10 times",
         coins: 300,
-        requirement: () => user.gameStats?.workCount >= 10,
+        requirement: () => (user.gameStats?.workCount || 0) >= 10,
       },
+      {
+        id: "worker_50",
+        name: "Dedicated Worker",
+        description: "Work 50 times",
+        coins: 1500,
+        requirement: () => (user.gameStats?.workCount || 0) >= 50,
+      },
+      {
+        id: "worker_100",
+        name: "Workaholic",
+        description: "Work 100 times",
+        coins: 3000,
+        requirement: () => (user.gameStats?.workCount || 0) >= 100,
+      },
+      {
+        id: "worker_500",
+        name: "Career Professional",
+        description: "Work 500 times",
+        coins: 10000,
+        requirement: () => (user.gameStats?.workCount || 0) >= 500,
+      },
+      
+      // Crime Achievements
+      {
+        id: "first_crime",
+        name: "Breaking Bad",
+        description: "Commit your first crime",
+        coins: 100,
+        requirement: () => (user.gameStats?.crimeCount || 0) >= 1,
+      },
+      {
+        id: "criminal_10",
+        name: "Petty Criminal",
+        description: "Commit 10 crimes",
+        coins: 500,
+        requirement: () => (user.gameStats?.crimeCount || 0) >= 10,
+      },
+      {
+        id: "criminal_50",
+        name: "Career Criminal",
+        description: "Commit 50 crimes",
+        coins: 2000,
+        requirement: () => (user.gameStats?.crimeCount || 0) >= 50,
+      },
+      {
+        id: "criminal_100",
+        name: "Crime Lord",
+        description: "Commit 100 crimes",
+        coins: 5000,
+        requirement: () => (user.gameStats?.crimeCount || 0) >= 100,
+      },
+      
+      // Gambling Achievements
+      {
+        id: "first_gamble",
+        name: "Feeling Lucky",
+        description: "Gamble for the first time",
+        coins: 100,
+        requirement: () => (user.gameStats?.gambleCount || 0) >= 1,
+      },
+      {
+        id: "gambler_25",
+        name: "Frequent Gambler",
+        description: "Gamble 25 times",
+        coins: 1000,
+        requirement: () => (user.gameStats?.gambleCount || 0) >= 25,
+      },
+      {
+        id: "gambler_100",
+        name: "High Roller",
+        description: "Gamble 100 times",
+        coins: 5000,
+        requirement: () => (user.gameStats?.gambleCount || 0) >= 100,
+      },
+      
+      // Shopping Achievements
+      {
+        id: "first_purchase",
+        name: "First Purchase",
+        description: "Buy your first item from the shop",
+        coins: 150,
+        requirement: () => (user.inventory && Object.keys(user.inventory).length > 0),
+      },
+      {
+        id: "shopaholic_10",
+        name: "Shopaholic",
+        description: "Own 10 different items",
+        coins: 1000,
+        requirement: () => (user.inventory && Object.keys(user.inventory).length >= 10),
+      },
+      {
+        id: "collector_25",
+        name: "Collector",
+        description: "Own 25 different items",
+        coins: 3000,
+        requirement: () => (user.inventory && Object.keys(user.inventory).length >= 25),
+      },
+      {
+        id: "hoarder_50",
+        name: "Hoarder",
+        description: "Own 50 different items",
+        coins: 7500,
+        requirement: () => (user.inventory && Object.keys(user.inventory).length >= 50),
+      },
+      
+      // Social Achievements
+      {
+        id: "first_friend",
+        name: "Making Friends",
+        description: "Add your first friend",
+        coins: 200,
+        requirement: () => (user.friends && user.friends.length >= 1),
+      },
+      {
+        id: "social_5",
+        name: "Social Butterfly",
+        description: "Have 5 friends",
+        coins: 750,
+        requirement: () => (user.friends && user.friends.length >= 5),
+      },
+      {
+        id: "social_10",
+        name: "Popular",
+        description: "Have 10 friends",
+        coins: 2000,
+        requirement: () => (user.friends && user.friends.length >= 10),
+      },
+      
+      // Pet Achievements
+      {
+        id: "first_pet",
+        name: "Pet Owner",
+        description: "Adopt your first pet",
+        coins: 500,
+        requirement: () => (user.gameStats?.petCount || 0) >= 1,
+      },
+      {
+        id: "pet_lover_3",
+        name: "Pet Lover",
+        description: "Own 3 pets",
+        coins: 1500,
+        requirement: () => (user.gameStats?.petCount || 0) >= 3,
+      },
+      {
+        id: "pet_collector_5",
+        name: "Pet Collector",
+        description: "Own 5 pets",
+        coins: 3000,
+        requirement: () => (user.gameStats?.petCount || 0) >= 5,
+      },
+      
+      // Adventure Achievements
+      {
+        id: "first_adventure",
+        name: "Adventurer",
+        description: "Complete your first adventure",
+        coins: 300,
+        requirement: () => (user.gameStats?.adventureCount || 0) >= 1,
+      },
+      {
+        id: "explorer_10",
+        name: "Explorer",
+        description: "Complete 10 adventures",
+        coins: 2000,
+        requirement: () => (user.gameStats?.adventureCount || 0) >= 10,
+      },
+      {
+        id: "treasure_hunter_50",
+        name: "Treasure Hunter",
+        description: "Complete 50 adventures",
+        coins: 7500,
+        requirement: () => (user.gameStats?.adventureCount || 0) >= 50,
+      },
+      
+      // Daily Achievements
+      {
+        id: "daily_5",
+        name: "Consistent Player",
+        description: "Claim daily reward 5 times",
+        coins: 500,
+        requirement: () => (user.gameStats?.dailyCount || 0) >= 5,
+      },
+      {
+        id: "daily_30",
+        name: "Monthly Dedication",
+        description: "Claim daily reward 30 times",
+        coins: 3000,
+        requirement: () => (user.gameStats?.dailyCount || 0) >= 30,
+      },
+      {
+        id: "daily_100",
+        name: "Daily Champion",
+        description: "Claim daily reward 100 times",
+        coins: 10000,
+        requirement: () => (user.gameStats?.dailyCount || 0) >= 100,
+      },
+      
+      // Special Achievements
+      {
+        id: "lucky_7",
+        name: "Lucky Number Seven",
+        description: "Reach exactly 7,777 coins",
+        coins: 777,
+        requirement: () => user.coins === 7777,
+      },
+      {
+        id: "broke",
+        name: "Rock Bottom",
+        description: "Have exactly 0 coins after having more than 1000",
+        coins: 500,
+        requirement: () => user.coins === 0 && (user.gameStats?.maxCoins || 0) > 1000,
+      },
+      {
+        id: "comeback_kid",
+        name: "Comeback Kid",
+        description: "Earn 10,000 coins after going broke",
+        coins: 2000,
+        requirement: () => user.coins >= 10000 && (user.gameStats?.timesBroke || 0) >= 1,
+      },
+      {
+        id: "profile_complete",
+        name: "Profile Perfectionist",
+        description: "Complete your profile with bio and avatar",
+        coins: 500,
+        requirement: () => user.bio && user.bio.length > 10 && user.avatarUrl && user.avatarUrl.length > 0,
+      },
+      
+      // Admin/Special Badges (manually granted)
       {
         id: "owners",
         name: "Owner",
         description: "Special protection badge for owners",
         coins: 0,
         requirement: () => false,
-      }, // Manually granted only
+      },
+      {
+        id: "badge_junior_admin",
+        name: "Junior Admin",
+        description: "Junior Administrator badge",
+        coins: 0,
+        requirement: () => false,
+      },
+      {
+        id: "badge_admin",
+        name: "Admin",
+        description: "Administrator badge",
+        coins: 0,
+        requirement: () => false,
+      },
+      {
+        id: "badge_senior_admin",
+        name: "Senior Admin",
+        description: "Senior Administrator badge",
+        coins: 0,
+        requirement: () => false,
+      },
+      {
+        id: "badge_lead_admin",
+        name: "Lead Admin",
+        description: "Lead Administrator badge",
+        coins: 0,
+        requirement: () => false,
+      },
     ];
 
     for (const achievement of achievementDefinitions) {
@@ -1123,6 +1493,381 @@ export class EconomyService {
     }
 
     return newAchievements;
+  }
+
+  // Get all achievement definitions
+  static getAllAchievements() {
+    return [
+      // Beginner Achievements
+      {
+        id: "first_coin",
+        name: "First Coin",
+        description: "Earn your first coin",
+        coins: 100,
+      },
+      {
+        id: "first_work",
+        name: "First Day on the Job",
+        description: "Complete your first work shift",
+        coins: 50,
+      },
+      {
+        id: "first_bank",
+        name: "Saving Up",
+        description: "Deposit coins in the bank for the first time",
+        coins: 75,
+      },
+      
+      // Level Achievements
+      {
+        id: "level_5",
+        name: "Level Up!",
+        description: "Reach level 5",
+        coins: 500,
+      },
+      {
+        id: "level_10",
+        name: "Experienced",
+        description: "Reach level 10",
+        coins: 1000,
+      },
+      {
+        id: "level_15",
+        name: "Veteran Player",
+        description: "Reach level 15",
+        coins: 2000,
+      },
+      {
+        id: "level_20",
+        name: "Master",
+        description: "Reach level 20",
+        coins: 3500,
+      },
+      {
+        id: "level_25",
+        name: "Elite",
+        description: "Reach level 25",
+        coins: 5000,
+      },
+      {
+        id: "level_30",
+        name: "Champion",
+        description: "Reach level 30",
+        coins: 7500,
+      },
+      {
+        id: "level_50",
+        name: "Legend",
+        description: "Reach level 50",
+        coins: 15000,
+      },
+      
+      // Economy Achievements
+      {
+        id: "rich_1k",
+        name: "Getting Rich",
+        description: "Have 1,000 coins",
+        coins: 250,
+      },
+      {
+        id: "rich_10k",
+        name: "Very Rich",
+        description: "Have 10,000 coins",
+        coins: 1000,
+      },
+      {
+        id: "rich_50k",
+        name: "Wealthy",
+        description: "Have 50,000 coins",
+        coins: 5000,
+      },
+      {
+        id: "rich_100k",
+        name: "Six Figures",
+        description: "Have 100,000 coins",
+        coins: 10000,
+      },
+      {
+        id: "rich_500k",
+        name: "Half a Million",
+        description: "Have 500,000 coins",
+        coins: 25000,
+      },
+      {
+        id: "millionaire",
+        name: "Millionaire",
+        description: "Have 1,000,000 coins",
+        coins: 50000,
+      },
+      {
+        id: "multi_millionaire",
+        name: "Multi-Millionaire",
+        description: "Have 5,000,000 coins",
+        coins: 100000,
+      },
+      
+      // Bank Achievements
+      {
+        id: "bank_10k",
+        name: "Safe Keeper",
+        description: "Have 10,000 coins in the bank",
+        coins: 1500,
+      },
+      {
+        id: "bank_100k",
+        name: "Bank Vault",
+        description: "Have 100,000 coins in the bank",
+        coins: 10000,
+      },
+      {
+        id: "bank_500k",
+        name: "Secure Fortune",
+        description: "Have 500,000 coins in the bank",
+        coins: 30000,
+      },
+      
+      // Work Achievements
+      {
+        id: "worker",
+        name: "Hard Worker",
+        description: "Work 10 times",
+        coins: 300,
+      },
+      {
+        id: "worker_50",
+        name: "Dedicated Worker",
+        description: "Work 50 times",
+        coins: 1500,
+      },
+      {
+        id: "worker_100",
+        name: "Workaholic",
+        description: "Work 100 times",
+        coins: 3000,
+      },
+      {
+        id: "worker_500",
+        name: "Career Professional",
+        description: "Work 500 times",
+        coins: 10000,
+      },
+      
+      // Crime Achievements
+      {
+        id: "first_crime",
+        name: "Breaking Bad",
+        description: "Commit your first crime",
+        coins: 100,
+      },
+      {
+        id: "criminal_10",
+        name: "Petty Criminal",
+        description: "Commit 10 crimes",
+        coins: 500,
+      },
+      {
+        id: "criminal_50",
+        name: "Career Criminal",
+        description: "Commit 50 crimes",
+        coins: 2000,
+      },
+      {
+        id: "criminal_100",
+        name: "Crime Lord",
+        description: "Commit 100 crimes",
+        coins: 5000,
+      },
+      
+      // Gambling Achievements
+      {
+        id: "first_gamble",
+        name: "Feeling Lucky",
+        description: "Gamble for the first time",
+        coins: 100,
+      },
+      {
+        id: "gambler_25",
+        name: "Frequent Gambler",
+        description: "Gamble 25 times",
+        coins: 1000,
+      },
+      {
+        id: "gambler_100",
+        name: "High Roller",
+        description: "Gamble 100 times",
+        coins: 5000,
+      },
+      
+      // Shopping Achievements
+      {
+        id: "first_purchase",
+        name: "First Purchase",
+        description: "Buy your first item from the shop",
+        coins: 150,
+      },
+      {
+        id: "shopaholic_10",
+        name: "Shopaholic",
+        description: "Own 10 different items",
+        coins: 1000,
+      },
+      {
+        id: "collector_25",
+        name: "Collector",
+        description: "Own 25 different items",
+        coins: 3000,
+      },
+      {
+        id: "hoarder_50",
+        name: "Hoarder",
+        description: "Own 50 different items",
+        coins: 7500,
+      },
+      
+      // Social Achievements
+      {
+        id: "first_friend",
+        name: "Making Friends",
+        description: "Add your first friend",
+        coins: 200,
+      },
+      {
+        id: "social_5",
+        name: "Social Butterfly",
+        description: "Have 5 friends",
+        coins: 750,
+      },
+      {
+        id: "social_10",
+        name: "Popular",
+        description: "Have 10 friends",
+        coins: 2000,
+      },
+      
+      // Pet Achievements
+      {
+        id: "first_pet",
+        name: "Pet Owner",
+        description: "Adopt your first pet",
+        coins: 500,
+      },
+      {
+        id: "pet_lover_3",
+        name: "Pet Lover",
+        description: "Own 3 pets",
+        coins: 1500,
+      },
+      {
+        id: "pet_collector_5",
+        name: "Pet Collector",
+        description: "Own 5 pets",
+        coins: 3000,
+      },
+      
+      // Adventure Achievements
+      {
+        id: "first_adventure",
+        name: "Adventurer",
+        description: "Complete your first adventure",
+        coins: 300,
+      },
+      {
+        id: "explorer_10",
+        name: "Explorer",
+        description: "Complete 10 adventures",
+        coins: 2000,
+      },
+      {
+        id: "treasure_hunter_50",
+        name: "Treasure Hunter",
+        description: "Complete 50 adventures",
+        coins: 7500,
+      },
+      
+      // Daily Achievements
+      {
+        id: "daily_5",
+        name: "Consistent Player",
+        description: "Claim daily reward 5 times",
+        coins: 500,
+      },
+      {
+        id: "daily_30",
+        name: "Monthly Dedication",
+        description: "Claim daily reward 30 times",
+        coins: 3000,
+      },
+      {
+        id: "daily_100",
+        name: "Daily Champion",
+        description: "Claim daily reward 100 times",
+        coins: 10000,
+      },
+      
+      // Special Achievements
+      {
+        id: "lucky_7",
+        name: "Lucky Number Seven",
+        description: "Reach exactly 7,777 coins",
+        coins: 777,
+      },
+      {
+        id: "broke",
+        name: "Rock Bottom",
+        description: "Have exactly 0 coins after having more than 1000",
+        coins: 500,
+      },
+      {
+        id: "comeback_kid",
+        name: "Comeback Kid",
+        description: "Earn 10,000 coins after going broke",
+        coins: 2000,
+      },
+      {
+        id: "profile_complete",
+        name: "Profile Perfectionist",
+        description: "Complete your profile with bio and avatar",
+        coins: 500,
+      },
+      
+      // Admin/Special Badges (manually granted)
+      {
+        id: "owners",
+        name: "Owner",
+        description: "Special protection badge for owners",
+        coins: 0,
+      },
+      {
+        id: "badge_junior_admin",
+        name: "Junior Admin",
+        description: "Junior Administrator badge",
+        coins: 0,
+      },
+      {
+        id: "badge_admin",
+        name: "Admin",
+        description: "Administrator badge",
+        coins: 0,
+      },
+      {
+        id: "badge_senior_admin",
+        name: "Senior Admin",
+        description: "Senior Administrator badge",
+        coins: 0,
+      },
+      {
+        id: "badge_lead_admin",
+        name: "Lead Admin",
+        description: "Lead Administrator badge",
+        coins: 0,
+      },
+    ];
+  }
+
+  // Get achievement details by ID
+  static getAchievementById(achievementId: string) {
+    const achievements = this.getAllAchievements();
+    return achievements.find(ach => ach.id === achievementId);
   }
 
   // Check if user has owners badge (protection from bans/coin removal)
