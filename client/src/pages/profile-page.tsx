@@ -76,6 +76,14 @@ export default function ProfilePage() {
     },
   });
 
+  const { data: achievementDefinitions = [] } = useQuery({
+    queryKey: ["/api/achievements"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/achievements");
+      return res.json();
+    },
+  });
+
   const profileForm = useForm<z.infer<typeof profileUpdateSchema>>({
     resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
@@ -387,18 +395,36 @@ export default function ProfilePage() {
                     No achievements yet. Keep playing to unlock some!
                   </p>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {achievements.map((achievement: any, index: number) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="justify-center p-2"
-                        data-testid={`achievement-${index}`}
-                      >
-                        <Medal className="w-3 h-3 mr-1" />
-                        {achievement.name || achievement}
-                      </Badge>
-                    ))}
+                  <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto">
+                    {achievements.map((achievementId: string, index: number) => {
+                      const achievementDef = achievementDefinitions.find(
+                        (def: any) => def.id === achievementId
+                      );
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-start gap-2 p-3 bg-muted rounded-lg"
+                          data-testid={`achievement-${index}`}
+                        >
+                          <Medal className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-foreground">
+                              {achievementDef?.name || achievementId}
+                            </div>
+                            {achievementDef?.description && (
+                              <div className="text-xs text-muted-foreground">
+                                {achievementDef.description}
+                              </div>
+                            )}
+                            {achievementDef?.coins > 0 && (
+                              <div className="text-xs text-accent mt-1">
+                                +{achievementDef.coins} coins
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
