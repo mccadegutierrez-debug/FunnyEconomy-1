@@ -1836,10 +1836,19 @@ export function registerRoutes(app: Express): Server {
         const { petId, petName } = givePetSchema.parse(req.body);
         const pet = await storage.adoptPet(req.params.userId, petId, petName);
 
-        await logAdminAction(req, "give_pet", "pet", pet.id, petName || "Pet", {
-          userId: req.params.userId,
-          petId,
-          petName,
+        await logAdminAction({
+          adminUsername: req.user?.username || "system",
+          adminRole: req.user?.adminRole || "none",
+          action: "give_pet",
+          targetType: "pet",
+          targetId: pet.id,
+          targetName: petName || "Pet",
+          details: {
+            userId: req.params.userId,
+            petId,
+            petName,
+          },
+          req,
         });
 
         res.json({

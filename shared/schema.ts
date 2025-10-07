@@ -527,7 +527,28 @@ export const selectEventSchema = createSelectSchema(events);
 
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+
+// Base User type from Drizzle
+type BaseUser = typeof users.$inferSelect;
+
+// Extend User type with proper JSON field types
+export type User = Omit<BaseUser, 'inventory' | 'achievements' | 'gameStats' | 'friends'> & {
+  inventory: any[];
+  achievements: string[];
+  friends: string[];
+  gameStats: {
+    workCount?: number;
+    crimeCount?: number;
+    gambleCount?: number;
+    petCount?: number;
+    adventureCount?: number;
+    dailyCount?: number;
+    maxCoins?: number;
+    timesBroke?: number;
+    [key: string]: any;
+  };
+};
+
 export type Item = typeof items.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;

@@ -2760,10 +2760,12 @@ export class EconomyService {
         xp: currentXP,
       });
 
-      await storage.createNotification(
-        username,
-        `🎉 Level Up! You are now level ${currentLevel}!${levelsGained > 1 ? ` (+${levelsGained} levels)` : ''}`,
-      );
+      await storage.createNotification({
+        user: username,
+        type: "system",
+        message: `🎉 Level Up! You are now level ${currentLevel}!${levelsGained > 1 ? ` (+${levelsGained} levels)` : ''}`,
+        read: false,
+      });
     }
   }
 }

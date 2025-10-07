@@ -207,7 +207,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return (user as User) || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
@@ -227,12 +227,12 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
-    return user || undefined;
+    return (user as User) || undefined;
   }
 
   async getAllUsers(): Promise<User[]> {
     const allUsers = await db.select().from(users);
-    return allUsers;
+    return allUsers as User[];
   }
 
   async createUser(
@@ -245,7 +245,7 @@ export class DatabaseStorage implements IStorage {
         passwordHash: userData.passwordHash,
       })
       .returning();
-    return user;
+    return user as User;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
@@ -259,7 +259,7 @@ export class DatabaseStorage implements IStorage {
       throw new Error("User not found");
     }
 
-    return updatedUser;
+    return updatedUser as User;
   }
 
   async deleteUser(id: string): Promise<void> {
