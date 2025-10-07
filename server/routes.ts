@@ -1774,7 +1774,7 @@ export function registerRoutes(app: Express): Server {
   // Remove owners badge from specific user
   app.post(
     "/api/admin/users/:username/remove-owners-badge",
-    requirePermission("give_admin_roles"),
+    requireAdmin,
     async (req, res) => {
       try {
         const username = req.params.username;
@@ -1791,14 +1791,16 @@ export function registerRoutes(app: Express): Server {
           achievements: filteredAchievements,
         });
 
-        await logAdminAction(
+        await logAdminAction({
+          adminUsername: req.user?.username || "system_admin",
+          adminRole: req.user?.adminRole || "system",
+          action: "remove_owners_badge",
+          targetType: "user",
+          targetId: user.id,
+          targetName: username,
+          details: { removedBadge: "owners" },
           req,
-          "remove_owners_badge",
-          "user",
-          user.id,
-          username,
-          { removedBadge: "owners" }
-        );
+        });
 
         res.json({
           success: true,
