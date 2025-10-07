@@ -1771,6 +1771,45 @@ export function registerRoutes(app: Express): Server {
     },
   );
 
+  // Remove owners badge from specific user
+  app.post(
+    "/api/admin/users/:username/remove-owners-badge",
+    requirePermission("give_admin_roles"),
+    async (req, res) => {
+      try {
+        const username = req.params.username;
+        const user = await storage.getUserByUsername(username);
+        
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        const achievements = (user.achievements || []) as string[];
+        const filteredAchievements = achievements.filter(a => a !== "owners");
+        
+        await storage.updateUser(user.id, {
+          achievements: filteredAchievements,
+        });
+
+        await logAdminAction(
+          req,
+          "remove_owners_badge",
+          "user",
+          user.id,
+          username,
+          { removedBadge: "owners" }
+        );
+
+        res.json({
+          success: true,
+          message: `Owners badge removed from ${username}`,
+        });
+      } catch (error) {
+        res.status(400).json({ error: (error as Error).message });
+      }
+    },
+  );
+
   // Give pet to user (admin)
   app.post(
     "/api/admin/users/:userId/give-pet",
