@@ -45,6 +45,8 @@ import { db } from "./db";
 import { eq, desc, and, isNull, lt, gte, sql } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { DrizzleSessionStore } from "@kinde/node-express-session-store";
+import * as schema from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -197,8 +199,17 @@ export class DatabaseStorage implements IStorage {
   public sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // 24 hours
+    // Initialize with MemoryStore, but it will be replaced by DrizzleSessionStore getter
+  }
+
+  // Use a getter for sessionStore to ensure DrizzleSessionStore is used and configured correctly.
+  get sessionStore(): session.Store {
+    return new DrizzleSessionStore({
+      db: db,
+      tableName: "sessions",
+      schema: schema.sessions,
+      // Clean up expired sessions every hour
+      cleanupInterval: 60 * 60 * 1000,
     });
   }
 
@@ -542,7 +553,7 @@ export class DatabaseStorage implements IStorage {
         type: "consumable" as const,
         rarity: "rare" as const,
         effects: {
-          passive: { winRateBoost: 0.2, coinsPerHour: 0 },
+          passive: { winRateBoost: 0, coinsPerHour: 0 },
           active: {
             useCooldown: 3600000,
             duration: 3600000,
@@ -1735,7 +1746,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(petHunts)
       .set({ isCompleted: true, rewards })
-      .where(eq(petHunts.id, huntId));
+      .where(eq(huntId, hunt.id)); // Corrected to use hunt.id
 
     await this.addPetXP(hunt.petId, xp);
 
@@ -1917,7 +1928,7 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(events.id, id))
       .returning();
-    
+
     if (!event) {
       throw new Error("Event not found");
     }
@@ -1934,7 +1945,7 @@ export class DatabaseStorage implements IStorage {
       .set({ active: true })
       .where(eq(events.id, id))
       .returning();
-    
+
     if (!event) {
       throw new Error("Event not found");
     }
@@ -1947,7 +1958,7 @@ export class DatabaseStorage implements IStorage {
       .set({ active: false })
       .where(eq(events.id, id))
       .returning();
-    
+
     if (!event) {
       throw new Error("Event not found");
     }
