@@ -20,9 +20,21 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  const isReplit = process.env.REPL_SLUG && process.env.REPL_OWNER;
+  const port = parseInt(process.env.PORT || "5000", 10);
+  
   const serverOptions = {
     middlewareMode: true,
-    hmr: { 
+    hmr: isReplit ? {
+      protocol: 'wss',
+      host: `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`,
+      port: 443,
+      clientPort: 443,
+      server,
+    } : {
+      protocol: 'ws',
+      host: '0.0.0.0',
+      port: port,
       server,
     },
     allowedHosts: true as const,
