@@ -28,19 +28,6 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    host: '0.0.0.0',
-    port: 5173,
-    strictPort: false,
-    hmr: process.env.REPL_SLUG ? {
-      host: `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`,
-      clientPort: 443,
-      protocol: 'wss',
-      port: 5173,
-    } : {
-      protocol: 'ws',
-      host: '0.0.0.0',
-      port: 5173,
-    },
     fs: {
       strict: true,
       deny: ["**/.*"],
