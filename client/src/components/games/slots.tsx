@@ -97,8 +97,8 @@ export default function Slots() {
     playMutation.mutate(bet);
   };
 
-  const quickBets = [10, 50, 100, 500, 1000];
-  const symbols = ["🐸", "💎", "🚀", "💰", "🔥"];
+  const quickBets = [10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000,];
+  const symbols = ["🐸", "💎", "🚀", "💰", "🔥", "🤑"];
 
   return (
     <div className="space-y-6">
@@ -138,7 +138,10 @@ export default function Slots() {
                 <div key={symbol} className="space-y-1">
                   <div className="text-2xl">{symbol}</div>
                   <div className="text-xs text-muted-foreground">
-                    {symbol === "💰"
+                    {symbol === "🤑"
+                        ? "75x"
+                        : "75x"
+                     : symbol === "💰"
                       ? "50x"
                       : symbol === "💎"
                         ? "25x"
@@ -146,7 +149,8 @@ export default function Slots() {
                           ? "15x"
                           : symbol === "🔥"
                             ? "10x"
-                            : "5x"}
+                            : "5x"
+                    }
                   </div>
                 </div>
               ))}
@@ -257,7 +261,7 @@ export default function Slots() {
             <CardContent className="space-y-2 text-sm">
               <p>• Match 3 symbols to win</p>
               <p>• Different symbols have different multipliers</p>
-              <p>• 💰 = 50x, 💎 = 25x, 🚀 = 15x, 🔥 = 10x, 🐸 = 5x</p>
+              <p>• 🤑 = 75x, 💰 = 50x, 💎 = 25x, 🚀 = 15x, 🔥 = 10x, 🐸 = 5x</p>
               <p>• Two matching symbols = 2x multiplier</p>
               <p>• Bet between 10 and 150,000 coins</p>
             </CardContent>

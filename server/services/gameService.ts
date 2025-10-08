@@ -12,9 +12,9 @@ export class GameService {
   // Get Friday boost multipliers
   private static getFridayBoostMultipliers() {
     return {
-      gamblingLuck: 1.25, // 25% better odds
+      gamblingLuck: 1.155, // 15.5% better odds
       coinsMultiplier: 1.5, // 50% more coins
-      xpMultiplier: 2.0, // 2x XP
+      xpMultiplier: 3.5, // 2x XP
     };
   }
 
@@ -108,7 +108,7 @@ export class GameService {
     const boosts = this.getFridayBoostMultipliers();
 
     // Slot symbols and their payouts
-    const symbols = ["🐸", "💎", "🚀", "💰", "🔥"];
+    const symbols = ["🐸", "💎", "🚀", "💰", "🔥", "🤑"];
     const reels = [
       symbols[this.getSecureRandom() % symbols.length],
       symbols[this.getSecureRandom() % symbols.length],
@@ -121,6 +121,7 @@ export class GameService {
     if (reels[0] === reels[1] && reels[1] === reels[2]) {
       // All three match
       if (reels[0] === "💰") multiplier = 50;
+      else if (reels[0] === "🤑") multiplier = 75;
       else if (reels[0] === "💎") multiplier = 25;
       else if (reels[0] === "🚀") multiplier = 15;
       else if (reels[0] === "🔥") multiplier = 10;
