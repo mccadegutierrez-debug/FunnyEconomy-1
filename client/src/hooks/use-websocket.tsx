@@ -44,12 +44,10 @@ export function useWebSocket() {
             setAuthenticated(true);
           } else if (message.type === "auth_error") {
             setAuthenticated(false);
-            // Try to reconnect after a short delay in case session was just loading
-            setTimeout(() => {
-              if (ws.current?.readyState === WebSocket.CLOSED) {
-                connectWebSocket();
-              }
-            }, 2000);
+            // Only try to reconnect once after a delay
+            if (ws.current) {
+              ws.current.close();
+            }
           } else if (message.type === "chat") {
             // Only add chat messages to the messages array
             setMessages((prev) => [...prev.slice(-99), message]); // Keep last 100 messages

@@ -2813,30 +2813,50 @@ export function registerRoutes(app: Express): Server {
     // Extract session from cookies to authenticate user
     const extractUserFromSession = async (req: any): Promise<string | null> => {
       try {
-        if (!req.headers.cookie) return null;
+        if (!req.headers.cookie) {
+          return null;
+        }
 
         const cookies = parse(req.headers.cookie);
-        const sessionId = cookies["connect.sid"];
+        const sessionCookie = cookies["connect.sid"];
 
-        if (!sessionId) return null;
+        if (!sessionCookie) {
+          return null;
+        }
 
-        // Extract session ID (remove signature if present)
-        const cleanSessionId = sessionId.startsWith("s:")
-          ? sessionId.slice(2).split(".")[0]
-          : sessionId;
+        // Extract session ID (remove 's:' prefix and signature after '.')
+        let sessionId = sessionCookie;
+        if (sessionId.startsWith("s:")) {
+          sessionId = sessionId.slice(2);
+          const dotIndex = sessionId.indexOf(".");
+          if (dotIndex !== -1) {
+            sessionId = sessionId.substring(0, dotIndex);
+          }
+        }
 
         return new Promise((resolve) => {
-          storage.sessionStore.get(cleanSessionId, (err, session: any) => {
-            if (
-              err ||
-              !session ||
-              !session.passport ||
-              !session.passport.user
-            ) {
+          storage.sessionStore.get(sessionId, (err: any, session: any) => {
+            if (err) {
               resolve(null);
-            } else {
-              resolve(session.passport.user.username);
+              return;
             }
+            
+            if (!session) {
+              resolve(null);
+              return;
+            }
+
+            // Check if session has passport data with user info
+            if (session.passport && session.passport.user) {
+              // User object should have username
+              const username = session.passport.user.username;
+              if (username) {
+                resolve(username);
+                return;
+              }
+            }
+
+            resolve(null);
           });
         });
       } catch (error) {
@@ -2852,19 +2872,28 @@ export function registerRoutes(app: Express): Server {
         switch (message.type) {
           case "auth":
             // Authenticate user from session
-            authenticatedUsername = await extractUserFromSession(req);
-            if (authenticatedUsername) {
-              ws.send(
-                JSON.stringify({
-                  type: "auth_success",
-                  username: authenticatedUsername,
-                }),
-              );
-            } else {
+            try {
+              authenticatedUsername = await extractUserFromSession(req);
+              if (authenticatedUsername) {
+                ws.send(
+                  JSON.stringify({
+                    type: "auth_success",
+                    username: authenticatedUsername,
+                  }),
+                );
+              } else {
+                ws.send(
+                  JSON.stringify({
+                    type: "auth_error",
+                    message: "Not authenticated or session expired",
+                  }),
+                );
+              }
+            } catch (authError) {
               ws.send(
                 JSON.stringify({
                   type: "auth_error",
-                  message: "Not authenticated or session expired",
+                  message: "Authentication failed",
                 }),
               );
             }
