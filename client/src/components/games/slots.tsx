@@ -139,17 +139,16 @@ export default function Slots() {
                   <div className="text-2xl">{symbol}</div>
                   <div className="text-xs text-muted-foreground">
                     {symbol === "🤑"
-                        ? "75x"
-                        : "75x"
-                     : symbol === "💰"
-                      ? "50x"
-                      : symbol === "💎"
-                        ? "25x"
-                        : symbol === "🚀"
-                          ? "15x"
-                          : symbol === "🔥"
-                            ? "10x"
-                            : "5x"
+                      ? "75x"
+                      : symbol === "💰"
+                        ? "50x"
+                        : symbol === "💎"
+                          ? "25x"
+                          : symbol === "🚀"
+                            ? "15x"
+                            : symbol === "🔥"
+                              ? "10x"
+                              : "5x"
                     }
                   </div>
                 </div>
