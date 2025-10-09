@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -31,8 +31,15 @@ import {
   Gamepad2,
   ExternalLink,
   Shield,
+  ArrowLeft,
+  HandshakeIcon,
 } from "lucide-react";
 import { useRoute } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { useTradeWebSocket } from "@/hooks/use-trade-websocket";
+import { useState } from "react";
+import { TradingWindow } from "@/components/trade/trading-window";
 
 interface PublicProfile {
   id: string;
@@ -107,6 +114,10 @@ function getAchievementBadgeColor(rarity: string) {
 export default function PublicProfilePage() {
   const [match, params] = useRoute("/profile/:username");
   const username = params?.username;
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { sendTradeOffer } = useTradeWebSocket();
+  const [activeTradeId, setActiveTradeId] = useState<string | null>(null);
 
   const {
     data: userProfile,
@@ -129,12 +140,32 @@ export default function PublicProfilePage() {
   });
 
   // Get public item metadata for inventory display (no auth required)
-  const { data: allItems = [] } = useQuery({
+  const { data: allItems = [] } = useQuery<any[]>({
     queryKey: ["/api/public/items"],
-    queryFn: async () => {
-      const res = await fetch("/api/public/items");
-      if (!res.ok) return [];
-      return res.json();
+  });
+
+  const tradeOfferMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/trades/offer", {
+        body: { targetUsername: username },
+      });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      if (data.offer) {
+        sendTradeOffer(username!, data.offer.id);
+        toast({
+          title: "Trade Offer Sent",
+          description: `Trade offer sent to ${username}`,
+        });
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send trade offer",
+        variant: "destructive",
+      });
     },
   });
 
@@ -555,6 +586,15 @@ export default function PublicProfilePage() {
           </div>
         </div>
       </main>
+
+      {activeTradeId && username && (
+        <TradingWindow
+          tradeId={activeTradeId}
+          isOpen={!!activeTradeId}
+          onClose={() => setActiveTradeId(null)}
+          otherUsername={username}
+        />
+      )}
 
       <Footer />
     </div>
