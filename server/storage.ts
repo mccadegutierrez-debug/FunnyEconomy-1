@@ -196,23 +196,23 @@ export interface IStorage {
   deactivateEvent(id: string): Promise<SelectEvent>;
 
   // Trading System
-  createTradeOffer(fromUserId: string, toUserId: string): Promise<any>;
-  getTradeOffers(userId: string): Promise<any[]>;
-  acceptTradeOffer(offerId: string): Promise<any>;
+  createTradeOffer(fromUserId: string, toUserId: string): Promise<TradeOffer>;
+  getTradeOffers(userId: string): Promise<TradeOffer[]>;
+  acceptTradeOffer(offerId: string): Promise<TradeOffer>;
   rejectTradeOffer(offerId: string): Promise<void>;
-  createTrade(userId1: string, userId2: string): Promise<any>;
-  getTrade(tradeId: string): Promise<any | undefined>;
-  getActiveTrade(userId1: string, userId2: string): Promise<any | undefined>;
+  createTrade(userId1: string, userId2: string): Promise<Trade>;
+  getTrade(tradeId: string): Promise<Trade | undefined>;
+  getActiveTrade(userId1: string, userId2: string): Promise<Trade | undefined>;
   addTradeItem(
     tradeId: string,
     userId: string,
     itemType: "item" | "pet" | "collectible" | "coins",
     itemId: string | null,
     quantity: number,
-  ): Promise<any>;
+  ): Promise<TradeItem>;
   removeTradeItem(tradeItemId: string): Promise<void>;
-  getTradeItems(tradeId: string): Promise<any[]>;
-  markTradeReady(tradeId: string, userId: string): Promise<any>;
+  getTradeItems(tradeId: string): Promise<TradeItem[]>;
+  markTradeReady(tradeId: string, userId: string): Promise<Trade>;
   executeTrade(tradeId: string): Promise<{ success: boolean; message: string }>;
   cancelTrade(tradeId: string): Promise<void>;
 
@@ -1782,7 +1782,7 @@ export class DatabaseStorage implements IStorage {
     const [hunt] = await db
       .select()
       .from(petHunts)
-      .where(eq(petHunts.id, huntId));
+      .where(eq(huntId, hunt.id));
     if (!hunt) throw new Error("Hunt not found");
 
     if (new Date() < hunt.completesAt) {
@@ -1808,7 +1808,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(petHunts)
       .set({ isCompleted: true, rewards })
-      .where(eq(huntId, hunt.id));
+      .where(eq(hunt.id, huntId));
 
     if (Math.random() < 0.33) {
       const bonusPoints = Math.floor(Math.random() * 5) + 5;
@@ -2036,19 +2036,24 @@ export class DatabaseStorage implements IStorage {
 
   // Trading System Implementation
   async createTradeOffer(fromUserId: string, toUserId: string): Promise<TradeOffer> {
-    const [offer] = await db
-      .insert(tradeOffers)
-      .values({
-        fromUserId,
-        toUserId,
-        status: "pending",
-      })
-      .returning();
+    const offer = await db.insert(tradeOffers).values({
+      fromUserId,
+      toUserId,
+      status: 'pending',
+    }).returning();
 
-    if (!offer) {
-      throw new Error("Failed to create trade offer");
-    }
-    return offer;
+    return offer[0];
+  }
+
+  async getRecentTradeOffers(userId: string, since: Date): Promise<number> {
+    const offers = await db
+      .select()
+      .from(tradeOffers)
+      .where(
+        sql`${tradeOffers.fromUserId} = ${userId} AND ${tradeOffers.createdAt} >= ${since}`
+      );
+
+    return offers.length;
   }
 
   async getTradeOffers(userId: string): Promise<TradeOffer[]> {

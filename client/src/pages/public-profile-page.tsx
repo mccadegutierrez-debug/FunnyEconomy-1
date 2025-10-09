@@ -149,6 +149,10 @@ export default function PublicProfilePage() {
       const response = await apiRequest("POST", "/api/trades/offer", {
         body: { targetUsername: username },
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to send trade offer");
+      }
       return await response.json();
     },
     onSuccess: (data) => {
@@ -160,10 +164,10 @@ export default function PublicProfilePage() {
         });
       }
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Trade Failed",
-        description: "Failed to send trade offer",
+        description: error.message || "Failed to send trade offer",
         variant: "destructive",
       });
     },

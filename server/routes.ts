@@ -939,6 +939,16 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "Cannot trade with yourself" });
       }
 
+      // Check rate limit: 2 trade requests per 1.5 hours
+      const oneAndHalfHoursAgo = new Date(Date.now() - 90 * 60 * 1000); // 90 minutes
+      const recentOffers = await storage.getRecentTradeOffers(fromUser.id, oneAndHalfHoursAgo);
+      
+      if (recentOffers >= 2) {
+        return res.status(429).json({ 
+          error: "Trade request limit reached. You can send 2 trade requests every 1.5 hours." 
+        });
+      }
+
       const offer = await storage.createTradeOffer(fromUser.id, toUser.id);
       res.json(offer);
     } catch (error) {
