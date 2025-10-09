@@ -35,7 +35,7 @@ function initializeDatabase(index: number = 0) {
   if (!url) {
     throw new Error(`No database URL at index ${index}`);
   }
-  
+
   pool = new Pool({ 
     connectionString: url,
     max: 10,
@@ -43,12 +43,12 @@ function initializeDatabase(index: number = 0) {
     connectionTimeoutMillis: 10000,
     allowExitOnIdle: false,
   });
-  
+
   // Handle pool errors
   pool.on('error', (err) => {
     console.error('Unexpected database pool error:', err);
   });
-  
+
   db = drizzle({ client: pool, schema });
   currentDatabaseIndex = index;
   console.log(`Using database: ${DATABASE_LABELS[index] || `Database ${index}`}`);
@@ -58,7 +58,7 @@ function initializeDatabase(index: number = 0) {
 function isConnectionError(error: any): boolean {
   const message = error?.message?.toLowerCase() || "";
   const code = error?.code;
-  
+
   // Connection-specific errors
   return (
     code === "ECONNREFUSED" ||
@@ -80,7 +80,7 @@ export async function withDatabaseFailover<T>(
   for (let i = 0; i < DATABASE_URLS.length; i++) {
     const dbIndex = (currentDatabaseIndex + i) % DATABASE_URLS.length;
     const url = DATABASE_URLS[dbIndex];
-    
+
     if (!url) continue;
 
     try {
@@ -91,15 +91,15 @@ export async function withDatabaseFailover<T>(
         // Clean up old connection
         await oldPool.end().catch(() => {});
       }
-      
+
       return await operation();
     } catch (error) {
       lastError = error as Error;
-      
+
       // Only try next database if it's a connection error
       if (isConnectionError(error)) {
         console.error(`Database connection error on ${DATABASE_LABELS[dbIndex]}: ${(error as Error).message}`);
-        
+
         // If this is our current database, try reconnecting before failover
         if (dbIndex === currentDatabaseIndex && i === 0) {
           try {

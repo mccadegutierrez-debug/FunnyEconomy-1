@@ -7,13 +7,6 @@ export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
-    // The Replit plugins below should only be included in development and when running on Replit.
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          // These dynamic imports must be handled asynchronously.
-        ]
-      : []),
   ],
   resolve: {
     alias: {
