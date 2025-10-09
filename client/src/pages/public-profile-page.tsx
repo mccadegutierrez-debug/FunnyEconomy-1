@@ -331,6 +331,18 @@ export default function PublicProfilePage() {
                   </div>
                 )}
 
+                {user && user.username !== username && (
+                  <Button
+                    onClick={() => tradeOfferMutation.mutate()}
+                    disabled={tradeOfferMutation.isPending}
+                    className="w-full"
+                    data-testid="button-trade-offer"
+                  >
+                    <HandshakeIcon className="w-4 h-4 mr-2" />
+                    {tradeOfferMutation.isPending ? "Sending..." : "Trade"}
+                  </Button>
+                )}
+
                 <Separator />
 
                 <div className="grid grid-cols-2 gap-4 text-center">
