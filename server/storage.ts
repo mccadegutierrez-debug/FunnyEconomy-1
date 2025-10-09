@@ -446,22 +446,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async initializeData(): Promise<void> {
-    // Initialize trade storage
-    const tradeOffers = await db.get("trade_offers");
-    if (!tradeOffers) {
-      await db.set("trade_offers", []);
-    }
-
-    const trades = await db.get("trades");
-    if (!trades) {
-      await db.set("trades", []);
-    }
-
-    const tradeItems = await db.get("trade_items");
-    if (!tradeItems) {
-      await db.set("trade_items", []);
-    }
-
     // Get existing items to check what's already in the database
     const existingItems = await this.getAllItems();
     const existingItemNames = new Set(existingItems.map((item) => item.name));
