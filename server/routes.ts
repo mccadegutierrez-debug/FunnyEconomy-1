@@ -433,13 +433,13 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/freemium/claim", requireAuth, async (req, res) => {
     try {
       let { rewardIndex } = req.body;
-
+      
       // If no rewardIndex provided, auto-generate rewards and pick the first one
       if (typeof rewardIndex !== "number") {
         const rewards = await FreemiumService.generateRewards(req.user!.username);
         rewardIndex = 0; // Auto-select first reward
       }
-
+      
       const result = await FreemiumService.claimReward(
         req.user!.username,
         rewardIndex,
@@ -942,15 +942,15 @@ export function registerRoutes(app: Express): Server {
       // Check rate limit: 2 trade requests per 1.5 hours
       const oneAndHalfHoursAgo = new Date(Date.now() - 90 * 60 * 1000); // 90 minutes
       const recentOffers = await storage.getRecentTradeOffers(fromUser.id, oneAndHalfHoursAgo);
-
+      
       if (recentOffers >= 2) {
-        return res.status(429).json({
-          error: "Trade request limit reached. You can send 2 trade requests every 1.5 hours."
+        return res.status(429).json({ 
+          error: "Trade request limit reached. You can send 2 trade requests every 1.5 hours." 
         });
       }
 
       const offer = await storage.createTradeOffer(fromUser.id, toUser.id);
-
+      
       // Broadcast trade offer to all connected clients
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
@@ -965,7 +965,7 @@ export function registerRoutes(app: Express): Server {
           );
         }
       });
-
+      
       res.json(offer);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -978,7 +978,7 @@ export function registerRoutes(app: Express): Server {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-
+      
       const offers = await storage.getTradeOffers(user.id);
       res.json(offers);
     } catch (error) {
@@ -1011,7 +1011,7 @@ export function registerRoutes(app: Express): Server {
       if (!trade) {
         return res.status(404).json({ error: "Trade not found" });
       }
-
+      
       const items = await storage.getTradeItems(req.params.id);
       res.json({ ...trade, items });
     } catch (error) {
@@ -1023,7 +1023,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const { itemType, itemId, quantity } = req.body;
       const user = await storage.getUserByUsername(req.user!.username);
-
+      
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -1044,7 +1044,7 @@ export function registerRoutes(app: Express): Server {
         itemId || null,
         quantity || 1
       );
-
+      
       res.json(tradeItem);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -1069,12 +1069,12 @@ export function registerRoutes(app: Express): Server {
       }
 
       const trade = await storage.markTradeReady(req.params.id, user.id);
-
+      
       if (trade.user1Ready && trade.user2Ready) {
         const result = await storage.executeTrade(req.params.id);
         return res.json(result);
       }
-
+      
       res.json({ success: true, trade });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -1955,14 +1955,14 @@ export function registerRoutes(app: Express): Server {
       try {
         const username = req.params.username;
         const user = await storage.getUserByUsername(username);
-
+        
         if (!user) {
           return res.status(404).json({ error: "User not found" });
         }
 
         const achievements = (user.achievements || []) as string[];
         const filteredAchievements = achievements.filter(a => a !== "owners");
-
+        
         await storage.updateUser(user.id, {
           achievements: filteredAchievements,
         });
@@ -2037,17 +2037,17 @@ export function registerRoutes(app: Express): Server {
       });
 
       const { petTypeId, customName } = adoptSchema.parse(req.body);
-
+      
       const result = await storage.adoptPetWithPayment(
         req.user!.username,
         petTypeId,
         customName
       );
-
-      res.json({
-        success: true,
+      
+      res.json({ 
+        success: true, 
         pet: result.pet,
-        newBalance: result.newBalance
+        newBalance: result.newBalance 
       });
     } catch (error) {
       const errorMessage = (error as Error).message;
@@ -2068,18 +2068,18 @@ export function registerRoutes(app: Express): Server {
     try {
       const pets = await storage.getUserPets(req.user!.id);
       const petTypes = await storage.getAllPetTypes();
-
+      
       const petsWithDecay = await Promise.all(
         pets.map(async (pet) => {
           const petType = petTypes.find((pt) => pt.id === pet.petTypeId);
           if (!petType) return pet;
-
+          
           const decayedPet = storage.calculateStatDecay(pet, petType);
-
-          if (decayedPet.hunger !== pet.hunger ||
-            decayedPet.hygiene !== pet.hygiene ||
-            decayedPet.fun !== pet.fun ||
-            decayedPet.energy !== pet.energy) {
+          
+          if (decayedPet.hunger !== pet.hunger || 
+              decayedPet.hygiene !== pet.hygiene || 
+              decayedPet.fun !== pet.fun || 
+              decayedPet.energy !== pet.energy) {
             await storage.updatePet(pet.id, {
               hunger: decayedPet.hunger,
               hygiene: decayedPet.hygiene,
@@ -2087,13 +2087,13 @@ export function registerRoutes(app: Express): Server {
               energy: decayedPet.energy,
             });
           }
-
+          
           await storage.checkAndHandlePetDeath(decayedPet);
-
+          
           return await storage.getPet(pet.id);
         })
       );
-
+      
       res.json(petsWithDecay);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -2462,11 +2462,11 @@ export function registerRoutes(app: Express): Server {
     async (req, res) => {
       try {
         const { featureKey } = req.params;
-
+        
         const bodySchema = z.object({
           enabled: z.boolean(),
         });
-
+        
         const { enabled } = bodySchema.parse(req.body);
 
         const previousFlag = await storage.getFeatureFlag(featureKey);
@@ -2503,11 +2503,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const { featureKey } = req.params;
       const flag = await storage.getFeatureFlag(featureKey);
-
+      
       if (!flag) {
         return res.status(404).json({ error: "Feature flag not found" });
       }
-
+      
       res.json(flag);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
@@ -2565,7 +2565,7 @@ export function registerRoutes(app: Express): Server {
       if (event.active) {
         const allUsers = await storage.getAllUsers();
         const notificationMessage = `${event.emoji} ${event.name}: ${event.description}`;
-
+        
         for (const user of allUsers) {
           if (user && !user.banned) {
             await storage.createNotification({
@@ -2588,10 +2588,10 @@ export function registerRoutes(app: Express): Server {
     try {
       const { id } = req.params;
       const event = await storage.activateEvent(id);
-
+      
       const allUsers = await storage.getAllUsers();
       const notificationMessage = `${event.emoji} ${event.name}: ${event.description}`;
-
+      
       for (const user of allUsers) {
         if (user && !user.banned) {
           await storage.createNotification({
@@ -2642,7 +2642,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const { id } = req.params;
       const event = await storage.getEvent(id);
-
+      
       if (!event) {
         return res.status(404).json({ error: "Event not found" });
       }
@@ -2759,7 +2759,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const now = new Date();
       const currentYear = now.getFullYear();
-
+      
       // Helper function to create date for this year or next year if passed
       const getHolidayDate = (month: number, day: number, durationDays: number = 1) => {
         const holidayDate = new Date(currentYear, month - 1, day);
@@ -2914,7 +2914,7 @@ export function registerRoutes(app: Express): Server {
       const now = new Date();
       const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
       const isFriday = dayOfWeek === 5;
-
+      
       res.json({
         active: isFriday,
         boosts: {
@@ -2935,7 +2935,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/admin/friday-boost/activate", requireAdmin, async (req, res) => {
     try {
       const allUsers = await storage.getAllUsers();
-
+      
       for (const user of allUsers) {
         if (user && !user.banned) {
           await storage.createNotification({
@@ -3009,7 +3009,7 @@ export function registerRoutes(app: Express): Server {
               resolve(null);
               return;
             }
-
+            
             if (!session) {
               console.log('[WebSocket] No session found for ID:', sessionId);
               resolve(null);
@@ -3021,7 +3021,7 @@ export function registerRoutes(app: Express): Server {
               // session.passport.user contains the user ID (from serializeUser)
               const userId = session.passport.user;
               console.log('[WebSocket] Found user ID in session:', userId);
-
+              
               // Fetch the full user object from storage
               try {
                 const user = await storage.getUser(userId);

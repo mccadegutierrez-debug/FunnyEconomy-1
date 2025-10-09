@@ -7,7 +7,6 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import rateLimit from "express-rate-limit";
-import bcrypt from "bcrypt"; // Assuming bcrypt is used for hashing as per the changes
 
 // Audit logging helper function
 export async function logAdminAction(options: {
@@ -60,12 +59,6 @@ async function hashPassword(password: string) {
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
-
-// Using bcrypt for password hashing as implied by the changes
-async function hash(password: string, saltRounds: number) {
-  return await bcrypt.hash(password, saltRounds);
-}
-
 
 async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
@@ -230,7 +223,6 @@ export function setupAuth(app: Express) {
     res.json({ success: true, message: "Admin session terminated" });
   });
 
-  // User registration endpoint
   app.post("/api/register", authLimiter, async (req, res, next) => {
     try {
       const { username, password } = req.body;
@@ -268,12 +260,9 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: "Username already exists" });
       }
 
-      // Hash the password using bcrypt
-      const passwordHash = await hash(password, 10);
-
       const user = await storage.createUser({
         username,
-        passwordHash,
+        passwordHash: await hashPassword(password),
       });
 
       // Create welcome transaction
@@ -284,14 +273,6 @@ export function setupAuth(app: Express) {
         targetUser: null,
         description: "Welcome bonus! 🎉",
         timestamp: new Date(),
-      });
-
-      // Send automatic friend request notification from savage
-      await storage.createNotification({
-        user: username,
-        type: "friend",
-        message: `👋 savage wants to be your friend!`,
-        read: false,
       });
 
       req.login(user, (err) => {
