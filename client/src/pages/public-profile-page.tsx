@@ -152,17 +152,17 @@ export default function PublicProfilePage() {
       return await response.json();
     },
     onSuccess: (data) => {
-      if (data.offer) {
-        sendTradeOffer(username!, data.offer.id);
+      if (data.id) {
+        sendTradeOffer(username!, data.id);
         toast({
-          title: "Trade Offer Sent",
+          title: "Trade Request Sent! 🤝",
           description: `Trade offer sent to ${username}`,
         });
       }
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: "Trade Failed",
         description: "Failed to send trade offer",
         variant: "destructive",
       });
