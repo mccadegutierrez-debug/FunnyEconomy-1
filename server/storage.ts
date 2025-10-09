@@ -446,6 +446,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async initializeData(): Promise<void> {
+    // Initialize trade storage
+    const tradeOffers = await db.get("trade_offers");
+    if (!tradeOffers) {
+      await db.set("trade_offers", []);
+    }
+
+    const trades = await db.get("trades");
+    if (!trades) {
+      await db.set("trades", []);
+    }
+
+    const tradeItems = await db.get("trade_items");
+    if (!tradeItems) {
+      await db.set("trade_items", []);
+    }
+
     // Get existing items to check what's already in the database
     const existingItems = await this.getAllItems();
     const existingItemNames = new Set(existingItems.map((item) => item.name));
@@ -1685,11 +1701,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     let baseSuccessRate = 0.7;
-    
+
     const pet1Skills = Array.isArray(pet1.skills) ? pet1.skills : [];
     const pet2Skills = Array.isArray(pet2.skills) ? pet2.skills : [];
     const hasBreederSkill = pet1Skills.includes("breeder") || pet2Skills.includes("breeder");
-    
+
     if (hasBreederSkill) {
       baseSuccessRate = baseSuccessRate * 1.15;
     }
@@ -2238,7 +2254,7 @@ export class DatabaseStorage implements IStorage {
           }
           await this.updateUser(user1.id, { coins: user1.coins - item.quantity });
           await this.updateUser(user2.id, { coins: user2.coins + item.quantity });
-          
+
           await this.createTransaction({
             user: user1.username,
             type: "transfer",
@@ -2260,7 +2276,7 @@ export class DatabaseStorage implements IStorage {
           if (itemIndex === -1) {
             return { success: false, message: `${user1.username} doesn't have the required items` };
           }
-          
+
           userInventory[itemIndex].quantity -= item.quantity;
           if (userInventory[itemIndex].quantity <= 0) {
             userInventory.splice(itemIndex, 1);
@@ -2288,7 +2304,7 @@ export class DatabaseStorage implements IStorage {
           }
           await this.updateUser(user2.id, { coins: user2.coins - item.quantity });
           await this.updateUser(user1.id, { coins: user1.coins + item.quantity });
-          
+
           await this.createTransaction({
             user: user2.username,
             type: "transfer",
@@ -2310,7 +2326,7 @@ export class DatabaseStorage implements IStorage {
           if (itemIndex === -1) {
             return { success: false, message: `${user2.username} doesn't have the required items` };
           }
-          
+
           userInventory[itemIndex].quantity -= item.quantity;
           if (userInventory[itemIndex].quantity <= 0) {
             userInventory.splice(itemIndex, 1);
@@ -2347,7 +2363,7 @@ export class DatabaseStorage implements IStorage {
       .update(trades)
       .set({ status: "cancelled", updatedAt: new Date() })
       .where(eq(trades.id, tradeId));
-      
+
     await db
       .delete(tradeItems)
       .where(eq(tradeItems.tradeId, tradeId));
