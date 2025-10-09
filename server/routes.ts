@@ -924,6 +924,146 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Trading System Routes
+  app.post("/api/trades/offer", requireAuth, async (req, res) => {
+    try {
+      const { targetUsername } = req.body;
+      const fromUser = await storage.getUserByUsername(req.user!.username);
+      const toUser = await storage.getUserByUsername(targetUsername);
+
+      if (!fromUser || !toUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (fromUser.id === toUser.id) {
+        return res.status(400).json({ error: "Cannot trade with yourself" });
+      }
+
+      const offer = await storage.createTradeOffer(fromUser.id, toUser.id);
+      res.json(offer);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/trades/offers", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      const offers = await storage.getTradeOffers(user.id);
+      res.json(offers);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/trades/offers/:id/accept", requireAuth, async (req, res) => {
+    try {
+      const offer = await storage.acceptTradeOffer(req.params.id);
+      const trade = await storage.createTrade(offer.fromUserId, offer.toUserId);
+      res.json({ offer, trade });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/trades/offers/:id/reject", requireAuth, async (req, res) => {
+    try {
+      await storage.rejectTradeOffer(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/trades/:id", requireAuth, async (req, res) => {
+    try {
+      const trade = await storage.getTrade(req.params.id);
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+      
+      const items = await storage.getTradeItems(req.params.id);
+      res.json({ ...trade, items });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/trades/:id/add-item", requireAuth, async (req, res) => {
+    try {
+      const { itemType, itemId, quantity } = req.body;
+      const user = await storage.getUserByUsername(req.user!.username);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const trade = await storage.getTrade(req.params.id);
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.userId1 !== user.id && trade.userId2 !== user.id) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+
+      const tradeItem = await storage.addTradeItem(
+        req.params.id,
+        user.id,
+        itemType,
+        itemId || null,
+        quantity || 1
+      );
+      
+      res.json(tradeItem);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/trades/:id/remove-item", requireAuth, async (req, res) => {
+    try {
+      const { tradeItemId } = req.body;
+      await storage.removeTradeItem(tradeItemId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/trades/:id/accept", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const trade = await storage.markTradeReady(req.params.id, user.id);
+      
+      if (trade.user1Ready && trade.user2Ready) {
+        const result = await storage.executeTrade(req.params.id);
+        return res.json(result);
+      }
+      
+      res.json({ success: true, trade });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/trades/:id/cancel", requireAuth, async (req, res) => {
+    try {
+      await storage.cancelTrade(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   // Admin routes
   app.get(
     "/api/admin/users",
@@ -2814,6 +2954,7 @@ export function registerRoutes(app: Express): Server {
     const extractUserFromSession = async (req: any): Promise<string | null> => {
       try {
         if (!req.headers.cookie) {
+          console.log('[WebSocket] No cookies found in request');
           return null;
         }
 
@@ -2821,6 +2962,7 @@ export function registerRoutes(app: Express): Server {
         const sessionCookie = cookies["connect.sid"];
 
         if (!sessionCookie) {
+          console.log('[WebSocket] No session cookie found');
           return null;
         }
 
@@ -2835,31 +2977,44 @@ export function registerRoutes(app: Express): Server {
         }
 
         return new Promise((resolve) => {
-          storage.sessionStore.get(sessionId, (err: any, session: any) => {
+          storage.sessionStore.get(sessionId, async (err: any, session: any) => {
             if (err) {
+              console.log('[WebSocket] Session store error:', err);
               resolve(null);
               return;
             }
             
             if (!session) {
+              console.log('[WebSocket] No session found for ID:', sessionId);
               resolve(null);
               return;
             }
 
-            // Check if session has passport data with user info
+            // Check if session has passport data with user ID
             if (session.passport && session.passport.user) {
-              // User object should have username
-              const username = session.passport.user.username;
-              if (username) {
-                resolve(username);
-                return;
+              // session.passport.user contains the user ID (from serializeUser)
+              const userId = session.passport.user;
+              console.log('[WebSocket] Found user ID in session:', userId);
+              
+              // Fetch the full user object from storage
+              try {
+                const user = await storage.getUser(userId);
+                if (user && user.username) {
+                  console.log('[WebSocket] Successfully authenticated user:', user.username);
+                  resolve(user.username);
+                  return;
+                }
+              } catch (error) {
+                console.log('[WebSocket] Error fetching user:', error);
               }
             }
 
+            console.log('[WebSocket] Authentication failed - no valid session data');
             resolve(null);
           });
         });
       } catch (error) {
+        console.log('[WebSocket] Error during authentication:', error);
         return null;
       }
     };
@@ -2983,6 +3138,85 @@ export function registerRoutes(app: Express): Server {
                 }),
               );
             }
+            break;
+
+          case "trade_offer":
+            if (!authenticatedUsername) {
+              ws.send(
+                JSON.stringify({
+                  type: "error",
+                  message: "Must be authenticated to send trade offers",
+                }),
+              );
+              break;
+            }
+
+            const targetUsername = message.targetUsername;
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN && client !== ws) {
+                client.send(
+                  JSON.stringify({
+                    type: "trade_offer",
+                    fromUsername: authenticatedUsername,
+                    targetUsername: targetUsername,
+                    offerId: message.offerId,
+                    timestamp: Date.now(),
+                  }),
+                );
+              }
+            });
+            break;
+
+          case "trade_update":
+            if (!authenticatedUsername) {
+              ws.send(
+                JSON.stringify({
+                  type: "error",
+                  message: "Must be authenticated to update trades",
+                }),
+              );
+              break;
+            }
+
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(
+                  JSON.stringify({
+                    type: "trade_update",
+                    tradeId: message.tradeId,
+                    action: message.action,
+                    userId: message.userId,
+                    item: message.item,
+                    timestamp: Date.now(),
+                  }),
+                );
+              }
+            });
+            break;
+
+          case "trade_accepted":
+            if (!authenticatedUsername) {
+              ws.send(
+                JSON.stringify({
+                  type: "error",
+                  message: "Must be authenticated",
+                }),
+              );
+              break;
+            }
+
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(
+                  JSON.stringify({
+                    type: "trade_accepted",
+                    tradeId: message.tradeId,
+                    result: message.result,
+                    timestamp: Date.now(),
+                  }),
+                );
+              }
+            });
             break;
 
           case "join":

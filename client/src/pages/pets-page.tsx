@@ -370,11 +370,33 @@ export default function PetsPage() {
   const startBreedingMutation = useMutation({
     mutationFn: ({ petId1, petId2 }: { petId1: string; petId2: string }) =>
       apiRequest("POST", "/api/pets/breeding", { petId1, petId2 }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/pets/breeding"] });
+      const pet1 = pets.find(p => p.id === breedingPet1);
+      const pet2 = pets.find(p => p.id === breedingPet2);
       toast({
-        title: "💕 Breeding Started!",
-        description: "Your pets are breeding! Check back in 24 hours.",
+        title: "💕 Breeding Started Successfully!",
+        description: (
+          <div className="space-y-2">
+            <p className="font-semibold text-pink-500">
+              {pet1?.name} × {pet2?.name}
+            </p>
+            <p className="text-sm">
+              Your pets are now breeding! An offspring will be ready in <span className="font-bold text-primary">24 hours</span>.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Check back later to see if the breeding was successful! 🐾
+            </p>
+          </div>
+        ),
+        duration: 6000,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Breeding Failed",
+        description: error.message || "Could not start breeding. Please try again.",
+        variant: "destructive",
       });
     },
   });

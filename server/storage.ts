@@ -15,6 +15,9 @@ import {
   petActivities,
   featureFlags,
   events,
+  tradeOffers,
+  trades,
+  tradeItems,
   type User,
   type InsertUser,
   type Item,
@@ -40,6 +43,9 @@ import {
   type FeatureFlag,
   type InsertEvent,
   type SelectEvent,
+  type TradeOffer,
+  type Trade,
+  type TradeItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, lt, gte, sql } from "drizzle-orm";
@@ -188,6 +194,27 @@ export interface IStorage {
   deleteEvent(id: string): Promise<void>;
   activateEvent(id: string): Promise<SelectEvent>;
   deactivateEvent(id: string): Promise<SelectEvent>;
+
+  // Trading System
+  createTradeOffer(fromUserId: string, toUserId: string): Promise<any>;
+  getTradeOffers(userId: string): Promise<any[]>;
+  acceptTradeOffer(offerId: string): Promise<any>;
+  rejectTradeOffer(offerId: string): Promise<void>;
+  createTrade(userId1: string, userId2: string): Promise<any>;
+  getTrade(tradeId: string): Promise<any | undefined>;
+  getActiveTrade(userId1: string, userId2: string): Promise<any | undefined>;
+  addTradeItem(
+    tradeId: string,
+    userId: string,
+    itemType: "item" | "pet" | "collectible" | "coins",
+    itemId: string | null,
+    quantity: number,
+  ): Promise<any>;
+  removeTradeItem(tradeItemId: string): Promise<void>;
+  getTradeItems(tradeId: string): Promise<any[]>;
+  markTradeReady(tradeId: string, userId: string): Promise<any>;
+  executeTrade(tradeId: string): Promise<{ success: boolean; message: string }>;
+  cancelTrade(tradeId: string): Promise<void>;
 
   // System
   initializeData(): Promise<void>;
@@ -1370,11 +1397,17 @@ export class DatabaseStorage implements IStorage {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");
 
-    const updatedPet = await this.updatePet(petId, {
+    const updates: Partial<Pet> = {
       hunger: Math.min(100, pet.hunger + 25),
       lastFed: new Date(),
-    });
+    };
 
+    if (Math.random() < 0.33) {
+      const bonusPoints = Math.floor(Math.random() * 3) + 3;
+      updates.trainingPoints = pet.trainingPoints + bonusPoints;
+    }
+
+    const updatedPet = await this.updatePet(petId, updates);
     await this.addPetXP(petId, 5);
     return updatedPet;
   }
@@ -1383,11 +1416,17 @@ export class DatabaseStorage implements IStorage {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");
 
-    const updatedPet = await this.updatePet(petId, {
+    const updates: Partial<Pet> = {
       hygiene: Math.min(100, pet.hygiene + 30),
       lastCleaned: new Date(),
-    });
+    };
 
+    if (Math.random() < 0.33) {
+      const bonusPoints = Math.floor(Math.random() * 3) + 3;
+      updates.trainingPoints = pet.trainingPoints + bonusPoints;
+    }
+
+    const updatedPet = await this.updatePet(petId, updates);
     await this.addPetXP(petId, 5);
     return updatedPet;
   }
@@ -1396,11 +1435,17 @@ export class DatabaseStorage implements IStorage {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");
 
-    const updatedPet = await this.updatePet(petId, {
+    const updates: Partial<Pet> = {
       fun: Math.min(100, pet.fun + 20),
       lastPlayed: new Date(),
-    });
+    };
 
+    if (Math.random() < 0.33) {
+      const bonusPoints = Math.floor(Math.random() * 3) + 3;
+      updates.trainingPoints = pet.trainingPoints + bonusPoints;
+    }
+
+    const updatedPet = await this.updatePet(petId, updates);
     await this.addPetXP(petId, 10);
     return updatedPet;
   }
@@ -1409,11 +1454,17 @@ export class DatabaseStorage implements IStorage {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");
 
-    const updatedPet = await this.updatePet(petId, {
+    const updates: Partial<Pet> = {
       energy: Math.min(100, pet.energy + 40),
       lastSlept: new Date(),
-    });
+    };
 
+    if (Math.random() < 0.33) {
+      const bonusPoints = Math.floor(Math.random() * 3) + 3;
+      updates.trainingPoints = pet.trainingPoints + bonusPoints;
+    }
+
+    const updatedPet = await this.updatePet(petId, updates);
     await this.addPetXP(petId, 3);
     return updatedPet;
   }
@@ -1593,6 +1644,10 @@ export class DatabaseStorage implements IStorage {
       throw new Error("One or both pets not found");
     }
 
+    if (petId1 === petId2) {
+      throw new Error("Cannot breed a pet with itself");
+    }
+
     if (pet1.userId !== pet2.userId) {
       throw new Error("Both pets must belong to the same user");
     }
@@ -1753,7 +1808,14 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(petHunts)
       .set({ isCompleted: true, rewards })
-      .where(eq(huntId, hunt.id)); // Corrected to use hunt.id
+      .where(eq(huntId, hunt.id));
+
+    if (Math.random() < 0.33) {
+      const bonusPoints = Math.floor(Math.random() * 5) + 5;
+      await this.updatePet(hunt.petId, {
+        trainingPoints: pet.trainingPoints + bonusPoints,
+      });
+    }
 
     await this.addPetXP(hunt.petId, xp);
 
@@ -1970,6 +2032,325 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Event not found");
     }
     return event;
+  }
+
+  // Trading System Implementation
+  async createTradeOffer(fromUserId: string, toUserId: string): Promise<TradeOffer> {
+    const [offer] = await db
+      .insert(tradeOffers)
+      .values({
+        fromUserId,
+        toUserId,
+        status: "pending",
+      })
+      .returning();
+
+    if (!offer) {
+      throw new Error("Failed to create trade offer");
+    }
+    return offer;
+  }
+
+  async getTradeOffers(userId: string): Promise<TradeOffer[]> {
+    return await db
+      .select()
+      .from(tradeOffers)
+      .where(
+        and(
+          eq(tradeOffers.toUserId, userId),
+          eq(tradeOffers.status, "pending")
+        )
+      )
+      .orderBy(desc(tradeOffers.createdAt));
+  }
+
+  async acceptTradeOffer(offerId: string): Promise<TradeOffer> {
+    const [offer] = await db
+      .update(tradeOffers)
+      .set({ status: "accepted" })
+      .where(eq(tradeOffers.id, offerId))
+      .returning();
+
+    if (!offer) {
+      throw new Error("Trade offer not found");
+    }
+    return offer;
+  }
+
+  async rejectTradeOffer(offerId: string): Promise<void> {
+    await db
+      .update(tradeOffers)
+      .set({ status: "rejected" })
+      .where(eq(tradeOffers.id, offerId));
+  }
+
+  async createTrade(userId1: string, userId2: string): Promise<Trade> {
+    const [trade] = await db
+      .insert(trades)
+      .values({
+        userId1,
+        userId2,
+        status: "active",
+        user1Ready: false,
+        user2Ready: false,
+      })
+      .returning();
+
+    if (!trade) {
+      throw new Error("Failed to create trade");
+    }
+    return trade;
+  }
+
+  async getTrade(tradeId: string): Promise<Trade | undefined> {
+    const [trade] = await db
+      .select()
+      .from(trades)
+      .where(eq(trades.id, tradeId));
+    return trade || undefined;
+  }
+
+  async getActiveTrade(userId1: string, userId2: string): Promise<Trade | undefined> {
+    const [trade] = await db
+      .select()
+      .from(trades)
+      .where(
+        and(
+          eq(trades.status, "active"),
+          sql`(${trades.userId1} = ${userId1} AND ${trades.userId2} = ${userId2}) OR (${trades.userId1} = ${userId2} AND ${trades.userId2} = ${userId1})`
+        )
+      );
+    return trade || undefined;
+  }
+
+  async addTradeItem(
+    tradeId: string,
+    userId: string,
+    itemType: "item" | "pet" | "collectible" | "coins",
+    itemId: string | null,
+    quantity: number
+  ): Promise<TradeItem> {
+    const [tradeItem] = await db
+      .insert(tradeItems)
+      .values({
+        tradeId,
+        userId,
+        itemType,
+        itemId,
+        quantity,
+      })
+      .returning();
+
+    if (!tradeItem) {
+      throw new Error("Failed to add trade item");
+    }
+
+    await db
+      .update(trades)
+      .set({ 
+        updatedAt: new Date(),
+        user1Ready: false,
+        user2Ready: false,
+      })
+      .where(eq(trades.id, tradeId));
+
+    return tradeItem;
+  }
+
+  async removeTradeItem(tradeItemId: string): Promise<void> {
+    const [item] = await db
+      .select()
+      .from(tradeItems)
+      .where(eq(tradeItems.id, tradeItemId));
+
+    if (item) {
+      await db
+        .update(trades)
+        .set({ 
+          updatedAt: new Date(),
+          user1Ready: false,
+          user2Ready: false,
+        })
+        .where(eq(trades.id, item.tradeId));
+    }
+
+    await db
+      .delete(tradeItems)
+      .where(eq(tradeItems.id, tradeItemId));
+  }
+
+  async getTradeItems(tradeId: string): Promise<TradeItem[]> {
+    return await db
+      .select()
+      .from(tradeItems)
+      .where(eq(tradeItems.tradeId, tradeId))
+      .orderBy(desc(tradeItems.addedAt));
+  }
+
+  async markTradeReady(tradeId: string, userId: string): Promise<Trade> {
+    const trade = await this.getTrade(tradeId);
+    if (!trade) {
+      throw new Error("Trade not found");
+    }
+
+    const isUser1 = trade.userId1 === userId;
+    const updateField = isUser1 ? { user1Ready: true } : { user2Ready: true };
+
+    const [updatedTrade] = await db
+      .update(trades)
+      .set({ ...updateField, updatedAt: new Date() })
+      .where(eq(trades.id, tradeId))
+      .returning();
+
+    if (!updatedTrade) {
+      throw new Error("Failed to update trade");
+    }
+
+    return updatedTrade;
+  }
+
+  async executeTrade(tradeId: string): Promise<{ success: boolean; message: string }> {
+    const trade = await this.getTrade(tradeId);
+    if (!trade) {
+      return { success: false, message: "Trade not found" };
+    }
+
+    if (!trade.user1Ready || !trade.user2Ready) {
+      return { success: false, message: "Both users must accept the trade" };
+    }
+
+    const items = await this.getTradeItems(tradeId);
+    const user1 = await this.getUser(trade.userId1);
+    const user2 = await this.getUser(trade.userId2);
+
+    if (!user1 || !user2) {
+      return { success: false, message: "User not found" };
+    }
+
+    const user1Items = items.filter(item => item.userId === trade.userId1);
+    const user2Items = items.filter(item => item.userId === trade.userId2);
+
+    try {
+      for (const item of user1Items) {
+        if (item.itemType === "coins") {
+          if (user1.coins < item.quantity) {
+            return { success: false, message: `${user1.username} has insufficient coins` };
+          }
+          await this.updateUser(user1.id, { coins: user1.coins - item.quantity });
+          await this.updateUser(user2.id, { coins: user2.coins + item.quantity });
+          
+          await this.createTransaction({
+            user: user1.username,
+            type: "transfer",
+            amount: -item.quantity,
+            targetUser: user2.username,
+            description: `Trade: Sent ${item.quantity} coins to ${user2.username}`,
+          });
+        } else if (item.itemType === "pet" && item.itemId) {
+          const pet = await this.getPet(item.itemId);
+          if (!pet || pet.userId !== user1.id) {
+            return { success: false, message: `Invalid pet in trade` };
+          }
+          await this.updatePet(item.itemId, { userId: user2.id });
+        } else if (item.itemId) {
+          const userInventory = user1.inventory as any[];
+          const itemIndex = userInventory.findIndex(
+            (inv: any) => inv.itemId === item.itemId && inv.quantity >= item.quantity
+          );
+          if (itemIndex === -1) {
+            return { success: false, message: `${user1.username} doesn't have the required items` };
+          }
+          
+          userInventory[itemIndex].quantity -= item.quantity;
+          if (userInventory[itemIndex].quantity <= 0) {
+            userInventory.splice(itemIndex, 1);
+          }
+
+          const user2Inventory = user2.inventory as any[];
+          const existingItemIndex = user2Inventory.findIndex(
+            (inv: any) => inv.itemId === item.itemId
+          );
+          if (existingItemIndex >= 0) {
+            user2Inventory[existingItemIndex].quantity += item.quantity;
+          } else {
+            user2Inventory.push({ itemId: item.itemId, quantity: item.quantity });
+          }
+
+          await this.updateUser(user1.id, { inventory: userInventory });
+          await this.updateUser(user2.id, { inventory: user2Inventory });
+        }
+      }
+
+      for (const item of user2Items) {
+        if (item.itemType === "coins") {
+          if (user2.coins < item.quantity) {
+            return { success: false, message: `${user2.username} has insufficient coins` };
+          }
+          await this.updateUser(user2.id, { coins: user2.coins - item.quantity });
+          await this.updateUser(user1.id, { coins: user1.coins + item.quantity });
+          
+          await this.createTransaction({
+            user: user2.username,
+            type: "transfer",
+            amount: -item.quantity,
+            targetUser: user1.username,
+            description: `Trade: Sent ${item.quantity} coins to ${user1.username}`,
+          });
+        } else if (item.itemType === "pet" && item.itemId) {
+          const pet = await this.getPet(item.itemId);
+          if (!pet || pet.userId !== user2.id) {
+            return { success: false, message: `Invalid pet in trade` };
+          }
+          await this.updatePet(item.itemId, { userId: user1.id });
+        } else if (item.itemId) {
+          const userInventory = user2.inventory as any[];
+          const itemIndex = userInventory.findIndex(
+            (inv: any) => inv.itemId === item.itemId && inv.quantity >= item.quantity
+          );
+          if (itemIndex === -1) {
+            return { success: false, message: `${user2.username} doesn't have the required items` };
+          }
+          
+          userInventory[itemIndex].quantity -= item.quantity;
+          if (userInventory[itemIndex].quantity <= 0) {
+            userInventory.splice(itemIndex, 1);
+          }
+
+          const user1Inventory = user1.inventory as any[];
+          const existingItemIndex = user1Inventory.findIndex(
+            (inv: any) => inv.itemId === item.itemId
+          );
+          if (existingItemIndex >= 0) {
+            user1Inventory[existingItemIndex].quantity += item.quantity;
+          } else {
+            user1Inventory.push({ itemId: item.itemId, quantity: item.quantity });
+          }
+
+          await this.updateUser(user2.id, { inventory: userInventory });
+          await this.updateUser(user1.id, { inventory: user1Inventory });
+        }
+      }
+
+      await db
+        .update(trades)
+        .set({ status: "completed", updatedAt: new Date() })
+        .where(eq(trades.id, tradeId));
+
+      return { success: true, message: "Trade completed successfully!" };
+    } catch (error) {
+      return { success: false, message: `Trade failed: ${(error as Error).message}` };
+    }
+  }
+
+  async cancelTrade(tradeId: string): Promise<void> {
+    await db
+      .update(trades)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(eq(trades.id, tradeId));
+      
+    await db
+      .delete(tradeItems)
+      .where(eq(tradeItems.tradeId, tradeId));
   }
 }
 

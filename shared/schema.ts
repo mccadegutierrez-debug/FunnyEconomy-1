@@ -359,6 +359,60 @@ export const featureFlags = pgTable("feature_flags", {
   updatedBy: varchar("updated_by"),
 });
 
+// Trading System Tables
+export const tradeOffers = pgTable("trade_offers", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  fromUserId: varchar("from_user_id").notNull(),
+  toUserId: varchar("to_user_id").notNull(),
+  status: varchar("status", {
+    enum: ["pending", "accepted", "rejected"],
+  })
+    .default("pending")
+    .notNull(),
+  createdAt: timestamp("created_at")
+    .default(sql`now()`)
+    .notNull(),
+});
+
+export const trades = pgTable("trades", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId1: varchar("user_id_1").notNull(),
+  userId2: varchar("user_id_2").notNull(),
+  status: varchar("status", {
+    enum: ["active", "completed", "cancelled"],
+  })
+    .default("active")
+    .notNull(),
+  user1Ready: boolean("user_1_ready").default(false).notNull(),
+  user2Ready: boolean("user_2_ready").default(false).notNull(),
+  createdAt: timestamp("created_at")
+    .default(sql`now()`)
+    .notNull(),
+  updatedAt: timestamp("updated_at")
+    .default(sql`now()`)
+    .notNull(),
+});
+
+export const tradeItems = pgTable("trade_items", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  tradeId: varchar("trade_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  itemType: varchar("item_type", {
+    enum: ["item", "pet", "collectible", "coins"],
+  }).notNull(),
+  itemId: varchar("item_id"),
+  quantity: integer("quantity").default(1).notNull(),
+  addedAt: timestamp("added_at")
+    .default(sql`now()`)
+    .notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
@@ -451,6 +505,42 @@ export const petHuntsRelations = relations(petHunts, ({ one }) => ({
   }),
 }));
 
+export const tradeOffersRelations = relations(tradeOffers, ({ one }) => ({
+  fromUser: one(users, {
+    fields: [tradeOffers.fromUserId],
+    references: [users.id],
+  }),
+  toUser: one(users, {
+    fields: [tradeOffers.toUserId],
+    references: [users.id],
+  }),
+}));
+
+export const tradesRelations = relations(trades, ({ one, many }) => ({
+  user1: one(users, {
+    fields: [trades.userId1],
+    references: [users.id],
+    relationName: "user1Trades",
+  }),
+  user2: one(users, {
+    fields: [trades.userId2],
+    references: [users.id],
+    relationName: "user2Trades",
+  }),
+  items: many(tradeItems),
+}));
+
+export const tradeItemsRelations = relations(tradeItems, ({ one }) => ({
+  trade: one(trades, {
+    fields: [tradeItems.tradeId],
+    references: [trades.id],
+  }),
+  user: one(users, {
+    fields: [tradeItems.userId],
+    references: [users.id],
+  }),
+}));
+
 // Create insert and select schemas from tables
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -524,6 +614,22 @@ export const insertEventSchema = createInsertSchema(events).omit({
   createdAt: true,
 });
 export const selectEventSchema = createSelectSchema(events);
+export const insertTradeOfferSchema = createInsertSchema(tradeOffers).omit({
+  id: true,
+  createdAt: true,
+});
+export const selectTradeOfferSchema = createSelectSchema(tradeOffers);
+export const insertTradeSchema = createInsertSchema(trades).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export const selectTradeSchema = createSelectSchema(trades);
+export const insertTradeItemSchema = createInsertSchema(tradeItems).omit({
+  id: true,
+  addedAt: true,
+});
+export const selectTradeItemSchema = createSelectSchema(tradeItems);
 
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -578,3 +684,9 @@ export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
 export type FeatureFlag = typeof featureFlags.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type SelectEvent = typeof events.$inferSelect;
+export type InsertTradeOffer = z.infer<typeof insertTradeOfferSchema>;
+export type TradeOffer = typeof tradeOffers.$inferSelect;
+export type InsertTrade = z.infer<typeof insertTradeSchema>;
+export type Trade = typeof trades.$inferSelect;
+export type InsertTradeItem = z.infer<typeof insertTradeItemSchema>;
+export type TradeItem = typeof tradeItems.$inferSelect;

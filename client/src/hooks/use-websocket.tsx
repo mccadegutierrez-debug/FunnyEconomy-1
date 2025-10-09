@@ -26,23 +26,29 @@ export function useWebSocket() {
     const connectWebSocket = () => {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
+      console.log('[WebSocket Client] Connecting to:', wsUrl);
 
       ws.current = new WebSocket(wsUrl);
 
       ws.current.onopen = () => {
+        console.log('[WebSocket Client] Connection opened');
         setConnected(true);
         // Send auth message to authenticate with session cookies
         ws.current?.send(JSON.stringify({ type: "auth" }));
+        console.log('[WebSocket Client] Sent auth message');
       };
 
       ws.current.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
+          console.log('[WebSocket Client] Received message:', message);
 
           // Handle authentication response
           if (message.type === "auth_success") {
+            console.log('[WebSocket Client] Authentication successful!');
             setAuthenticated(true);
           } else if (message.type === "auth_error") {
+            console.log('[WebSocket Client] Authentication failed:', message.message);
             setAuthenticated(false);
             // Only try to reconnect once after a delay
             if (ws.current) {
@@ -52,20 +58,21 @@ export function useWebSocket() {
             // Only add chat messages to the messages array
             setMessages((prev) => [...prev.slice(-99), message]); // Keep last 100 messages
           } else if (message.type === "error") {
-            // WebSocket error handled silently
+            console.log('[WebSocket Client] Error message:', message.message);
           }
         } catch (error) {
-          // WebSocket parse error handled silently
+          console.error('[WebSocket Client] Parse error:', error);
         }
       };
 
       ws.current.onclose = () => {
+        console.log('[WebSocket Client] Connection closed');
         setConnected(false);
         setAuthenticated(false);
       };
 
-      ws.current.onerror = () => {
-        // WebSocket connection error handled silently
+      ws.current.onerror = (error) => {
+        console.error('[WebSocket Client] Connection error:', error);
       };
     };
 

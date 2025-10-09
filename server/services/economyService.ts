@@ -1,6 +1,536 @@
 import { storage } from "../storage";
 
 export class EconomyService {
+  // 100+ Work job options
+  private static readonly WORK_OPTIONS = [
+    { id: "meme-farmer", name: "Meme Farmer", min: 100, max: 300, xp: 5 },
+    { id: "doge-miner", name: "Doge Miner", min: 50, max: 500, xp: 8 },
+    { id: "pepe-trader", name: "Pepe Trader", min: 150, max: 400, xp: 6 },
+    { id: "nft-creator", name: "NFT Creator", min: 200, max: 600, xp: 10 },
+    { id: "mod-botter", name: "Mod Botter", min: 80, max: 350, xp: 7 },
+    { id: "tiktok-dancer", name: "TikTok Dancer", min: 120, max: 380, xp: 6 },
+    { id: "discord-mod", name: "Discord Mod", min: 90, max: 320, xp: 5 },
+    { id: "reddit-karma-farmer", name: "Reddit Karma Farmer", min: 110, max: 340, xp: 6 },
+    { id: "twitch-streamer", name: "Twitch Streamer", min: 180, max: 520, xp: 9 },
+    { id: "youtube-clickbaiter", name: "YouTube Clickbaiter", min: 160, max: 480, xp: 8 },
+    { id: "instagram-influencer", name: "Instagram Influencer", min: 190, max: 550, xp: 10 },
+    { id: "twitter-shitposter", name: "Twitter Shitposter", min: 140, max: 420, xp: 7 },
+    { id: "gif-maker", name: "GIF Maker", min: 100, max: 310, xp: 5 },
+    { id: "emoji-designer", name: "Emoji Designer", min: 130, max: 390, xp: 7 },
+    { id: "filter-creator", name: "Filter Creator", min: 150, max: 430, xp: 8 },
+    { id: "vtuber", name: "VTuber", min: 210, max: 590, xp: 11 },
+    { id: "podcast-host", name: "Podcast Host", min: 170, max: 490, xp: 9 },
+    { id: "onlyfans-chef", name: "OnlyFans Chef", min: 220, max: 610, xp: 11 },
+    { id: "genshin-player", name: "Professional Genshin Player", min: 95, max: 330, xp: 6 },
+    { id: "minecraft-builder", name: "Minecraft Builder", min: 105, max: 345, xp: 6 },
+    { id: "fortnite-coach", name: "Fortnite Coach", min: 185, max: 535, xp: 9 },
+    { id: "valorant-smurf", name: "Valorant Smurf", min: 125, max: 370, xp: 7 },
+    { id: "league-flamer", name: "League Flamer", min: 85, max: 305, xp: 5 },
+    { id: "csgo-skin-trader", name: "CS:GO Skin Trader", min: 195, max: 560, xp: 10 },
+    { id: "roblox-developer", name: "Roblox Developer", min: 135, max: 400, xp: 7 },
+    { id: "among-us-detective", name: "Among Us Detective", min: 115, max: 355, xp: 6 },
+    { id: "fall-guys-pro", name: "Fall Guys Pro", min: 145, max: 425, xp: 8 },
+    { id: "crab-game-player", name: "Crab Game Player", min: 100, max: 315, xp: 5 },
+    { id: "beta-tester", name: "Professional Beta Tester", min: 155, max: 445, xp: 8 },
+    { id: "bug-reporter", name: "Bug Reporter", min: 110, max: 335, xp: 6 },
+    { id: "game-reviewer", name: "Game Reviewer", min: 175, max: 505, xp: 9 },
+    { id: "speedrunner", name: "Speedrunner", min: 205, max: 575, xp: 10 },
+    { id: "achievement-hunter", name: "Achievement Hunter", min: 120, max: 365, xp: 7 },
+    { id: "wiki-editor", name: "Wiki Editor", min: 90, max: 295, xp: 5 },
+    { id: "subreddit-mod", name: "Subreddit Moderator", min: 130, max: 385, xp: 7 },
+    { id: "meme-historian", name: "Meme Historian", min: 140, max: 410, xp: 7 },
+    { id: "copypasta-creator", name: "Copypasta Creator", min: 105, max: 325, xp: 6 },
+    { id: "bot-developer", name: "Bot Developer", min: 225, max: 625, xp: 12 },
+    { id: "script-kiddie", name: "Script Kiddie", min: 80, max: 285, xp: 4 },
+    { id: "tech-support-scammer", name: "Tech Support Scammer", min: 160, max: 460, xp: 8 },
+    { id: "crypto-bro", name: "Crypto Bro", min: 190, max: 540, xp: 10 },
+    { id: "day-trader", name: "Day Trader", min: 200, max: 565, xp: 10 },
+    { id: "nft-flipper", name: "NFT Flipper", min: 185, max: 525, xp: 9 },
+    { id: "ape-holder", name: "Bored Ape Holder", min: 210, max: 595, xp: 11 },
+    { id: "metaverse-realtor", name: "Metaverse Realtor", min: 195, max: 555, xp: 10 },
+    { id: "blockchain-expert", name: "Blockchain Expert", min: 230, max: 640, xp: 12 },
+    { id: "web3-developer", name: "Web3 Developer", min: 240, max: 660, xp: 13 },
+    { id: "dao-member", name: "DAO Member", min: 170, max: 495, xp: 9 },
+    { id: "defi-farmer", name: "DeFi Farmer", min: 180, max: 515, xp: 9 },
+    { id: "shitcoin-creator", name: "Shitcoin Creator", min: 155, max: 440, xp: 8 },
+    { id: "rugpull-artist", name: "Rugpull Artist", min: 220, max: 615, xp: 11 },
+    { id: "telegram-admin", name: "Telegram Admin", min: 125, max: 375, xp: 7 },
+    { id: "whitepaper-writer", name: "Whitepaper Writer", min: 165, max: 475, xp: 8 },
+    { id: "token-launcher", name: "Token Launcher", min: 205, max: 580, xp: 10 },
+    { id: "pump-dumper", name: "Pump & Dumper", min: 175, max: 500, xp: 9 },
+    { id: "whale-watcher", name: "Whale Watcher", min: 145, max: 415, xp: 8 },
+    { id: "gas-fee-optimizer", name: "Gas Fee Optimizer", min: 135, max: 395, xp: 7 },
+    { id: "smart-contract-auditor", name: "Smart Contract Auditor", min: 250, max: 680, xp: 14 },
+    { id: "yield-optimizer", name: "Yield Optimizer", min: 190, max: 545, xp: 10 },
+    { id: "liquidity-provider", name: "Liquidity Provider", min: 200, max: 570, xp: 10 },
+    { id: "airdrop-hunter", name: "Airdrop Hunter", min: 150, max: 435, xp: 8 },
+    { id: "whitelist-grinder", name: "Whitelist Grinder", min: 140, max: 405, xp: 7 },
+    { id: "mint-sniper", name: "Mint Sniper", min: 215, max: 600, xp: 11 },
+    { id: "floor-sweeper", name: "Floor Sweeper", min: 160, max: 465, xp: 8 },
+    { id: "rarity-checker", name: "Rarity Checker", min: 130, max: 380, xp: 7 },
+    { id: "trait-farmer", name: "Trait Farmer", min: 155, max: 450, xp: 8 },
+    { id: "pfp-collector", name: "PFP Collector", min: 185, max: 530, xp: 9 },
+    { id: "discord-raider", name: "Discord Raider", min: 95, max: 315, xp: 5 },
+    { id: "shill-account", name: "Shill Account", min: 110, max: 340, xp: 6 },
+    { id: "fud-spreader", name: "FUD Spreader", min: 120, max: 360, xp: 6 },
+    { id: "hopium-dealer", name: "Hopium Dealer", min: 145, max: 420, xp: 7 },
+    { id: "copium-supplier", name: "Copium Supplier", min: 135, max: 390, xp: 7 },
+    { id: "wagmi-preacher", name: "WAGMI Preacher", min: 155, max: 445, xp: 8 },
+    { id: "gm-sayer", name: "GM Sayer", min: 100, max: 300, xp: 5 },
+    { id: "ngmi-warner", name: "NGMI Warner", min: 115, max: 350, xp: 6 },
+    { id: "dyor-advisor", name: "DYOR Advisor", min: 140, max: 410, xp: 7 },
+    { id: "nfa-disclaimer", name: "NFA Disclaimer Writer", min: 105, max: 320, xp: 6 },
+    { id: "moon-predictor", name: "Moon Predictor", min: 130, max: 385, xp: 7 },
+    { id: "chart-reader", name: "Chart Reader", min: 165, max: 470, xp: 8 },
+    { id: "ta-expert", name: "TA Expert", min: 175, max: 510, xp: 9 },
+    { id: "elliott-wave-theorist", name: "Elliott Wave Theorist", min: 195, max: 550, xp: 10 },
+    { id: "fibonacci-drawer", name: "Fibonacci Drawer", min: 150, max: 430, xp: 8 },
+    { id: "support-resistance-finder", name: "Support/Resistance Finder", min: 160, max: 455, xp: 8 },
+    { id: "candlestick-pattern-spotter", name: "Candlestick Pattern Spotter", min: 170, max: 485, xp: 9 },
+    { id: "volume-analyzer", name: "Volume Analyzer", min: 155, max: 440, xp: 8 },
+    { id: "macd-crossover-trader", name: "MACD Crossover Trader", min: 165, max: 475, xp: 8 },
+    { id: "rsi-divergence-hunter", name: "RSI Divergence Hunter", min: 175, max: 500, xp: 9 },
+    { id: "bollinger-band-bouncer", name: "Bollinger Band Bouncer", min: 160, max: 460, xp: 8 },
+    { id: "moving-average-master", name: "Moving Average Master", min: 170, max: 490, xp: 9 },
+    { id: "head-shoulders-identifier", name: "Head & Shoulders Identifier", min: 155, max: 445, xp: 8 },
+    { id: "cup-handle-finder", name: "Cup & Handle Finder", min: 150, max: 435, xp: 8 },
+    { id: "double-top-spotter", name: "Double Top Spotter", min: 145, max: 425, xp: 7 },
+    { id: "triangle-breakout-trader", name: "Triangle Breakout Trader", min: 185, max: 520, xp: 9 },
+    { id: "wedge-pattern-player", name: "Wedge Pattern Player", min: 165, max: 470, xp: 8 },
+    { id: "flag-pennant-trader", name: "Flag & Pennant Trader", min: 155, max: 450, xp: 8 },
+    { id: "gap-trader", name: "Gap Trader", min: 175, max: 505, xp: 9 },
+    { id: "swing-trader", name: "Swing Trader", min: 190, max: 535, xp: 10 },
+    { id: "scalper", name: "Scalper", min: 125, max: 370, xp: 7 },
+    { id: "hodler", name: "Professional HODLer", min: 200, max: 560, xp: 10 },
+    { id: "paper-hands", name: "Paper Hands", min: 80, max: 280, xp: 4 },
+    { id: "diamond-hands", name: "Diamond Hands", min: 220, max: 620, xp: 11 },
+    { id: "bag-holder", name: "Bag Holder", min: 75, max: 275, xp: 4 },
+    { id: "dip-buyer", name: "Dip Buyer", min: 165, max: 475, xp: 8 },
+    { id: "fomo-trader", name: "FOMO Trader", min: 90, max: 310, xp: 5 },
+    { id: "fud-victim", name: "FUD Victim", min: 85, max: 295, xp: 5 },
+    { id: "revenge-trader", name: "Revenge Trader", min: 70, max: 265, xp: 4 },
+    { id: "over-leveraged", name: "Over-Leveraged Gambler", min: 95, max: 325, xp: 6 },
+    { id: "liquidation-survivor", name: "Liquidation Survivor", min: 115, max: 355, xp: 6 },
+    { id: "stop-loss-hunter", name: "Stop Loss Hunter", min: 175, max: 495, xp: 9 },
+    { id: "margin-caller", name: "Margin Caller", min: 140, max: 400, xp: 7 },
+    { id: "short-squeezer", name: "Short Squeezer", min: 210, max: 590, xp: 11 },
+    { id: "long-liquidator", name: "Long Liquidator", min: 200, max: 575, xp: 10 },
+  ];
+
+  // 100+ Crime options
+  private static readonly CRIME_OPTIONS = [
+    { id: "steal-meme", name: "Steal a rare meme", success: 0.8, coins: 200, fine: 100, xp: 10 },
+    { id: "rob-server", name: "Rob a Discord server", success: 0.6, coins: 500, fine: 300, xp: 15 },
+    { id: "hack-computer", name: "Hack someone's computer", success: 0.4, coins: 1000, fine: 600, xp: 25 },
+    { id: "bank-heist", name: "Execute a bank heist", success: 0.2, coins: 2000, fine: 1200, xp: 50 },
+    { id: "steal-nft", name: "Steal an NFT", success: 0.5, coins: 800, fine: 450, xp: 20 },
+    { id: "phish-wallet", name: "Phish a crypto wallet", success: 0.45, coins: 900, fine: 500, xp: 22 },
+    { id: "rug-pull", name: "Execute a rug pull", success: 0.3, coins: 1500, fine: 900, xp: 35 },
+    { id: "insider-trading", name: "Insider trading", success: 0.35, coins: 1300, fine: 750, xp: 30 },
+    { id: "tax-evasion", name: "Tax evasion", success: 0.7, coins: 400, fine: 200, xp: 12 },
+    { id: "money-laundering", name: "Money laundering", success: 0.4, coins: 1100, fine: 650, xp: 27 },
+    { id: "steal-cookie", name: "Steal cookies from grandma", success: 0.85, coins: 150, fine: 75, xp: 8 },
+    { id: "fake-giveaway", name: "Host a fake giveaway", success: 0.55, coins: 700, fine: 400, xp: 18 },
+    { id: "impersonate-admin", name: "Impersonate a server admin", success: 0.5, coins: 750, fine: 425, xp: 19 },
+    { id: "ddos-website", name: "DDoS a website", success: 0.35, coins: 1200, fine: 700, xp: 28 },
+    { id: "sell-fakes", name: "Sell fake designer memes", success: 0.6, coins: 550, fine: 325, xp: 16 },
+    { id: "copyright-infringement", name: "Copyright infringement", success: 0.65, coins: 450, fine: 250, xp: 14 },
+    { id: "steal-art", name: "Steal digital art", success: 0.55, coins: 650, fine: 375, xp: 17 },
+    { id: "forge-signature", name: "Forge a signature", success: 0.5, coins: 800, fine: 450, xp: 20 },
+    { id: "identity-theft", name: "Identity theft", success: 0.3, coins: 1400, fine: 850, xp: 33 },
+    { id: "credit-card-fraud", name: "Credit card fraud", success: 0.25, coins: 1800, fine: 1100, xp: 45 },
+    { id: "pyramid-scheme", name: "Run a pyramid scheme", success: 0.4, coins: 1050, fine: 600, xp: 26 },
+    { id: "ponzi-scheme", name: "Start a Ponzi scheme", success: 0.35, coins: 1250, fine: 725, xp: 29 },
+    { id: "pump-dump", name: "Pump and dump scheme", success: 0.45, coins: 950, fine: 550, xp: 23 },
+    { id: "wash-trading", name: "Wash trading", success: 0.5, coins: 850, fine: 475, xp: 21 },
+    { id: "fake-news", name: "Spread fake news for profit", success: 0.6, coins: 600, fine: 350, xp: 17 },
+    { id: "market-manipulation", name: "Market manipulation", success: 0.35, coins: 1300, fine: 775, xp: 31 },
+    { id: "bribe-official", name: "Bribe a government official", success: 0.4, coins: 1100, fine: 650, xp: 27 },
+    { id: "embezzlement", name: "Embezzlement", success: 0.3, coins: 1500, fine: 900, xp: 36 },
+    { id: "blackmail", name: "Blackmail someone", success: 0.45, coins: 1000, fine: 575, xp: 24 },
+    { id: "extortion", name: "Extortion", success: 0.4, coins: 1150, fine: 675, xp: 28 },
+    { id: "kidnapping", name: "Kidnap a meme character", success: 0.15, coins: 2500, fine: 1500, xp: 60 },
+    { id: "arson", name: "Commit arson at a server", success: 0.2, coins: 2200, fine: 1300, xp: 55 },
+    { id: "vandalism", name: "Vandalize public property", success: 0.7, coins: 350, fine: 175, xp: 11 },
+    { id: "graffiti", name: "Spray paint graffiti", success: 0.75, coins: 300, fine: 150, xp: 10 },
+    { id: "shoplifting", name: "Shoplift rare items", success: 0.65, coins: 500, fine: 275, xp: 15 },
+    { id: "pickpocket", name: "Pickpocket tourists", success: 0.7, coins: 400, fine: 200, xp: 12 },
+    { id: "burglar", name: "Burgle a house", success: 0.45, coins: 950, fine: 525, xp: 23 },
+    { id: "carjack", name: "Carjack a lambo", success: 0.25, coins: 1900, fine: 1150, xp: 48 },
+    { id: "grand-theft-auto", name: "Grand theft auto", success: 0.2, coins: 2100, fine: 1250, xp: 52 },
+    { id: "smuggling", name: "Smuggle contraband", success: 0.35, coins: 1350, fine: 800, xp: 32 },
+    { id: "counterfeiting", name: "Counterfeit currency", success: 0.3, coins: 1600, fine: 950, xp: 38 },
+    { id: "bootlegging", name: "Bootleg merchandise", success: 0.55, coins: 700, fine: 400, xp: 18 },
+    { id: "loan-sharking", name: "Loan sharking", success: 0.5, coins: 850, fine: 475, xp: 21 },
+    { id: "racketeering", name: "Racketeering", success: 0.3, coins: 1550, fine: 925, xp: 37 },
+    { id: "witness-tampering", name: "Witness tampering", success: 0.4, coins: 1100, fine: 650, xp: 27 },
+    { id: "obstruction-justice", name: "Obstruction of justice", success: 0.45, coins: 1000, fine: 575, xp: 24 },
+    { id: "perjury", name: "Commit perjury", success: 0.5, coins: 900, fine: 500, xp: 22 },
+    { id: "contempt-court", name: "Contempt of court", success: 0.6, coins: 600, fine: 350, xp: 17 },
+    { id: "drunk-driving", name: "Drunk driving (GTA style)", success: 0.55, coins: 750, fine: 425, xp: 19 },
+    { id: "hit-run", name: "Hit and run", success: 0.4, coins: 1050, fine: 600, xp: 26 },
+    { id: "reckless-driving", name: "Reckless driving", success: 0.65, coins: 450, fine: 250, xp: 14 },
+    { id: "street-racing", name: "Illegal street racing", success: 0.5, coins: 850, fine: 475, xp: 21 },
+    { id: "drag-racing", name: "Drag racing", success: 0.55, coins: 700, fine: 400, xp: 18 },
+    { id: "drift-racing", name: "Drift racing", success: 0.6, coins: 600, fine: 350, xp: 17 },
+    { id: "illegal-gambling", name: "Run illegal gambling ring", success: 0.4, coins: 1150, fine: 675, xp: 28 },
+    { id: "fixed-matches", name: "Fix sports matches", success: 0.35, coins: 1300, fine: 775, xp: 31 },
+    { id: "doping", name: "Doping scandal", success: 0.5, coins: 800, fine: 450, xp: 20 },
+    { id: "match-throwing", name: "Throw a match", success: 0.55, coins: 750, fine: 425, xp: 19 },
+    { id: "ticket-scalping", name: "Ticket scalping", success: 0.7, coins: 400, fine: 200, xp: 12 },
+    { id: "price-gouging", name: "Price gouging", success: 0.6, coins: 550, fine: 325, xp: 16 },
+    { id: "false-advertising", name: "False advertising", success: 0.65, coins: 500, fine: 275, xp: 15 },
+    { id: "trademark-violation", name: "Trademark violation", success: 0.6, coins: 600, fine: 350, xp: 17 },
+    { id: "patent-infringement", name: "Patent infringement", success: 0.5, coins: 850, fine: 475, xp: 21 },
+    { id: "steal-trade-secrets", name: "Steal trade secrets", success: 0.35, coins: 1350, fine: 800, xp: 32 },
+    { id: "corporate-espionage", name: "Corporate espionage", success: 0.25, coins: 1850, fine: 1100, xp: 46 },
+    { id: "industrial-sabotage", name: "Industrial sabotage", success: 0.3, coins: 1550, fine: 925, xp: 37 },
+    { id: "data-breach", name: "Cause a data breach", success: 0.35, coins: 1250, fine: 725, xp: 29 },
+    { id: "ransomware", name: "Deploy ransomware", success: 0.25, coins: 1900, fine: 1150, xp: 48 },
+    { id: "cryptojacking", name: "Cryptojacking", success: 0.5, coins: 850, fine: 475, xp: 21 },
+    { id: "sim-swapping", name: "SIM swapping attack", success: 0.4, coins: 1100, fine: 650, xp: 27 },
+    { id: "credential-stuffing", name: "Credential stuffing", success: 0.55, coins: 750, fine: 425, xp: 19 },
+    { id: "sql-injection", name: "SQL injection attack", success: 0.45, coins: 1000, fine: 575, xp: 24 },
+    { id: "xss-attack", name: "XSS attack", success: 0.5, coins: 900, fine: 500, xp: 22 },
+    { id: "csrf-attack", name: "CSRF attack", success: 0.5, coins: 850, fine: 475, xp: 21 },
+    { id: "zero-day-exploit", name: "Zero-day exploit", success: 0.2, coins: 2300, fine: 1400, xp: 58 },
+    { id: "brute-force", name: "Brute force attack", success: 0.6, coins: 600, fine: 350, xp: 17 },
+    { id: "dictionary-attack", name: "Dictionary attack", success: 0.65, coins: 500, fine: 275, xp: 15 },
+    { id: "rainbow-table", name: "Rainbow table attack", success: 0.55, coins: 700, fine: 400, xp: 18 },
+    { id: "man-in-middle", name: "Man-in-the-middle attack", success: 0.4, coins: 1150, fine: 675, xp: 28 },
+    { id: "dns-spoofing", name: "DNS spoofing", success: 0.45, coins: 950, fine: 550, xp: 23 },
+    { id: "ip-spoofing", name: "IP spoofing", success: 0.5, coins: 850, fine: 475, xp: 21 },
+    { id: "arp-poisoning", name: "ARP poisoning", success: 0.5, coins: 900, fine: 500, xp: 22 },
+    { id: "session-hijacking", name: "Session hijacking", success: 0.45, coins: 1000, fine: 575, xp: 24 },
+    { id: "cookie-theft", name: "Cookie theft", success: 0.6, coins: 600, fine: 350, xp: 17 },
+    { id: "clickjacking", name: "Clickjacking", success: 0.65, coins: 450, fine: 250, xp: 14 },
+    { id: "tabnabbing", name: "Tabnabbing", success: 0.6, coins: 550, fine: 325, xp: 16 },
+    { id: "typosquatting", name: "Typosquatting", success: 0.7, coins: 400, fine: 200, xp: 12 },
+    { id: "cybersquatting", name: "Cybersquatting", success: 0.65, coins: 500, fine: 275, xp: 15 },
+    { id: "domain-hijacking", name: "Domain hijacking", success: 0.35, coins: 1300, fine: 775, xp: 31 },
+    { id: "email-spoofing", name: "Email spoofing", success: 0.6, coins: 600, fine: 350, xp: 17 },
+    { id: "sms-phishing", name: "SMS phishing", success: 0.65, coins: 450, fine: 250, xp: 14 },
+    { id: "vishing", name: "Voice phishing (vishing)", success: 0.55, coins: 750, fine: 425, xp: 19 },
+    { id: "whaling", name: "Whaling attack", success: 0.3, coins: 1600, fine: 950, xp: 38 },
+    { id: "spear-phishing", name: "Spear phishing", success: 0.4, coins: 1100, fine: 650, xp: 27 },
+    { id: "clone-phishing", name: "Clone phishing", success: 0.5, coins: 850, fine: 475, xp: 21 },
+    { id: "pharming", name: "Pharming", success: 0.45, coins: 950, fine: 550, xp: 23 },
+    { id: "watering-hole", name: "Watering hole attack", success: 0.35, coins: 1250, fine: 725, xp: 29 },
+    { id: "drive-by-download", name: "Drive-by download", success: 0.5, coins: 900, fine: 500, xp: 22 },
+    { id: "malvertising", name: "Malvertising", success: 0.55, coins: 750, fine: 425, xp: 19 },
+    { id: "trojan-horse", name: "Deploy trojan horse", success: 0.4, coins: 1100, fine: 650, xp: 27 },
+    { id: "worm-spreading", name: "Spread a worm", success: 0.35, coins: 1350, fine: 800, xp: 32 },
+    { id: "rootkit-install", name: "Install rootkit", success: 0.3, coins: 1500, fine: 900, xp: 36 },
+  ];
+
+  // 100+ Dig treasure options
+  private static readonly DIG_OPTIONS = [
+    { name: "Bottle Cap", coins: 20, xp: 2 },
+    { name: "Old Coin", coins: 75, xp: 5 },
+    { name: "Treasure Chest", coins: 200, xp: 10 },
+    { name: "Ancient Artifact", coins: 500, xp: 20 },
+    { name: "Pirate Treasure", coins: 800, xp: 30 },
+    { name: "Legendary Gem", coins: 1500, xp: 40 },
+    { name: "Dragon Hoard", coins: 3000, xp: 80 },
+    { name: "Rusty Spoon", coins: 15, xp: 1 },
+    { name: "Broken Watch", coins: 35, xp: 3 },
+    { name: "Old Key", coins: 50, xp: 4 },
+    { name: "Copper Ring", coins: 90, xp: 6 },
+    { name: "Silver Necklace", coins: 150, xp: 8 },
+    { name: "Gold Bracelet", coins: 250, xp: 12 },
+    { name: "Diamond Ring", coins: 600, xp: 25 },
+    { name: "Emerald Pendant", coins: 550, xp: 22 },
+    { name: "Ruby Earrings", coins: 700, xp: 28 },
+    { name: "Sapphire Brooch", coins: 650, xp: 26 },
+    { name: "Platinum Chain", coins: 850, xp: 32 },
+    { name: "Opal Tiara", coins: 950, xp: 35 },
+    { name: "Topaz Crown", coins: 1100, xp: 38 },
+    { name: "Amethyst Scepter", coins: 1300, xp: 42 },
+    { name: "Pearl Diadem", coins: 1200, xp: 40 },
+    { name: "Jade Statue", coins: 1400, xp: 45 },
+    { name: "Ivory Figurine", coins: 900, xp: 33 },
+    { name: "Bronze Medal", coins: 180, xp: 9 },
+    { name: "Silver Trophy", coins: 320, xp: 15 },
+    { name: "Gold Medal", coins: 480, xp: 19 },
+    { name: "Championship Belt", coins: 720, xp: 29 },
+    { name: "Rare Fossil", coins: 580, xp: 23 },
+    { name: "Dinosaur Bone", coins: 850, xp: 31 },
+    { name: "Meteorite Fragment", coins: 1250, xp: 41 },
+    { name: "Moon Rock", coins: 1600, xp: 50 },
+    { name: "Ancient Scroll", coins: 420, xp: 18 },
+    { name: "Old Map", coins: 350, xp: 16 },
+    { name: "Pirate Flag", coins: 280, xp: 13 },
+    { name: "Ship's Wheel", coins: 540, xp: 21 },
+    { name: "Anchor", coins: 380, xp: 17 },
+    { name: "Compass", coins: 220, xp: 11 },
+    { name: "Sextant", coins: 460, xp: 19 },
+    { name: "Spyglass", coins: 340, xp: 15 },
+    { name: "Cannonball", coins: 120, xp: 7 },
+    { name: "Musket", coins: 620, xp: 24 },
+    { name: "Cutlass", coins: 560, xp: 22 },
+    { name: "Flintlock Pistol", coins: 680, xp: 27 },
+    { name: "Powder Horn", coins: 240, xp: 12 },
+    { name: "Treasure Map", coins: 780, xp: 30 },
+    { name: "Buried Gold", coins: 1400, xp: 44 },
+    { name: "Spanish Doubloon", coins: 320, xp: 15 },
+    { name: "Pieces of Eight", coins: 280, xp: 13 },
+    { name: "Roman Coin", coins: 450, xp: 18 },
+    { name: "Greek Drachma", coins: 520, xp: 20 },
+    { name: "Egyptian Scarab", coins: 880, xp: 33 },
+    { name: "Mayan Mask", coins: 1050, xp: 37 },
+    { name: "Aztec Calendar", coins: 1150, xp: 39 },
+    { name: "Viking Helmet", coins: 920, xp: 34 },
+    { name: "Samurai Sword", coins: 1320, xp: 43 },
+    { name: "Knight's Shield", coins: 740, xp: 28 },
+    { name: "Medieval Crown", coins: 1480, xp: 46 },
+    { name: "Royal Scepter", coins: 1380, xp: 44 },
+    { name: "Holy Grail", coins: 2500, xp: 70 },
+    { name: "Excalibur", coins: 2800, xp: 75 },
+    { name: "Mjolnir", coins: 2600, xp: 72 },
+    { name: "Triforce", coins: 2200, xp: 65 },
+    { name: "Master Sword", coins: 2400, xp: 68 },
+    { name: "One Ring", coins: 3200, xp: 85 },
+    { name: "Elder Wand", coins: 2900, xp: 78 },
+    { name: "Infinity Stone", coins: 3500, xp: 90 },
+    { name: "Dragon Ball", coins: 2700, xp: 73 },
+    { name: "Chaos Emerald", coins: 2300, xp: 66 },
+    { name: "Power Crystal", coins: 1900, xp: 55 },
+    { name: "Magic Orb", coins: 1700, xp: 52 },
+    { name: "Enchanted Amulet", coins: 1550, xp: 48 },
+    { name: "Cursed Talisman", coins: 1850, xp: 54 },
+    { name: "Blessed Charm", coins: 1450, xp: 45 },
+    { name: "Lucky Clover", coins: 380, xp: 17 },
+    { name: "Rabbit's Foot", coins: 280, xp: 13 },
+    { name: "Horseshoe", coins: 220, xp: 11 },
+    { name: "Wishing Well Coin", coins: 150, xp: 8 },
+    { name: "Fountain Penny", coins: 25, xp: 2 },
+    { name: "Lost Wallet", coins: 420, xp: 18 },
+    { name: "Buried Cash", coins: 680, xp: 27 },
+    { name: "Bank Bag", coins: 1200, xp: 40 },
+    { name: "Safe Contents", coins: 1650, xp: 51 },
+    { name: "Vault Treasure", coins: 2100, xp: 60 },
+    { name: "Rare Stamp Collection", coins: 820, xp: 31 },
+    { name: "Antique Book", coins: 620, xp: 24 },
+    { name: "First Edition Comic", coins: 950, xp: 35 },
+    { name: "Vintage Vinyl", coins: 540, xp: 21 },
+    { name: "Classic Guitar", coins: 780, xp: 29 },
+    { name: "Old Painting", coins: 1100, xp: 38 },
+    { name: "Ancient Vase", coins: 860, xp: 32 },
+    { name: "Antique Clock", coins: 720, xp: 28 },
+    { name: "Vintage Camera", coins: 580, xp: 23 },
+    { name: "Old Typewriter", coins: 460, xp: 19 },
+    { name: "Retro Console", coins: 640, xp: 25 },
+    { name: "Arcade Machine", coins: 1280, xp: 42 },
+    { name: "Pinball Machine", coins: 1180, xp: 39 },
+    { name: "Jukebox", coins: 1420, xp: 45 },
+    { name: "Neon Sign", coins: 880, xp: 33 },
+    { name: "Vintage Poster", coins: 340, xp: 15 },
+    { name: "Collector's Card", coins: 520, xp: 20 },
+    { name: "Limited Edition Figure", coins: 780, xp: 29 },
+  ];
+
+  // 100+ Fish options
+  private static readonly FISH_OPTIONS = [
+    { name: "Pepe Fish", coins: 50, xp: 8 },
+    { name: "Doge Fish", coins: 100, xp: 12 },
+    { name: "Diamond Fish", coins: 200, xp: 20 },
+    { name: "Golden Fish", coins: 500, xp: 30 },
+    { name: "Legendary Fish", coins: 1000, xp: 50 },
+    { name: "Mythical Kraken Fish", coins: 2000, xp: 100 },
+    { name: "Minnow", coins: 25, xp: 5 },
+    { name: "Guppy", coins: 30, xp: 6 },
+    { name: "Goldfish", coins: 60, xp: 9 },
+    { name: "Koi", coins: 180, xp: 18 },
+    { name: "Beta Fish", coins: 90, xp: 11 },
+    { name: "Angelfish", coins: 140, xp: 15 },
+    { name: "Clownfish", coins: 120, xp: 13 },
+    { name: "Nemo", coins: 250, xp: 22 },
+    { name: "Dory", coins: 220, xp: 21 },
+    { name: "Rainbow Trout", coins: 150, xp: 16 },
+    { name: "Brown Trout", coins: 130, xp: 14 },
+    { name: "Brook Trout", coins: 110, xp: 12 },
+    { name: "Salmon", coins: 280, xp: 24 },
+    { name: "King Salmon", coins: 420, xp: 28 },
+    { name: "Sockeye Salmon", coins: 380, xp: 26 },
+    { name: "Atlantic Salmon", coins: 340, xp: 25 },
+    { name: "Rainbow Salmon", coins: 460, xp: 29 },
+    { name: "Bass", coins: 160, xp: 17 },
+    { name: "Largemouth Bass", coins: 240, xp: 21 },
+    { name: "Smallmouth Bass", coins: 210, xp: 20 },
+    { name: "Striped Bass", coins: 290, xp: 23 },
+    { name: "Sea Bass", coins: 200, xp: 19 },
+    { name: "Catfish", coins: 170, xp: 17 },
+    { name: "Channel Catfish", coins: 190, xp: 18 },
+    { name: "Flathead Catfish", coins: 230, xp: 21 },
+    { name: "Blue Catfish", coins: 260, xp: 22 },
+    { name: "Pike", coins: 320, xp: 25 },
+    { name: "Northern Pike", coins: 380, xp: 27 },
+    { name: "Muskellunge", coins: 520, xp: 32 },
+    { name: "Pickerel", coins: 280, xp: 23 },
+    { name: "Walleye", coins: 300, xp: 24 },
+    { name: "Perch", coins: 140, xp: 15 },
+    { name: "Yellow Perch", coins: 160, xp: 16 },
+    { name: "White Perch", coins: 150, xp: 15 },
+    { name: "Crappie", coins: 130, xp: 14 },
+    { name: "Black Crappie", coins: 150, xp: 15 },
+    { name: "White Crappie", coins: 140, xp: 14 },
+    { name: "Sunfish", coins: 80, xp: 10 },
+    { name: "Bluegill", coins: 100, xp: 11 },
+    { name: "Pumpkinseed", coins: 90, xp: 10 },
+    { name: "Carp", coins: 180, xp: 18 },
+    { name: "Common Carp", coins: 200, xp: 19 },
+    { name: "Mirror Carp", coins: 240, xp: 21 },
+    { name: "Grass Carp", coins: 220, xp: 20 },
+    { name: "Koi Carp", coins: 360, xp: 26 },
+    { name: "Tuna", coins: 450, xp: 29 },
+    { name: "Bluefin Tuna", coins: 800, xp: 40 },
+    { name: "Yellowfin Tuna", coins: 650, xp: 35 },
+    { name: "Albacore Tuna", coins: 550, xp: 32 },
+    { name: "Skipjack Tuna", coins: 480, xp: 30 },
+    { name: "Marlin", coins: 900, xp: 45 },
+    { name: "Blue Marlin", coins: 1200, xp: 55 },
+    { name: "Black Marlin", coins: 1100, xp: 52 },
+    { name: "White Marlin", coins: 950, xp: 48 },
+    { name: "Sailfish", coins: 850, xp: 42 },
+    { name: "Swordfish", coins: 780, xp: 38 },
+    { name: "Mahi-Mahi", coins: 420, xp: 28 },
+    { name: "Wahoo", coins: 580, xp: 33 },
+    { name: "Barracuda", coins: 520, xp: 31 },
+    { name: "Shark", coins: 1400, xp: 60 },
+    { name: "Great White Shark", coins: 2200, xp: 80 },
+    { name: "Hammerhead Shark", coins: 1800, xp: 70 },
+    { name: "Tiger Shark", coins: 1650, xp: 68 },
+    { name: "Bull Shark", coins: 1550, xp: 65 },
+    { name: "Mako Shark", coins: 1950, xp: 75 },
+    { name: "Whale Shark", coins: 2500, xp: 90 },
+    { name: "Megalodon", coins: 5000, xp: 150 },
+    { name: "Stingray", coins: 380, xp: 27 },
+    { name: "Manta Ray", coins: 680, xp: 36 },
+    { name: "Electric Ray", coins: 520, xp: 31 },
+    { name: "Octopus", coins: 460, xp: 29 },
+    { name: "Giant Octopus", coins: 980, xp: 49 },
+    { name: "Squid", coins: 320, xp: 25 },
+    { name: "Giant Squid", coins: 1300, xp: 58 },
+    { name: "Colossal Squid", coins: 1800, xp: 72 },
+    { name: "Kraken", coins: 3500, xp: 110 },
+    { name: "Lobster", coins: 340, xp: 25 },
+    { name: "Giant Lobster", coins: 720, xp: 37 },
+    { name: "Crab", coins: 220, xp: 20 },
+    { name: "King Crab", coins: 580, xp: 33 },
+    { name: "Snow Crab", coins: 420, xp: 28 },
+    { name: "Dungeness Crab", coins: 380, xp: 27 },
+    { name: "Blue Crab", coins: 280, xp: 23 },
+    { name: "Hermit Crab", coins: 120, xp: 13 },
+    { name: "Shrimp", coins: 150, xp: 15 },
+    { name: "Tiger Shrimp", coins: 280, xp: 23 },
+    { name: "Prawn", coins: 240, xp: 21 },
+    { name: "Scallop", coins: 320, xp: 25 },
+    { name: "Oyster", coins: 260, xp: 22 },
+    { name: "Pearl Oyster", coins: 880, xp: 43 },
+    { name: "Clam", coins: 180, xp: 18 },
+    { name: "Mussel", coins: 140, xp: 15 },
+    { name: "Snail", coins: 80, xp: 10 },
+  ];
+
+  // 100+ Search location options
+  private static readonly SEARCH_OPTIONS = [
+    { id: "couch", name: "under the couch", coins: { min: 10, max: 50 }, itemChance: 0.05 },
+    { id: "vault", name: "in the meme vault", coins: { min: 30, max: 100 }, itemChance: 0.15 },
+    { id: "dumpster", name: "behind a dumpster", coins: { min: 5, max: 30 }, itemChance: 0.08 },
+    { id: "pond", name: "in Pepe's pond", coins: { min: 20, max: 80 }, itemChance: 0.12 },
+    { id: "rock", name: "under a rock", coins: { min: 10, max: 40 }, itemChance: 0.06 },
+    { id: "purse", name: "in your mom's purse", coins: { min: 40, max: 120 }, itemChance: 0.2, special: true },
+    { id: "attic", name: "in the dusty attic", coins: { min: 25, max: 75 }, itemChance: 0.1 },
+    { id: "basement", name: "in the creepy basement", coins: { min: 15, max: 60 }, itemChance: 0.09 },
+    { id: "garage", name: "in the messy garage", coins: { min: 20, max: 70 }, itemChance: 0.11 },
+    { id: "shed", name: "in the old shed", coins: { min: 18, max: 65 }, itemChance: 0.08 },
+    { id: "car", name: "in the car seats", coins: { min: 22, max: 68 }, itemChance: 0.1 },
+    { id: "trunk", name: "in the car trunk", coins: { min: 28, max: 85 }, itemChance: 0.13 },
+    { id: "glovebox", name: "in the glove box", coins: { min: 15, max: 55 }, itemChance: 0.07 },
+    { id: "backpack", name: "in an old backpack", coins: { min: 12, max: 48 }, itemChance: 0.06 },
+    { id: "drawer", name: "in the junk drawer", coins: { min: 8, max: 42 }, itemChance: 0.05 },
+    { id: "closet", name: "in the messy closet", coins: { min: 16, max: 58 }, itemChance: 0.08 },
+    { id: "pocket", name: "in your winter coat pocket", coins: { min: 18, max: 62 }, itemChance: 0.09 },
+    { id: "washing-machine", name: "in the washing machine", coins: { min: 24, max: 72 }, itemChance: 0.11 },
+    { id: "dryer", name: "in the dryer lint trap", coins: { min: 14, max: 52 }, itemChance: 0.07 },
+    { id: "fridge", name: "behind the fridge", coins: { min: 20, max: 66 }, itemChance: 0.1 },
+    { id: "oven", name: "under the oven", coins: { min: 17, max: 61 }, itemChance: 0.08 },
+    { id: "bed", name: "under the bed", coins: { min: 19, max: 64 }, itemChance: 0.09 },
+    { id: "mattress", name: "between mattresses", coins: { min: 35, max: 95 }, itemChance: 0.14 },
+    { id: "pillow", name: "inside the pillowcase", coins: { min: 12, max: 46 }, itemChance: 0.06 },
+    { id: "bookshelf", name: "behind the books", coins: { min: 21, max: 69 }, itemChance: 0.1 },
+    { id: "desk", name: "in the desk drawer", coins: { min: 16, max: 56 }, itemChance: 0.08 },
+    { id: "computer", name: "inside the computer", coins: { min: 26, max: 78 }, itemChance: 0.12 },
+    { id: "keyboard", name: "under the keyboard", coins: { min: 10, max: 44 }, itemChance: 0.05 },
+    { id: "mouse-pad", name: "under the mouse pad", coins: { min: 8, max: 38 }, itemChance: 0.04 },
+    { id: "monitor", name: "behind the monitor", coins: { min: 14, max: 50 }, itemChance: 0.07 },
+    { id: "speakers", name: "inside the speakers", coins: { min: 18, max: 60 }, itemChance: 0.09 },
+    { id: "gaming-chair", name: "in the gaming chair", coins: { min: 22, max: 70 }, itemChance: 0.1 },
+    { id: "bean-bag", name: "in the bean bag", coins: { min: 16, max: 54 }, itemChance: 0.08 },
+    { id: "nightstand", name: "in the nightstand", coins: { min: 19, max: 63 }, itemChance: 0.09 },
+    { id: "dresser", name: "in the dresser", coins: { min: 23, max: 71 }, itemChance: 0.11 },
+    { id: "wardrobe", name: "in the wardrobe", coins: { min: 21, max: 67 }, itemChance: 0.1 },
+    { id: "shoe-box", name: "in the shoe box", coins: { min: 15, max: 53 }, itemChance: 0.07 },
+    { id: "toy-chest", name: "in the toy chest", coins: { min: 17, max: 59 }, itemChance: 0.08 },
+    { id: "lego-bin", name: "in the LEGO bin", coins: { min: 13, max: 49 }, itemChance: 0.06 },
+    { id: "bathroom-cabinet", name: "in the bathroom cabinet", coins: { min: 11, max: 45 }, itemChance: 0.06 },
+    { id: "medicine-cabinet", name: "in the medicine cabinet", coins: { min: 16, max: 56 }, itemChance: 0.08 },
+    { id: "toilet-tank", name: "in the toilet tank", coins: { min: 28, max: 82 }, itemChance: 0.12 },
+    { id: "shower", name: "behind the shower curtain", coins: { min: 9, max: 41 }, itemChance: 0.05 },
+    { id: "bathtub", name: "under the bathtub", coins: { min: 20, max: 65 }, itemChance: 0.09 },
+    { id: "laundry-basket", name: "in the laundry basket", coins: { min: 14, max: 51 }, itemChance: 0.07 },
+    { id: "trash-can", name: "in the trash can", coins: { min: 7, max: 36 }, itemChance: 0.04 },
+    { id: "recycle-bin", name: "in the recycle bin", coins: { min: 10, max: 43 }, itemChance: 0.05 },
+    { id: "compost", name: "in the compost heap", coins: { min: 6, max: 32 }, itemChance: 0.03 },
+    { id: "garden", name: "in the garden", coins: { min: 18, max: 62 }, itemChance: 0.09 },
+    { id: "flower-pot", name: "in the flower pot", coins: { min: 12, max: 47 }, itemChance: 0.06 },
+    { id: "birdhouse", name: "in the birdhouse", coins: { min: 15, max: 54 }, itemChance: 0.07 },
+    { id: "mailbox", name: "in the mailbox", coins: { min: 17, max: 58 }, itemChance: 0.08 },
+    { id: "newspaper", name: "inside the newspaper", coins: { min: 8, max: 39 }, itemChance: 0.04 },
+    { id: "pizza-box", name: "in the pizza box", coins: { min: 13, max: 48 }, itemChance: 0.06 },
+    { id: "cereal-box", name: "in the cereal box", coins: { min: 11, max: 44 }, itemChance: 0.05 },
+    { id: "cookie-jar", name: "in the cookie jar", coins: { min: 19, max: 64 }, itemChance: 0.09 },
+    { id: "pantry", name: "in the pantry", coins: { min: 16, max: 57 }, itemChance: 0.08 },
+    { id: "freezer", name: "in the freezer", coins: { min: 22, max: 69 }, itemChance: 0.1 },
+    { id: "dishwasher", name: "in the dishwasher", coins: { min: 14, max: 50 }, itemChance: 0.07 },
+    { id: "microwave", name: "in the microwave", coins: { min: 15, max: 52 }, itemChance: 0.07 },
+    { id: "toaster", name: "in the toaster", coins: { min: 9, max: 40 }, itemChance: 0.05 },
+    { id: "blender", name: "in the blender", coins: { min: 12, max: 46 }, itemChance: 0.06 },
+    { id: "coffee-maker", name: "in the coffee maker", coins: { min: 17, max: 59 }, itemChance: 0.08 },
+    { id: "teapot", name: "in the teapot", coins: { min: 13, max: 49 }, itemChance: 0.06 },
+    { id: "sugar-bowl", name: "in the sugar bowl", coins: { min: 10, max: 42 }, itemChance: 0.05 },
+    { id: "bread-box", name: "in the bread box", coins: { min: 14, max: 51 }, itemChance: 0.07 },
+    { id: "spice-rack", name: "behind the spice rack", coins: { min: 11, max: 45 }, itemChance: 0.06 },
+    { id: "cutting-board", name: "under the cutting board", coins: { min: 8, max: 37 }, itemChance: 0.04 },
+    { id: "pot", name: "in the cooking pot", coins: { min: 15, max: 53 }, itemChance: 0.07 },
+    { id: "pan", name: "in the frying pan", coins: { min: 13, max: 48 }, itemChance: 0.06 },
+    { id: "lunchbox", name: "in the old lunchbox", coins: { min: 16, max: 55 }, itemChance: 0.08 },
+    { id: "thermos", name: "in the thermos", coins: { min: 12, max: 46 }, itemChance: 0.06 },
+    { id: "water-bottle", name: "in the water bottle", coins: { min: 9, max: 41 }, itemChance: 0.05 },
+    { id: "gym-bag", name: "in the gym bag", coins: { min: 18, max: 61 }, itemChance: 0.09 },
+    { id: "sports-equipment", name: "with sports equipment", coins: { min: 20, max: 66 }, itemChance: 0.09 },
+    { id: "tennis-racket", name: "in the tennis racket bag", coins: { min: 15, max: 52 }, itemChance: 0.07 },
+    { id: "golf-bag", name: "in the golf bag", coins: { min: 24, max: 73 }, itemChance: 0.11 },
+    { id: "bowling-ball-bag", name: "in the bowling ball bag", coins: { min: 17, max: 58 }, itemChance: 0.08 },
+    { id: "bike", name: "on the bike", coins: { min: 19, max: 63 }, itemChance: 0.09 },
+    { id: "scooter", name: "in the scooter", coins: { min: 14, max: 50 }, itemChance: 0.07 },
+    { id: "skateboard", name: "under the skateboard", coins: { min: 12, max: 47 }, itemChance: 0.06 },
+    { id: "rollerblades", name: "in the rollerblades", coins: { min: 13, max: 48 }, itemChance: 0.06 },
+    { id: "helmet", name: "in the helmet", coins: { min: 11, max: 44 }, itemChance: 0.05 },
+    { id: "toolbox", name: "in the toolbox", coins: { min: 21, max: 68 }, itemChance: 0.1 },
+    { id: "tackle-box", name: "in the tackle box", coins: { min: 19, max: 64 }, itemChance: 0.09 },
+    { id: "sewing-kit", name: "in the sewing kit", coins: { min: 14, max: 51 }, itemChance: 0.07 },
+    { id: "art-supplies", name: "in the art supplies", coins: { min: 16, max: 55 }, itemChance: 0.08 },
+    { id: "paint-can", name: "in the paint can", coins: { min: 18, max: 60 }, itemChance: 0.09 },
+    { id: "bucket", name: "in the bucket", coins: { min: 13, max: 49 }, itemChance: 0.06 },
+    { id: "planter", name: "in the planter", coins: { min: 15, max: 53 }, itemChance: 0.07 },
+    { id: "watering-can", name: "in the watering can", coins: { min: 11, max: 45 }, itemChance: 0.06 },
+    { id: "hose", name: "in the garden hose", coins: { min: 9, max: 40 }, itemChance: 0.05 },
+    { id: "sandbox", name: "in the sandbox", coins: { min: 17, max: 59 }, itemChance: 0.08 },
+    { id: "treehouse", name: "in the treehouse", coins: { min: 23, max: 71 }, itemChance: 0.11 },
+    { id: "doghouse", name: "in the doghouse", coins: { min: 16, max: 56 }, itemChance: 0.08 },
+  ];
+
   // Bank operations
   static async deposit(username: string, amount: number) {
     const user = await storage.getUserByUsername(username);
@@ -389,7 +919,7 @@ export class EconomyService {
     };
   }
 
-  static async work(username: string, jobType: string) {
+  static async work(username: string, jobType?: string) {
     const user = await storage.getUserByUsername(username);
     if (!user) throw new Error("User not found");
 
@@ -403,18 +933,8 @@ export class EconomyService {
       );
     }
 
-    const jobs = {
-      "meme-farmer": { min: 100, max: 300, name: "Meme Farmer", xp: 5 },
-      "doge-miner": { min: 50, max: 500, name: "Doge Miner", xp: 8 },
-      "pepe-trader": { min: 150, max: 400, name: "Pepe Trader", xp: 6 },
-      "nft-creator": { min: 200, max: 600, name: "NFT Creator", xp: 10 },
-      "mod-botter": { min: 80, max: 350, name: "Mod Botter", xp: 7 },
-    };
-
-    const job = jobs[jobType as keyof typeof jobs];
-    if (!job) {
-      throw new Error("Invalid job type");
-    }
+    // Randomly select a job from the 100+ options
+    const job = this.WORK_OPTIONS[Math.floor(Math.random() * this.WORK_OPTIONS.length)];
 
     const amount =
       job.min + Math.floor(Math.random() * (job.max - job.min + 1));
@@ -518,51 +1038,12 @@ export class EconomyService {
       );
     }
 
-    const searchLocations = {
-      couch: {
-        name: "under the couch",
-        coins: { min: 10, max: 50 },
-        itemChance: 0.05,
-      },
-      vault: {
-        name: "in the meme vault",
-        coins: { min: 30, max: 100 },
-        itemChance: 0.15,
-      },
-      dumpster: {
-        name: "behind a dumpster",
-        coins: { min: 5, max: 30 },
-        itemChance: 0.08,
-      },
-      pond: {
-        name: "in Pepe's pond",
-        coins: { min: 20, max: 80 },
-        itemChance: 0.12,
-      },
-      rock: {
-        name: "under a rock",
-        coins: { min: 10, max: 40 },
-        itemChance: 0.06,
-      },
-      purse: {
-        name: "in your mom's purse",
-        coins: { min: 40, max: 120 },
-        itemChance: 0.2,
-      },
-    };
-
-    const selectedLocationKey =
-      location ||
-      Object.keys(searchLocations)[
-        Math.floor(Math.random() * Object.keys(searchLocations).length)
-      ];
-    const searchLocation =
-      searchLocations[selectedLocationKey as keyof typeof searchLocations] ||
-      searchLocations.couch;
+    // Randomly select a search location from the 100+ options
+    const searchLocation = this.SEARCH_OPTIONS[Math.floor(Math.random() * this.SEARCH_OPTIONS.length)];
     const locationName = searchLocation.name;
 
     // Special handling for 'purse' location - 70% success, 30% failure
-    if (selectedLocationKey === "purse") {
+    if (searchLocation.special) {
       const purseSuccess = Math.random() < 0.7;
 
       if (purseSuccess) {
@@ -764,31 +1245,6 @@ export class EconomyService {
       );
     }
 
-    const fishingLocations = {
-      pond: [
-        { name: "Pepe Fish", coins: 50, chance: 0.5, xp: 8 },
-        { name: "Doge Fish", coins: 100, chance: 0.35, xp: 12 },
-        { name: "Diamond Fish", coins: 200, chance: 0.15, xp: 20 },
-      ],
-      lake: [
-        { name: "Doge Fish", coins: 100, chance: 0.4, xp: 12 },
-        { name: "Diamond Fish", coins: 200, chance: 0.3, xp: 20 },
-        { name: "Golden Fish", coins: 500, chance: 0.25, xp: 30 },
-        { name: "Legendary Fish", coins: 800, chance: 0.05, xp: 50 },
-      ],
-      ocean: [
-        { name: "Diamond Fish", coins: 200, chance: 0.35, xp: 20 },
-        { name: "Golden Fish", coins: 500, chance: 0.3, xp: 30 },
-        { name: "Legendary Fish", coins: 1000, chance: 0.2, xp: 50 },
-        { name: "Mythical Kraken Fish", coins: 2000, chance: 0.15, xp: 100 },
-      ],
-    };
-
-    const selectedLocation = location || "pond";
-    const fishTypes =
-      fishingLocations[selectedLocation as keyof typeof fishingLocations] ||
-      fishingLocations.pond;
-
     // 20% failure chance
     const fishingFailed = Math.random() < 0.2;
 
@@ -817,18 +1273,8 @@ export class EconomyService {
       };
     }
 
-    // Random fish selection based on chance
-    const rand = Math.random();
-    let cumulativeChance = 0;
-    let caughtFish = fishTypes[0]; // default fallback
-
-    for (const fish of [...fishTypes].reverse()) {
-      cumulativeChance += fish.chance;
-      if (rand <= cumulativeChance) {
-        caughtFish = fish;
-        break;
-      }
-    }
+    // Randomly select a fish from the 100+ options
+    const caughtFish = this.FISH_OPTIONS[Math.floor(Math.random() * this.FISH_OPTIONS.length)];
 
     const successMessages = [
       "The fish didn't stand a chance! 🐟",
@@ -1995,44 +2441,8 @@ export class EconomyService {
       );
     }
 
-    const crimes = {
-      "steal-meme": {
-        name: "Steal a meme",
-        success: 0.8,
-        coins: 200,
-        fine: 100,
-        xp: 10,
-      },
-      "rob-server": {
-        name: "Rob a Discord server",
-        success: 0.6,
-        coins: 500,
-        fine: 300,
-        xp: 15,
-      },
-      "hack-computer": {
-        name: "Hack a computer",
-        success: 0.4,
-        coins: 1000,
-        fine: 600,
-        xp: 25,
-      },
-      "bank-heist": {
-        name: "Bank heist",
-        success: 0.2,
-        coins: 2000,
-        fine: 1200,
-        xp: 50,
-      },
-    };
-
-    const selectedCrimeKey =
-      crimeType ||
-      Object.keys(crimes)[
-        Math.floor(Math.random() * Object.keys(crimes).length)
-      ];
-    const selectedCrime =
-      crimes[selectedCrimeKey as keyof typeof crimes] || crimes["steal-meme"];
+    // Randomly select a crime from the 100+ options
+    const selectedCrime = this.CRIME_OPTIONS[Math.floor(Math.random() * this.CRIME_OPTIONS.length)];
     const success = Math.random() < selectedCrime.success;
 
     if (success) {
@@ -2237,31 +2647,6 @@ export class EconomyService {
       );
     }
 
-    const diggingLocations = {
-      backyard: [
-        { name: "Bottle Cap", coins: 20, chance: 0.4, xp: 2 },
-        { name: "Old Coin", coins: 75, chance: 0.35, xp: 5 },
-        { name: "Treasure Chest", coins: 200, chance: 0.25, xp: 10 },
-      ],
-      beach: [
-        { name: "Old Coin", coins: 75, chance: 0.35, xp: 5 },
-        { name: "Treasure Chest", coins: 200, chance: 0.3, xp: 10 },
-        { name: "Ancient Artifact", coins: 500, chance: 0.25, xp: 20 },
-        { name: "Pirate Treasure", coins: 800, chance: 0.1, xp: 30 },
-      ],
-      cave: [
-        { name: "Treasure Chest", coins: 200, chance: 0.3, xp: 10 },
-        { name: "Ancient Artifact", coins: 500, chance: 0.35, xp: 20 },
-        { name: "Legendary Gem", coins: 1500, chance: 0.25, xp: 40 },
-        { name: "Dragon Hoard", coins: 3000, chance: 0.1, xp: 80 },
-      ],
-    };
-
-    const selectedLocation = location || "backyard";
-    const treasures =
-      diggingLocations[selectedLocation as keyof typeof diggingLocations] ||
-      diggingLocations.backyard;
-
     // 20% failure chance
     const diggingFailed = Math.random() < 0.2;
 
@@ -2290,17 +2675,8 @@ export class EconomyService {
       };
     }
 
-    const rand = Math.random();
-    let cumulativeChance = 0;
-    let foundTreasure = treasures[0];
-
-    for (const treasure of [...treasures].reverse()) {
-      cumulativeChance += treasure.chance;
-      if (rand <= cumulativeChance) {
-        foundTreasure = treasure;
-        break;
-      }
-    }
+    // Randomly select a treasure from the 100+ options
+    const foundTreasure = this.DIG_OPTIONS[Math.floor(Math.random() * this.DIG_OPTIONS.length)];
 
     const successMessages = [
       "You struck gold! Well, coins... but still! ⛏️✨",
