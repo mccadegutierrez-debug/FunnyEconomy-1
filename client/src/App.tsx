@@ -18,9 +18,32 @@ import PublicProfilePage from "@/pages/public-profile-page";
 import FreemiumPage from "@/pages/freemium-page";
 import NotFound from "@/pages/not-found";
 import BanPage from "@/pages/ban-page";
+import { useTradeWebSocket } from "@/hooks/use-trade-websocket";
+import { TradeNotification } from "@/components/trade/trade-notification";
+import { useState, useEffect } from "react";
+
 
 function Router() {
-  const { isBanned, banInfo } = useAuth();
+  const { isBanned, banInfo, user, isLoading } = useAuth();
+  const { messages } = useTradeWebSocket();
+  const [tradeOffer, setTradeOffer] = useState<{
+    offerId: string;
+    fromUsername: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Listen for trade offers
+    const latestMessage = messages[messages.length - 1];
+    if (latestMessage?.type === "trade_offer" && user) {
+      // Check if this trade offer is for the current user
+      if (latestMessage.targetUsername === user.username) {
+        setTradeOffer({
+          offerId: latestMessage.offerId,
+          fromUsername: latestMessage.fromUsername,
+        });
+      }
+    }
+  }, [messages, user]);
 
   // If user is banned, show ban page instead of normal router
   if (isBanned && banInfo) {
@@ -33,21 +56,43 @@ function Router() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+
   return (
-    <Switch>
-      <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/games" component={GamesPage} />
-      <ProtectedRoute path="/freemium" component={FreemiumPage} />
-      <ProtectedRoute path="/shop" component={ShopPage} />
-      <ProtectedRoute path="/inventory" component={InventoryPage} />
-      <ProtectedRoute path="/pets" component={PetsPage} />
-      <ProtectedRoute path="/leaderboard" component={LeaderboardPage} />
-      <Route path="/profile/:username" component={PublicProfilePage} />
-      <ProtectedRoute path="/profile" component={ProfilePage} />
-      <ProtectedRoute path="/admin" component={AdminPage} />
-      <Route path="/auth" component={AuthPage} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Switch>
+        <ProtectedRoute path="/" component={HomePage} />
+        <ProtectedRoute path="/games" component={GamesPage} />
+        <ProtectedRoute path="/freemium" component={FreemiumPage} />
+        <ProtectedRoute path="/shop" component={ShopPage} />
+        <ProtectedRoute path="/inventory" component={InventoryPage} />
+        <ProtectedRoute path="/pets" component={PetsPage} />
+        <ProtectedRoute path="/leaderboard" component={LeaderboardPage} />
+        <Route path="/profile/:username" component={PublicProfilePage} />
+        <ProtectedRoute path="/profile" component={ProfilePage} />
+        <ProtectedRoute path="/admin" component={AdminPage} />
+        <Route path="/auth" component={AuthPage} />
+        <Route component={NotFound} />
+      </Switch>
+      {tradeOffer && (
+        <TradeNotification
+          offerId={tradeOffer.offerId}
+          fromUsername={tradeOffer.fromUsername}
+          onAccept={(tradeId) => {
+            setTradeOffer(null);
+            // Navigate to trading window or handle acceptance
+          }}
+          onDismiss={() => setTradeOffer(null)}
+        />
+      )}
+    </>
   );
 }
 

@@ -950,6 +950,22 @@ export function registerRoutes(app: Express): Server {
       }
 
       const offer = await storage.createTradeOffer(fromUser.id, toUser.id);
+      
+      // Broadcast trade offer to all connected clients
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: "trade_offer",
+              fromUsername: fromUser.username,
+              targetUsername: targetUsername,
+              offerId: offer.id,
+              timestamp: Date.now(),
+            }),
+          );
+        }
+      });
+      
       res.json(offer);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
