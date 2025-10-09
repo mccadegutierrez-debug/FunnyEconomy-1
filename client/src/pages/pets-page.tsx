@@ -93,6 +93,10 @@ export default function PetsPage() {
   const [newRoomName, setNewRoomName] = useState("");
   const [roomTab, setRoomTab] = useState("overview");
 
+  // Breeding state
+  const [breedingPet1, setBreedingPet1] = useState<string>("");
+  const [breedingPet2, setBreedingPet2] = useState<string>("");
+
   // Training state
   const [trainingPoints, setTrainingPoints] = useState({
     attack: 0,
@@ -1075,7 +1079,11 @@ export default function PetsPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select data-testid="select-pet1-breeding">
+                <Select 
+                  data-testid="select-pet1-breeding"
+                  value={breedingPet1}
+                  onValueChange={setBreedingPet1}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select first pet" />
                   </SelectTrigger>
@@ -1087,7 +1095,11 @@ export default function PetsPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select data-testid="select-pet2-breeding">
+                <Select 
+                  data-testid="select-pet2-breeding"
+                  value={breedingPet2}
+                  onValueChange={setBreedingPet2}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select second pet" />
                   </SelectTrigger>
@@ -1103,9 +1115,34 @@ export default function PetsPage() {
               <Button
                 className="w-full mt-4"
                 data-testid="button-start-breeding"
+                onClick={() => {
+                  if (!breedingPet1 || !breedingPet2) {
+                    toast({
+                      title: "❌ Select Both Pets",
+                      description: "Please select two pets to breed",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  if (breedingPet1 === breedingPet2) {
+                    toast({
+                      title: "❌ Different Pets Required",
+                      description: "Please select two different pets",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  startBreedingMutation.mutate({ 
+                    petId1: breedingPet1, 
+                    petId2: breedingPet2 
+                  });
+                  setBreedingPet1("");
+                  setBreedingPet2("");
+                }}
+                disabled={startBreedingMutation.isPending}
               >
                 <Baby className="w-4 h-4 mr-2" />
-                Start Breeding (24 hours)
+                {startBreedingMutation.isPending ? "Starting..." : "Start Breeding (24 hours)"}
               </Button>
             </CardContent>
           </Card>

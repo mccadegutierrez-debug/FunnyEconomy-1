@@ -113,6 +113,7 @@ export interface IStorage {
     customName?: string,
   ): Promise<{ pet: Pet; newBalance: number; transaction: Transaction }>;
   getUserPets(userId: string): Promise<Pet[]>;
+  getAllPets(): Promise<Pet[]>;
   getPet(petId: string): Promise<Pet | undefined>;
   updatePet(petId: string, updates: Partial<Pet>): Promise<Pet>;
   deletePet(petId: string): Promise<void>;
@@ -1274,6 +1275,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(pets).where(eq(pets.userId, userId));
   }
 
+  async getAllPets(): Promise<Pet[]> {
+    return await db.select().from(pets);
+  }
+
   async getPet(petId: string): Promise<Pet | undefined> {
     const [pet] = await db.select().from(pets).where(eq(pets.id, petId));
     return pet || undefined;
@@ -1446,7 +1451,7 @@ export class DatabaseStorage implements IStorage {
       return await this.updatePet(petId, {
         xp: newXP - xpNeeded,
         level: newLevel,
-        trainingPoints: pet.trainingPoints + 5,
+        trainingPoints: pet.trainingPoints + 100,
       });
     } else {
       return await this.updatePet(petId, { xp: newXP });
@@ -1624,7 +1629,17 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Parent pets not found");
     }
 
-    const isSuccessful = Math.random() > 0.3;
+    let baseSuccessRate = 0.7;
+    
+    const pet1Skills = Array.isArray(pet1.skills) ? pet1.skills : [];
+    const pet2Skills = Array.isArray(pet2.skills) ? pet2.skills : [];
+    const hasBreederSkill = pet1Skills.includes("breeder") || pet2Skills.includes("breeder");
+    
+    if (hasBreederSkill) {
+      baseSuccessRate = baseSuccessRate * 1.15;
+    }
+
+    const isSuccessful = Math.random() < baseSuccessRate;
 
     if (isSuccessful) {
       const offspring = await this.adoptPet(

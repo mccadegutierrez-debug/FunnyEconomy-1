@@ -19,7 +19,7 @@ export const AVAILABLE_SKILLS: PetSkillData[] = [
       type: "combat",
       preventSleepAfterLoss: true,
     },
-    trainingCost: 5000,
+    trainingCost: 50,
     category: "Combat",
   },
   {
@@ -31,7 +31,7 @@ export const AVAILABLE_SKILLS: PetSkillData[] = [
       type: "care",
       sicknessRecoveryMultiplier: 1.75,
     },
-    trainingCost: 7500,
+    trainingCost: 75,
     category: "Care",
   },
   {
@@ -42,7 +42,7 @@ export const AVAILABLE_SKILLS: PetSkillData[] = [
       type: "combat",
       preventFighting: true,
     },
-    trainingCost: 6000,
+    trainingCost: 60,
     category: "Combat",
   },
   {
@@ -53,7 +53,7 @@ export const AVAILABLE_SKILLS: PetSkillData[] = [
       type: "combat",
       damageMultiplier: 1.25,
     },
-    trainingCost: 10000,
+    trainingCost: 100,
     category: "Combat",
   },
   {
@@ -64,7 +64,7 @@ export const AVAILABLE_SKILLS: PetSkillData[] = [
       type: "care",
       decayReduction: 0.8,
     },
-    trainingCost: 8000,
+    trainingCost: 80,
     category: "Care",
   },
   {
@@ -76,7 +76,7 @@ export const AVAILABLE_SKILLS: PetSkillData[] = [
       type: "earning",
       huntRewardBonus: 1.1,
     },
-    trainingCost: 12000,
+    trainingCost: 120,
     category: "Earning",
   },
   {
@@ -88,7 +88,7 @@ export const AVAILABLE_SKILLS: PetSkillData[] = [
       type: "breeding",
       breedingSuccessBonus: 1.15,
     },
-    trainingCost: 15000,
+    trainingCost: 150,
     category: "Breeding",
   },
   {
@@ -99,7 +99,7 @@ export const AVAILABLE_SKILLS: PetSkillData[] = [
       type: "earning",
       huntSpeedMultiplier: 0.75,
     },
-    trainingCost: 10000,
+    trainingCost: 100,
     category: "Earning",
   },
 ];
