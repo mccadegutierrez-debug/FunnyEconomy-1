@@ -121,6 +121,8 @@ export default function ChangelogPage() {
     switch (category.toLowerCase()) {
       case "new features":
         return "bg-green-500/10 text-green-500 border-green-500/20";
+        case "major updates":
+          return "bg-green-500/10 text-green-500 border-green-500/20";
       case "improvements":
         return "bg-blue-500/10 text-blue-500 border-blue-500/20";
       case "bug fixes":
