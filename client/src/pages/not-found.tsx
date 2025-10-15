@@ -21,10 +21,12 @@ export default function NotFound() {
   useState(() => {
     // Add spooky decorations to 404 page
     const decorations = [
-      { type: 'ghost', top: '5%', left: '10%', delay: '0s' },
+      { type: 'pumpkin', top: '5%', left: '10%', delay: '0s' },
       { type: 'pumpkin', top: '10%', right: '12%', delay: '1.5s' },
-      { type: 'ghost', top: '85%', left: '8%', delay: '3s' },
+      { type: 'pumpkin', top: '85%', left: '8%', delay: '3s' },
       { type: 'pumpkin', top: '90%', right: '10%', delay: '2.5s' },
+      { type: 'pumpkin', top: '50%', left: '5%', delay: '2s' },
+      { type: 'pumpkin', top: '60%', right: '8%', delay: '3.5s' },
     ];
 
     decorations.forEach((decor) => {

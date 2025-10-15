@@ -26,11 +26,12 @@ export default function Header() {
   useEffect(() => {
     // Create floating Halloween decorations
     const decorations = [
-      { type: 'ghost', top: '10%', left: '5%', delay: '0s' },
+      { type: 'pumpkin', top: '10%', left: '5%', delay: '0s' },
       { type: 'pumpkin', top: '15%', right: '8%', delay: '2s' },
-      { type: 'ghost', top: '70%', left: '3%', delay: '4s' },
+      { type: 'pumpkin', top: '70%', left: '3%', delay: '4s' },
       { type: 'pumpkin', top: '80%', right: '5%', delay: '1s' },
-      { type: 'ghost', top: '40%', right: '2%', delay: '3s' },
+      { type: 'pumpkin', top: '40%', right: '2%', delay: '3s' },
+      { type: 'pumpkin', top: '50%', left: '2%', delay: '1.5s' },
     ];
 
     decorations.forEach((decor) => {
@@ -154,7 +155,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`halloween-hover text-foreground hover:text-primary transition-colors ${
+                className={`halloween-pumpkin text-foreground hover:text-primary transition-colors ${
                   item.active ? "text-primary font-bold" : ""
                 }`}
                 data-testid={`nav-${item.label.toLowerCase()}`}
