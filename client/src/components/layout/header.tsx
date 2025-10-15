@@ -126,7 +126,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-foreground hover:text-primary transition-colors ${
+                className={`halloween-hover text-foreground hover:text-primary transition-colors ${
                   item.active ? "text-primary font-bold" : ""
                 }`}
                 data-testid={`nav-${item.label.toLowerCase()}`}

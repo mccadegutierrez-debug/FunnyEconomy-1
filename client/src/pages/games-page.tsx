@@ -195,7 +195,7 @@ export default function GamesPage() {
             {games.map((game) => (
               <Card
                 key={game.id}
-                className={`hover:scale-105 transition-transform cursor-pointer border-${game.color}/20 hover:border-${game.color} ${game.color === "primary" ? "glow-primary" : game.color === "secondary" ? "glow-secondary" : "glow-accent"}`}
+                className={`halloween-hover hover:scale-105 transition-transform cursor-pointer border-${game.color}/20 hover:border-${game.color} ${game.color === "primary" ? "glow-primary" : game.color === "secondary" ? "glow-secondary" : "glow-accent"}`}
                 onClick={() => setActiveGame(game.id)}
                 data-testid={`game-card-${game.id}`}
               >

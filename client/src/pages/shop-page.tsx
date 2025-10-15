@@ -246,7 +246,7 @@ export default function ShopPage() {
             {filteredItems.map((item: any) => (
               <Card
                 key={item.id}
-                className="hover:scale-105 transition-transform border-primary/20 hover:border-primary"
+                className="halloween-hover hover:scale-105 transition-transform border-primary/20 hover:border-primary"
                 data-testid={`item-card-${item.id}`}
               >
                 <CardHeader className="text-center">
