@@ -33,6 +33,7 @@ import {
   Shield,
   ArrowLeft,
   HandshakeIcon,
+  Users,
 } from "lucide-react";
 import { useRoute } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
