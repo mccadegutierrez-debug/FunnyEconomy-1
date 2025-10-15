@@ -1418,7 +1418,7 @@ export default function HomePage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-2xl text-destructive">
-              <img src="/client/public/Pepes/sad.png" alt="Sad Pepe" className="w-12 h-12" />
+              <img src="/Pepes/sad.png" alt="Sad Pepe" className="w-12 h-12" />
               MAJOR SHUTDOWN NOTICE
             </DialogTitle>
             <DialogDescription className="text-base pt-4">
