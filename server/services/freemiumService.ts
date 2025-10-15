@@ -32,7 +32,7 @@ export class FreemiumService {
 
     // Get loot table
     const lootTable = (await storage.db?.get("freemium:loot")) || {
-      coins: { weight: 40, min: 100, max: 500 },
+      coins: { weight: 40, min: 100, max: 100 },
       common: { weight: 25 },
       uncommon: { weight: 15 },
       rare: { weight: 10 },
