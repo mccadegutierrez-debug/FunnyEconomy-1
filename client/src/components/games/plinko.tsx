@@ -80,10 +80,10 @@ export default function Plinko() {
   };
 
   const handlePlay = () => {
-    if (bet < 10 || bet > 150000) {
+    if (bet < 10 || bet > 75000) {
       toast({
         title: "Invalid Bet",
-        description: "Bet must be between 10 and 150,000 coins",
+        description: "Bet must be between 10 and 75,000 coins",
         variant: "destructive",
       });
       return;
@@ -221,7 +221,7 @@ export default function Plinko() {
                 id="bet-amount"
                 type="number"
                 min="10"
-                max="150000"
+                max="75000"
                 value={bet}
                 onChange={(e) => setBet(Number(e.target.value))}
                 className="text-center text-lg font-bold"
@@ -322,7 +322,7 @@ export default function Plinko() {
               <p>• Medium risk: Balanced (0.5x-3x)</p>
               <p>• High risk: Big wins or losses (0.5x-10x)</p>
               <p>• Ball bounces through pegs to land in a slot</p>
-              <p>• Bet between 10 and 150,000 coins</p>
+              <p>• Bet between 10 and 75,000 coins</p>
             </CardContent>
           </Card>
         </CardContent>

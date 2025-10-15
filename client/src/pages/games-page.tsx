@@ -134,7 +134,7 @@ export default function GamesPage() {
       icon: "🎯",
       description: "Drop the ball!",
       minBet: 10,
-      maxBet: 150000,
+      maxBet: 75000,
       component: Plinko,
       color: "accent",
     },
