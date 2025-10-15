@@ -256,6 +256,60 @@ a {
   }
 }
 
+/* Halloween Ghost Hover Effects */
+@keyframes ghostFloat {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -200%) scale(1.2) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes ghostWobble {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-3px) rotate(-5deg);
+  }
+  75% {
+    transform: translateX(3px) rotate(5deg);
+  }
+}
+
+.halloween-hover {
+  position: relative;
+  cursor: pointer;
+}
+
+.halloween-hover::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  background-image: url('/PetIcons/ghost.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 100;
+  transform: translate(-50%, -50%) scale(0);
+  filter: drop-shadow(0 0 10px rgba(255, 140, 0, 0.6));
+}
+
+.halloween-hover:hover::before {
+  animation: ghostFloat 1.5s ease-out forwards, ghostWobble 0.3s ease-in-out;
+}
+
 /* Halloween Jack-o'-lantern Hover Effects */
 @keyframes pumpkinBounce {
   0% {
@@ -315,6 +369,7 @@ a {
 }
 
 /* Spooky glow on hover */
+.halloween-hover:hover,
 .halloween-pumpkin:hover {
   box-shadow: 0 0 20px hsl(25 95% 55% / 0.6), 0 0 40px hsl(25 95% 55% / 0.3);
   transition: box-shadow 0.3s ease-in-out;
