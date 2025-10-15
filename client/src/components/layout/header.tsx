@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Menu, X, LogOut, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -297,6 +297,7 @@ export default function Header() {
                   data-testid="button-user-menu"
                 >
                   <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.avatarUrl} alt={user.username} />
                     <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                       {user.username[0].toUpperCase()}
                     </AvatarFallback>
@@ -306,6 +307,7 @@ export default function Header() {
               <DropdownMenuContent className="w-56" align="end">
                 <div className="flex items-center space-x-2 p-2">
                   <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatarUrl} alt={user.username} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {user.username[0].toUpperCase()}
                     </AvatarFallback>

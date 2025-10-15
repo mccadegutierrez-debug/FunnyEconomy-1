@@ -173,6 +173,32 @@ export default function PublicProfilePage() {
     },
   });
 
+  const friendRequestMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/friends/request", {
+        body: { targetUsername: username },
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to send friend request");
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Friend Request Sent! 👋",
+        description: `Friend request sent to ${username}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Friend Request Failed",
+        description: error.message || "Failed to send friend request",
+        variant: "destructive",
+      });
+    },
+  });
+
   if (!match || !username) {
     return (
       <div className="min-h-screen bg-background">
@@ -336,15 +362,29 @@ export default function PublicProfilePage() {
                 )}
 
                 {user && user.username !== username && (
-                  <Button
-                    onClick={() => tradeOfferMutation.mutate()}
-                    disabled={tradeOfferMutation.isPending}
-                    className="w-full"
-                    data-testid="button-trade-offer"
-                  >
-                    <HandshakeIcon className="w-4 h-4 mr-2" />
-                    {tradeOfferMutation.isPending ? "Sending..." : "Trade"}
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => tradeOfferMutation.mutate()}
+                      disabled={tradeOfferMutation.isPending}
+                      className="w-full"
+                      data-testid="button-trade-offer"
+                    >
+                      <HandshakeIcon className="w-4 h-4 mr-2" />
+                      {tradeOfferMutation.isPending ? "Sending..." : "Trade"}
+                    </Button>
+                    <Button
+                      onClick={() => friendRequestMutation.mutate()}
+                      disabled={friendRequestMutation.isPending}
+                      variant="outline"
+                      className="w-full"
+                      data-testid="button-friend-request"
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      {friendRequestMutation.isPending
+                        ? "Sending..."
+                        : "Add Friend"}
+                    </Button>
+                  </div>
                 )}
 
                 <Separator />

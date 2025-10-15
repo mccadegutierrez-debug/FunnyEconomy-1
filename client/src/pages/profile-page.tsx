@@ -50,10 +50,14 @@ import {
   Crown,
   Gamepad2,
 } from "lucide-react";
+import { UsernameLink } from "@/components/ui/username-link";
 
 const profileUpdateSchema = z.object({
   bio: z.string().max(200, "Bio must be 200 characters or less").optional(),
-  avatarUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  avatarUrl: z.string().refine(
+    (val) => !val || val === "" || val.startsWith("http://") || val.startsWith("https://") || val.startsWith("data:image/"),
+    "Must be a valid URL or uploaded image"
+  ).optional().or(z.literal("")),
 });
 
 export default function ProfilePage() {
@@ -80,6 +84,22 @@ export default function ProfilePage() {
     queryKey: ["/api/achievements"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/achievements");
+      return res.json();
+    },
+  });
+
+  const { data: friends = [] } = useQuery({
+    queryKey: ["/api/friends"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/friends");
+      return res.json();
+    },
+  });
+
+  const { data: friendRequests = [] } = useQuery({
+    queryKey: ["/api/friends/requests"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/friends/requests");
       return res.json();
     },
   });
@@ -118,6 +138,70 @@ export default function ProfilePage() {
     onError: (error: Error) => {
       toast({
         title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const acceptFriendMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      const res = await apiRequest("POST", `/api/friends/requests/${requestId}/accept`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Friend Added! 👋",
+        description: "Friend request accepted successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/friends/requests"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const rejectFriendMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      const res = await apiRequest("POST", `/api/friends/requests/${requestId}/reject`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request Rejected",
+        description: "Friend request has been rejected.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/friends/requests"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const removeFriendMutation = useMutation({
+    mutationFn: async (friendId: string) => {
+      const res = await apiRequest("DELETE", `/api/friends/${friendId}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Friend Removed",
+        description: "Friend has been removed from your list.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -477,11 +561,39 @@ export default function ProfilePage() {
                         <FormItem>
                           <FormLabel>Avatar URL</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="https://example.com/avatar.jpg"
-                              {...field}
-                              data-testid="input-avatar-url"
-                            />
+                            <div className="space-y-2">
+                              <Input
+                                placeholder="https://example.com/avatar.jpg"
+                                {...field}
+                                data-testid="input-avatar-url"
+                              />
+                              <div className="text-sm text-muted-foreground">
+                                Or upload an image:
+                              </div>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    if (file.size > 2 * 1024 * 1024) {
+                                      toast({
+                                        title: "File too large",
+                                        description: "Please upload an image smaller than 2MB",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      field.onChange(reader.result as string);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                                data-testid="input-avatar-file"
+                              />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -597,6 +709,61 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
+            {/* Friend Requests */}
+            {friendRequests.length > 0 && (
+              <Card data-testid="friend-requests">
+                <CardHeader>
+                  <CardTitle className="font-impact text-xl text-accent flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Friend Requests
+                  </CardTitle>
+                  <CardDescription>
+                    {friendRequests.length} pending request{friendRequests.length !== 1 ? 's' : ''}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {friendRequests.map((request: any) => (
+                      <div
+                        key={request.id}
+                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                        data-testid={`friend-request-${request.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={request.fromUserAvatar} />
+                            <AvatarFallback className="text-sm">
+                              {request.fromUsername?.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <UsernameLink username={request.fromUsername} className="text-sm font-medium" />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => acceptFriendMutation.mutate(request.id)}
+                            disabled={acceptFriendMutation.isPending}
+                            data-testid={`button-accept-${request.id}`}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => rejectFriendMutation.mutate(request.id)}
+                            disabled={rejectFriendMutation.isPending}
+                            data-testid={`button-reject-${request.id}`}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Friends */}
             <Card data-testid="friends-list">
               <CardHeader>
@@ -605,38 +772,50 @@ export default function ProfilePage() {
                   Friends
                 </CardTitle>
                 <CardDescription>
-                  {profile.friends?.length || 0} friends
+                  {friends.length} friend{friends.length !== 1 ? 's' : ''}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {!profile.friends || profile.friends.length === 0 ? (
+                {friends.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">
-                    No friends yet
+                    No friends yet. Add friends to see them here!
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {profile.friends
-                      .slice(0, 5)
-                      .map((friend: any, index: number) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-3 p-2 bg-muted rounded-lg"
-                          data-testid={`friend-${index}`}
-                        >
-                          <Avatar className="w-8 h-8">
-                            <AvatarFallback className="text-xs">
-                              {friend.username?.charAt(0).toUpperCase() ||
-                                friend.charAt(0).toUpperCase()}
+                    {friends.slice(0, 10).map((friend: any) => (
+                      <div
+                        key={friend.id}
+                        className="flex items-center justify-between p-2 bg-muted rounded-lg"
+                        data-testid={`friend-${friend.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={friend.avatarUrl} />
+                            <AvatarFallback className="text-sm">
+                              {friend.username?.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm font-medium">
-                            {friend.username || friend}
-                          </span>
+                          <div className="flex flex-col">
+                            <UsernameLink username={friend.username} className="text-sm font-medium" />
+                            <span className="text-xs text-muted-foreground">
+                              Level {friend.level}
+                            </span>
+                          </div>
                         </div>
-                      ))}
-                    {profile.friends.length > 5 && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeFriendMutation.mutate(friend.id)}
+                          disabled={removeFriendMutation.isPending}
+                          data-testid={`button-unfriend-${friend.id}`}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    {friends.length > 10 && (
                       <p className="text-muted-foreground text-center text-sm">
-                        +{profile.friends.length - 5} more friends
+                        +{friends.length - 10} more friends
                       </p>
                     )}
                   </div>

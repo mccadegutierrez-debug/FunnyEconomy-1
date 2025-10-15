@@ -209,6 +209,27 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
   const myReadyStatus = isUser1 ? tradeData.user1Ready : tradeData.user2Ready;
   const theirReadyStatus = isUser1 ? tradeData.user2Ready : tradeData.user1Ready;
 
+  const getItemDetails = (item: TradeItem) => {
+    if (item.itemType === "coins") {
+      return { name: `${item.quantity} coins`, emoji: "💰", type: "coins" };
+    }
+    if (item.itemType === "pet") {
+      const pet = userPets?.find((p) => p.id === item.itemId);
+      return { 
+        name: pet?.name || "Unknown Pet", 
+        emoji: pet?.emoji || "🐾", 
+        type: "pet" 
+      };
+    }
+    const itemData = allItems?.find((i) => i.id === item.itemId);
+    return { 
+      name: itemData?.name || "Unknown Item", 
+      emoji: itemData?.emoji || "📦", 
+      type: itemData?.type || "item",
+      quantity: item.quantity
+    };
+  };
+
   const availableItems = (userInventory?.inventory || []).filter((item: any) => {
     if (!allItems) return false;
     const itemData = allItems.find((i) => i.id === item.itemId);
@@ -259,34 +280,32 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
                   No items added yet
                 </p>
               ) : (
-                myItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-2 bg-muted rounded"
-                    data-testid={`my-trade-item-${item.id}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {item.itemType === "coins" ? (
-                        <Coins className="w-5 h-5 text-yellow-500" />
-                      ) : (
-                        <Package className="w-5 h-5" />
-                      )}
-                      <span className="text-sm">
-                        {item.itemType === "coins"
-                          ? `${item.quantity} coins`
-                          : `${item.itemType} x${item.quantity}`}
-                      </span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => removeItemMutation.mutate(item.id)}
-                      data-testid={`button-remove-item-${item.id}`}
+                myItems.map((item) => {
+                  const itemDetails = getItemDetails(item);
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 bg-muted rounded"
+                      data-testid={`my-trade-item-${item.id}`}
                     >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{itemDetails.emoji}</span>
+                        <span className="text-sm">
+                          {itemDetails.name}
+                          {itemDetails.quantity && itemDetails.quantity > 1 && ` x${itemDetails.quantity}`}
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeItemMutation.mutate(item.id)}
+                        data-testid={`button-remove-item-${item.id}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  );
+                })
               )}
             </div>
           </Card>
@@ -313,24 +332,22 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
                   No items added yet
                 </p>
               ) : (
-                theirItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-2 p-2 bg-muted rounded"
-                    data-testid={`their-trade-item-${item.id}`}
-                  >
-                    {item.itemType === "coins" ? (
-                      <Coins className="w-5 h-5 text-yellow-500" />
-                    ) : (
-                      <Package className="w-5 h-5" />
-                    )}
-                    <span className="text-sm">
-                      {item.itemType === "coins"
-                        ? `${item.quantity} coins`
-                        : `${item.itemType} x${item.quantity}`}
-                    </span>
-                  </div>
-                ))
+                theirItems.map((item) => {
+                  const itemDetails = getItemDetails(item);
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-2 p-2 bg-muted rounded"
+                      data-testid={`their-trade-item-${item.id}`}
+                    >
+                      <span className="text-xl">{itemDetails.emoji}</span>
+                      <span className="text-sm">
+                        {itemDetails.name}
+                        {itemDetails.quantity && itemDetails.quantity > 1 && ` x${itemDetails.quantity}`}
+                      </span>
+                    </div>
+                  );
+                })
               )}
             </div>
           </Card>
@@ -379,17 +396,18 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
                 value={cat.id}
                 className="max-h-[200px] overflow-y-auto"
               >
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   {cat.id === "pet" || cat.id === "all" ? (
                     availablePets.map((pet: any) => (
                       <Button
                         key={pet.id}
                         variant="outline"
-                        size="sm"
+                        className="flex flex-col items-center gap-1 h-auto p-3"
                         onClick={() => handleAddPet(pet.id)}
                         data-testid={`button-add-pet-${pet.id}`}
                       >
-                        {pet.name}
+                        <span className="text-2xl">{pet.emoji || "🐾"}</span>
+                        <span className="text-xs text-center truncate w-full">{pet.name}</span>
                       </Button>
                     ))
                   ) : null}
@@ -401,11 +419,19 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
                         <Button
                           key={item.itemId}
                           variant="outline"
-                          size="sm"
+                          className="flex flex-col items-center gap-1 h-auto p-3"
                           onClick={() => handleAddItem(item.itemId, itemData?.type || "item")}
                           data-testid={`button-add-item-${item.itemId}`}
                         >
-                          {itemData?.name || "Unknown"} (x{item.quantity})
+                          <span className="text-2xl">{itemData?.emoji || "📦"}</span>
+                          <span className="text-xs text-center truncate w-full">
+                            {itemData?.name || "Unknown"}
+                          </span>
+                          {item.quantity > 1 && (
+                            <Badge variant="secondary" className="text-xs">
+                              x{item.quantity}
+                            </Badge>
+                          )}
                         </Button>
                       );
                     })

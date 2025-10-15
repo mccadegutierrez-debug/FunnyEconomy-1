@@ -52,7 +52,8 @@ export function useTradeWebSocket() {
             message.type === "trade_offer" ||
             message.type === "trade_update" ||
             message.type === "trade_accepted" ||
-            message.type === "trade_started"
+            message.type === "trade_started" ||
+            message.type === "trade_cancelled"
           ) {
             setMessages((prev) => [...prev.slice(-99), message]);
           }

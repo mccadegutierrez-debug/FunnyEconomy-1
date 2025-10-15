@@ -71,8 +71,13 @@ function Router() {
           otherUsername: otherUsername,
         });
       }
+    } else if (latestMessage?.type === "trade_cancelled" && activeTrade) {
+      // Close trade window when trade is cancelled
+      if (latestMessage.tradeId === activeTrade.tradeId) {
+        setActiveTrade(null);
+      }
     }
-  }, [messages, user]);
+  }, [messages, user, activeTrade]);
 
   // If user is banned, show ban page instead of normal router
   if (isBanned && banInfo) {

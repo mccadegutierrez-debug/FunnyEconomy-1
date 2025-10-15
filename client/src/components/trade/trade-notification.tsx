@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { X, HandshakeIcon } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { UsernameLink } from "@/components/ui/username-link";
 
 interface TradeNotificationProps {
   offerId: string;
@@ -87,7 +88,7 @@ export function TradeNotification({
             Trade Request
           </p>
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{fromUsername}</span> wants to trade with you!
+            <UsernameLink username={fromUsername} className="font-semibold text-foreground" /> wants to trade with you!
           </p>
         </div>
         <Button

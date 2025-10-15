@@ -951,20 +951,19 @@ export function registerRoutes(app: Express): Server {
 
       const offer = await storage.createTradeOffer(fromUser.id, toUser.id);
       
-      // Broadcast trade offer to all connected clients
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(
-            JSON.stringify({
-              type: "trade_offer",
-              fromUsername: fromUser.username,
-              targetUsername: targetUsername,
-              offerId: offer.id,
-              timestamp: Date.now(),
-            }),
-          );
-        }
-      });
+      // Send trade offer notification only to the target user
+      const targetWs = userConnections.get(targetUsername);
+      if (targetWs && targetWs.readyState === WebSocket.OPEN) {
+        targetWs.send(
+          JSON.stringify({
+            type: "trade_offer",
+            fromUsername: fromUser.username,
+            targetUsername: targetUsername,
+            offerId: offer.id,
+            timestamp: Date.now(),
+          }),
+        );
+      }
       
       res.json(offer);
     } catch (error) {
@@ -995,19 +994,24 @@ export function registerRoutes(app: Express): Server {
       const toUser = await storage.getUser(offer.toUserId);
       
       if (fromUser && toUser) {
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(
-              JSON.stringify({
-                type: "trade_started",
-                tradeId: trade.id,
-                fromUsername: fromUser.username,
-                toUsername: toUser.username,
-                timestamp: Date.now(),
-              }),
-            );
-          }
+        // Send trade_started notification to both users
+        const tradeStartedMessage = JSON.stringify({
+          type: "trade_started",
+          tradeId: trade.id,
+          fromUsername: fromUser.username,
+          toUsername: toUser.username,
+          timestamp: Date.now(),
         });
+        
+        const fromWs = userConnections.get(fromUser.username);
+        if (fromWs && fromWs.readyState === WebSocket.OPEN) {
+          fromWs.send(tradeStartedMessage);
+        }
+        
+        const toWs = userConnections.get(toUser.username);
+        if (toWs && toWs.readyState === WebSocket.OPEN) {
+          toWs.send(tradeStartedMessage);
+        }
       }
       
       res.json({ offer, trade });
@@ -1103,7 +1107,35 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/trades/:id/cancel", requireAuth, async (req, res) => {
     try {
-      await storage.cancelTrade(req.params.id);
+      const trade = await storage.getTrade(req.params.id);
+      if (trade) {
+        await storage.cancelTrade(req.params.id);
+        
+        // Notify both users about the cancellation via WebSocket
+        const user1 = await storage.getUser(trade.userId1);
+        const user2 = await storage.getUser(trade.userId2);
+        
+        const tradeCancelledMessage = JSON.stringify({
+          type: "trade_cancelled",
+          tradeId: req.params.id,
+          timestamp: Date.now(),
+        });
+        
+        if (user1) {
+          const user1Ws = userConnections.get(user1.username);
+          if (user1Ws && user1Ws.readyState === WebSocket.OPEN) {
+            user1Ws.send(tradeCancelledMessage);
+          }
+        }
+        
+        if (user2) {
+          const user2Ws = userConnections.get(user2.username);
+          if (user2Ws && user2Ws.readyState === WebSocket.OPEN) {
+            user2Ws.send(tradeCancelledMessage);
+          }
+        }
+      }
+      
       res.json({ success: true });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -3091,6 +3123,9 @@ export function registerRoutes(app: Express): Server {
     path: "/ws",
   });
 
+  // Map to track username -> WebSocket connections
+  const userConnections = new Map<string, WebSocket>();
+
   wss.on("connection", (ws: WebSocket, req) => {
     let authenticatedUsername: string | null = null;
 
@@ -3174,6 +3209,8 @@ export function registerRoutes(app: Express): Server {
             try {
               authenticatedUsername = await extractUserFromSession(req);
               if (authenticatedUsername) {
+                // Store WebSocket connection for this user
+                userConnections.set(authenticatedUsername, ws);
                 ws.send(
                   JSON.stringify({
                     type: "auth_success",
@@ -3296,19 +3333,18 @@ export function registerRoutes(app: Express): Server {
             }
 
             const targetUsername = message.targetUsername;
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN && client !== ws) {
-                client.send(
-                  JSON.stringify({
-                    type: "trade_offer",
-                    fromUsername: authenticatedUsername,
-                    targetUsername: targetUsername,
-                    offerId: message.offerId,
-                    timestamp: Date.now(),
-                  }),
-                );
-              }
-            });
+            const targetUserWs = userConnections.get(targetUsername);
+            if (targetUserWs && targetUserWs.readyState === WebSocket.OPEN) {
+              targetUserWs.send(
+                JSON.stringify({
+                  type: "trade_offer",
+                  fromUsername: authenticatedUsername,
+                  targetUsername: targetUsername,
+                  offerId: message.offerId,
+                  timestamp: Date.now(),
+                }),
+              );
+            }
             break;
 
           case "trade_update":
@@ -3322,20 +3358,39 @@ export function registerRoutes(app: Express): Server {
               break;
             }
 
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(
-                  JSON.stringify({
-                    type: "trade_update",
-                    tradeId: message.tradeId,
-                    action: message.action,
-                    userId: message.userId,
-                    item: message.item,
-                    timestamp: Date.now(),
-                  }),
-                );
+            // Get trade to find both users involved
+            try {
+              const trade = await storage.getTrade(message.tradeId);
+              if (trade) {
+                const user1 = await storage.getUser(trade.userId1);
+                const user2 = await storage.getUser(trade.userId2);
+                
+                const tradeUpdateMessage = JSON.stringify({
+                  type: "trade_update",
+                  tradeId: message.tradeId,
+                  action: message.action,
+                  userId: message.userId,
+                  item: message.item,
+                  timestamp: Date.now(),
+                });
+                
+                if (user1) {
+                  const user1Ws = userConnections.get(user1.username);
+                  if (user1Ws && user1Ws.readyState === WebSocket.OPEN) {
+                    user1Ws.send(tradeUpdateMessage);
+                  }
+                }
+                
+                if (user2) {
+                  const user2Ws = userConnections.get(user2.username);
+                  if (user2Ws && user2Ws.readyState === WebSocket.OPEN) {
+                    user2Ws.send(tradeUpdateMessage);
+                  }
+                }
               }
-            });
+            } catch (err) {
+              // Error getting trade, skip broadcast
+            }
             break;
 
           case "trade_accepted":
@@ -3349,18 +3404,37 @@ export function registerRoutes(app: Express): Server {
               break;
             }
 
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(
-                  JSON.stringify({
-                    type: "trade_accepted",
-                    tradeId: message.tradeId,
-                    result: message.result,
-                    timestamp: Date.now(),
-                  }),
-                );
+            // Get trade to find both users involved
+            try {
+              const trade = await storage.getTrade(message.tradeId);
+              if (trade) {
+                const user1 = await storage.getUser(trade.userId1);
+                const user2 = await storage.getUser(trade.userId2);
+                
+                const tradeAcceptedMessage = JSON.stringify({
+                  type: "trade_accepted",
+                  tradeId: message.tradeId,
+                  result: message.result,
+                  timestamp: Date.now(),
+                });
+                
+                if (user1) {
+                  const user1Ws = userConnections.get(user1.username);
+                  if (user1Ws && user1Ws.readyState === WebSocket.OPEN) {
+                    user1Ws.send(tradeAcceptedMessage);
+                  }
+                }
+                
+                if (user2) {
+                  const user2Ws = userConnections.get(user2.username);
+                  if (user2Ws && user2Ws.readyState === WebSocket.OPEN) {
+                    user2Ws.send(tradeAcceptedMessage);
+                  }
+                }
               }
-            });
+            } catch (err) {
+              // Error getting trade, skip broadcast
+            }
             break;
 
           case "join":
@@ -3378,7 +3452,10 @@ export function registerRoutes(app: Express): Server {
     });
 
     ws.on("close", () => {
-      // Client disconnected
+      // Remove user from connections map on disconnect
+      if (authenticatedUsername) {
+        userConnections.delete(authenticatedUsername);
+      }
     });
   });
 
