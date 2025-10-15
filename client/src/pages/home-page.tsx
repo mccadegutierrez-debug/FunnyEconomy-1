@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -66,6 +67,30 @@ import {
 export default function HomePage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [showWorkDialog, setShowWorkDialog] = useState(false);
+  const [showBegDialog, setShowBegDialog] = useState(false);
+  const [showSearchDialog, setShowSearchDialog] = useState(false);
+  const [showCrimeDialog, setShowCrimeDialog] = useState(false);
+  const [showHuntDialog, setShowHuntDialog] = useState(false);
+  const [showFishDialog, setShowFishDialog] = useState(false);
+  const [showDiveDialog, setShowDiveDialog] = useState(false);
+  const [showHighlowDialog, setShowHighlowDialog] = useState(false);
+  const [showDigDialog, setShowDigDialog] = useState(false);
+  const [showPMDialog, setShowPMDialog] = useState(false);
+  const [showShootDialog, setShowShootDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showShutdownNotice, setShowShutdownNotice] = useState(false);
+
+  // Check if shutdown notice has been shown this session
+  useEffect(() => {
+    if (user) {
+      const hasSeenNotice = sessionStorage.getItem("shutdown_notice_shown");
+      if (!hasSeenNotice) {
+        setShowShutdownNotice(true);
+        sessionStorage.setItem("shutdown_notice_shown", "true");
+      }
+    }
+  }, [user]);
 
   const { data: transactions = [] } = useQuery({
     queryKey: ["/api/user/transactions"],
@@ -1391,6 +1416,39 @@ export default function HomePage() {
       </main>
 
       <Footer />
+
+      {/* Shutdown Notice Dialog */}
+      <Dialog open={showShutdownNotice} onOpenChange={setShowShutdownNotice}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl text-destructive">
+              <span className="text-3xl">❗</span>
+              MAJOR SHUTDOWN NOTICE
+            </DialogTitle>
+            <DialogDescription className="text-base pt-4">
+              <div className="space-y-3">
+                <p className="font-semibold text-foreground">
+                  The platform will be undergoing a major shutdown until <span className="text-primary">October 17, 2025</span>.
+                </p>
+                <p>
+                  Please save your progress and plan accordingly. All services will be unavailable during this maintenance period.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  We apologize for any inconvenience and appreciate your understanding.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => setShowShutdownNotice(false)}
+              className="w-full"
+            >
+              I Understand
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

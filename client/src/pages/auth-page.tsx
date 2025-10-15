@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
 import {
@@ -12,14 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,18 +35,6 @@ type RegisterData = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
-  const [showShutdownNotice, setShowShutdownNotice] = useState(false);
-
-  // Check if shutdown notice has been shown this session
-  useEffect(() => {
-    if (user) {
-      const hasSeenNotice = sessionStorage.getItem("shutdown_notice_shown");
-      if (!hasSeenNotice) {
-        setShowShutdownNotice(true);
-        sessionStorage.setItem("shutdown_notice_shown", "true");
-      }
-    }
-  }, [user]);
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -252,36 +232,6 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
-
-      {/* Shutdown Notice Dialog */}
-      <Dialog open={showShutdownNotice} onOpenChange={setShowShutdownNotice}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-2xl text-destructive">
-              <span className="text-3xl">❗</span>
-              MAJOR SHUTDOWN NOTICE
-            </DialogTitle>
-            <DialogDescription className="text-base pt-4">
-              <div className="space-y-3">
-                <p className="font-semibold text-foreground">
-                  The platform will be undergoing a major shutdown until <span className="text-primary">October 17, 2025</span>.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  We apologize for any inconvenience and appreciate your understanding.
-                </p>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              onClick={() => setShowShutdownNotice(false)}
-              className="w-full"
-            >
-              I Understand
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
