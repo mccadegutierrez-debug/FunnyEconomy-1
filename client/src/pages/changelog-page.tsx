@@ -26,21 +26,19 @@ interface ChangelogEntry {
 const mockChangelogs: ChangelogEntry[] = [
   {
     id: "1",
-    version: "2025.1.0",
-    date: "January 10, 2025",
+    version: "2025.10.15",
+    date: "October 15, 2025",
     changes: [
       {
-        category: "New Features",
+        category: "Major Update",
         items: [
-          "Added pet system with breeding and hunting mechanics",
           "Introduced trading system for items and pets",
-          "New admin panel with comprehensive management tools",
+          "Themed Update: Halloween Edition",
         ],
       },
       {
         category: "Improvements",
         items: [
-          "Enhanced UI/UX across all pages",
           "Improved performance and loading times",
           "Better mobile responsiveness",
         ],
@@ -54,11 +52,11 @@ const mockChangelogs: ChangelogEntry[] = [
         ],
       },
     ],
-    author: "Development Team",
+    author: "savage",
   },
   {
     id: "2",
-    version: "2024.12.5",
+    version: "2025.09.12",
     date: "December 20, 2024",
     changes: [
       {
@@ -78,12 +76,12 @@ const mockChangelogs: ChangelogEntry[] = [
         ],
       },
     ],
-    author: "Development Team",
+    author: "savage",
   },
   {
     id: "3",
-    version: "2024.12.0",
-    date: "December 1, 2024",
+    version: "2025.9.11",
+    date: "Septempber 11, 2025",
     changes: [
       {
         category: "Launch",
@@ -103,7 +101,7 @@ const mockChangelogs: ChangelogEntry[] = [
         ],
       },
     ],
-    author: "Development Team",
+    author: "savage",
   },
 ];
 
