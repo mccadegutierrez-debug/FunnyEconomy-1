@@ -144,6 +144,12 @@ export default function PublicProfilePage() {
     queryKey: ["/api/public/items"],
   });
 
+  // Check if trading is enabled
+  const { data: tradingFeatureFlag } = useQuery<{ enabled: boolean }>({
+    queryKey: ["/api/feature-flags/trading"],
+    enabled: !!user,
+  });
+
   const tradeOfferMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", "/api/trades/offer", {
@@ -363,15 +369,17 @@ export default function PublicProfilePage() {
 
                 {user && user.username !== username && (
                   <div className="space-y-2">
-                    <Button
-                      onClick={() => tradeOfferMutation.mutate()}
-                      disabled={tradeOfferMutation.isPending}
-                      className="w-full"
-                      data-testid="button-trade-offer"
-                    >
-                      <HandshakeIcon className="w-4 h-4 mr-2" />
-                      {tradeOfferMutation.isPending ? "Sending..." : "Trade"}
-                    </Button>
+                    {tradingFeatureFlag?.enabled !== false && (
+                      <Button
+                        onClick={() => tradeOfferMutation.mutate()}
+                        disabled={tradeOfferMutation.isPending}
+                        className="w-full"
+                        data-testid="button-trade-offer"
+                      >
+                        <HandshakeIcon className="w-4 h-4 mr-2" />
+                        {tradeOfferMutation.isPending ? "Sending..." : "Trade"}
+                      </Button>
+                    )}
                     <Button
                       onClick={() => friendRequestMutation.mutate()}
                       disabled={friendRequestMutation.isPending}

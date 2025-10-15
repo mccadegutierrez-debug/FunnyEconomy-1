@@ -177,11 +177,34 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
       return;
     }
 
-    addItemMutation.mutate({
-      itemType: "coins",
-      itemId: null,
-      quantity: amount,
-    });
+    const existingCoinItem = myItems.find(item => item.itemType === "coins");
+    const totalCoins = existingCoinItem ? existingCoinItem.quantity + amount : amount;
+
+    if (totalCoins > (userInventory?.coins || 0)) {
+      toast({
+        title: "Insufficient Coins",
+        description: `You only have ${userInventory?.coins || 0} coins`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (existingCoinItem) {
+      removeItemMutation.mutate(existingCoinItem.id);
+      setTimeout(() => {
+        addItemMutation.mutate({
+          itemType: "coins",
+          itemId: null,
+          quantity: totalCoins,
+        });
+      }, 100);
+    } else {
+      addItemMutation.mutate({
+        itemType: "coins",
+        itemId: null,
+        quantity: amount,
+      });
+    }
     setCoinsToAdd("");
   };
 
@@ -209,16 +232,51 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
   const myReadyStatus = isUser1 ? tradeData.user1Ready : tradeData.user2Ready;
   const theirReadyStatus = isUser1 ? tradeData.user2Ready : tradeData.user1Ready;
 
+  const getItemIcon = (type: string, name: string) => {
+    const nameLower = name.toLowerCase();
+    
+    if (nameLower.includes("hunting rifle")) {
+      return <img src="/ShopIcons/HuntingRifle.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("ban hammer")) {
+      return <img src="/ShopIcons/BanHammer.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("fishing rod")) {
+      return <img src="/ShopIcons/FishingPole.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("shovel")) {
+      return <img src="/ShopIcons/Shovel.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("laptop")) {
+      return <img src="/ShopIcons/Laptop.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("bank note") || nameLower.includes("banknote")) {
+      return <img src="/ShopIcons/BankNote.png" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("barrel") || nameLower.includes("sludge")) {
+      return <img src="/ShopIcons/BarrelofSludge.gif" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (nameLower.includes("meme trophy") || (nameLower.includes("trophy") && nameLower.includes("pepe"))) {
+      return <img src="/ShopIcons/PepeTrophy.webp" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    if (type === "lootbox" || nameLower.includes("box") || nameLower.includes("chest") || nameLower.includes("pack")) {
+      return <img src="/ShopIcons/normbox.gif" alt={name} className="w-12 h-12 object-contain" />;
+    }
+    
+    return <img src="/PetIcons/tbd.png" alt={name} className="w-12 h-12 object-contain" />;
+  };
+
   const getItemDetails = (item: TradeItem) => {
     if (item.itemType === "coins") {
-      return { name: `${item.quantity} coins`, emoji: "💰", type: "coins" };
+      return { name: `${item.quantity} coins`, emoji: "💰", type: "coins", icon: null };
     }
     if (item.itemType === "pet") {
       const pet = userPets?.find((p) => p.id === item.itemId);
       return { 
         name: pet?.name || "Unknown Pet", 
         emoji: pet?.emoji || "🐾", 
-        type: "pet" 
+        type: "pet",
+        icon: null
       };
     }
     const itemData = allItems?.find((i) => i.id === item.itemId);
@@ -226,7 +284,8 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
       name: itemData?.name || "Unknown Item", 
       emoji: itemData?.emoji || "📦", 
       type: itemData?.type || "item",
-      quantity: item.quantity
+      quantity: item.quantity,
+      icon: itemData ? getItemIcon(itemData.type, itemData.name) : null
     };
   };
 
@@ -249,18 +308,20 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" data-testid="trading-window">
-        <DialogHeader>
-          <DialogTitle className="font-impact text-2xl text-primary flex items-center gap-2">
-            <Package className="w-6 h-6" />
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-background to-background/80" data-testid="trading-window">
+        <DialogHeader className="border-b border-primary/20 pb-4">
+          <DialogTitle className="font-impact text-3xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-lg">
+              <Package className="w-7 h-7 text-primary" />
+            </div>
             Trading with {otherUsername}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <Card className="p-4 border-2 border-primary/50">
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          <Card className="p-4 border-2 border-primary/50 bg-gradient-to-br from-primary/5 to-transparent shadow-lg">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-lg">Your Offer</h3>
+              <h3 className="font-bold text-lg text-primary">Your Offer</h3>
               {myReadyStatus ? (
                 <Badge variant="default" className="gap-1">
                   <CheckCircle className="w-3 h-3" />
@@ -274,45 +335,52 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
               )}
             </div>
 
-            <div className="space-y-2 min-h-[200px] max-h-[300px] overflow-y-auto">
+            <div className="min-h-[200px] max-h-[300px] overflow-y-auto">
               {myItems.length === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-8">
                   No items added yet
                 </p>
               ) : (
-                myItems.map((item) => {
-                  const itemDetails = getItemDetails(item);
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-2 bg-muted rounded"
-                      data-testid={`my-trade-item-${item.id}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{itemDetails.emoji}</span>
-                        <span className="text-sm">
-                          {itemDetails.name}
-                          {itemDetails.quantity && itemDetails.quantity > 1 && ` x${itemDetails.quantity}`}
-                        </span>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeItemMutation.mutate(item.id)}
-                        data-testid={`button-remove-item-${item.id}`}
+                <div className="grid grid-cols-3 gap-2">
+                  {myItems.map((item) => {
+                    const itemDetails = getItemDetails(item);
+                    return (
+                      <div
+                        key={item.id}
+                        className="relative flex flex-col items-center p-3 bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-lg hover:border-primary/60 transition-all group"
+                        data-testid={`my-trade-item-${item.id}`}
                       >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  );
-                })
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full bg-destructive/90 hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeItemMutation.mutate(item.id)}
+                          data-testid={`button-remove-item-${item.id}`}
+                        >
+                          <X className="w-3 h-3 text-white" />
+                        </Button>
+                        <div className="mb-2">
+                          {itemDetails.icon || <span className="text-3xl">{itemDetails.emoji}</span>}
+                        </div>
+                        <span className="text-xs text-center font-medium truncate w-full px-1">
+                          {itemDetails.name}
+                        </span>
+                        {itemDetails.quantity && itemDetails.quantity > 1 && (
+                          <Badge variant="secondary" className="mt-1 text-xs">
+                            x{itemDetails.quantity}
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </Card>
 
-          <Card className="p-4 border-2 border-secondary/50">
+          <Card className="p-4 border-2 border-secondary/50 bg-gradient-to-br from-secondary/5 to-transparent shadow-lg">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-lg">{otherUsername}'s Offer</h3>
+              <h3 className="font-bold text-lg text-secondary">{otherUsername}'s Offer</h3>
               {theirReadyStatus ? (
                 <Badge variant="default" className="gap-1">
                   <CheckCircle className="w-3 h-3" />
@@ -326,28 +394,36 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
               )}
             </div>
 
-            <div className="space-y-2 min-h-[200px] max-h-[300px] overflow-y-auto">
+            <div className="min-h-[200px] max-h-[300px] overflow-y-auto">
               {theirItems.length === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-8">
                   No items added yet
                 </p>
               ) : (
-                theirItems.map((item) => {
-                  const itemDetails = getItemDetails(item);
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-2 p-2 bg-muted rounded"
-                      data-testid={`their-trade-item-${item.id}`}
-                    >
-                      <span className="text-xl">{itemDetails.emoji}</span>
-                      <span className="text-sm">
-                        {itemDetails.name}
-                        {itemDetails.quantity && itemDetails.quantity > 1 && ` x${itemDetails.quantity}`}
-                      </span>
-                    </div>
-                  );
-                })
+                <div className="grid grid-cols-3 gap-2">
+                  {theirItems.map((item) => {
+                    const itemDetails = getItemDetails(item);
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex flex-col items-center p-3 bg-gradient-to-br from-secondary/10 to-secondary/5 border-2 border-secondary/30 rounded-lg"
+                        data-testid={`their-trade-item-${item.id}`}
+                      >
+                        <div className="mb-2">
+                          {itemDetails.icon || <span className="text-3xl">{itemDetails.emoji}</span>}
+                        </div>
+                        <span className="text-xs text-center font-medium truncate w-full px-1">
+                          {itemDetails.name}
+                        </span>
+                        {itemDetails.quantity && itemDetails.quantity > 1 && (
+                          <Badge variant="secondary" className="mt-1 text-xs">
+                            x{itemDetails.quantity}
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </Card>

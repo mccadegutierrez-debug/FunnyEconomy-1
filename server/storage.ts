@@ -1954,6 +1954,12 @@ export class DatabaseStorage implements IStorage {
         description: "Enable or disable the freemium reward system",
         enabled: true,
       },
+      {
+        featureKey: "trading",
+        featureName: "Trading System",
+        description: "Enable or disable the trading system between players",
+        enabled: true,
+      },
     ];
 
     for (const flag of defaultFlags) {
