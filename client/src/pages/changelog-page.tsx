@@ -147,7 +147,7 @@ export default function ChangelogPage() {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Header Section */}
         <div className="space-y-4">
-          <h1 className="font-impact text-5xl text-primary dm-title">
+          <h1 className="font-impact text-5xl dm-title">
             Changelog
           </h1>
           <p className="text-muted-foreground text-lg max-w-3xl">
