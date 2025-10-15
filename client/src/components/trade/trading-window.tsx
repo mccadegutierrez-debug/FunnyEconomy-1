@@ -190,14 +190,15 @@ export function TradingWindow({ tradeId, isOpen, onClose, otherUsername }: Tradi
     }
 
     if (existingCoinItem) {
-      removeItemMutation.mutate(existingCoinItem.id);
-      setTimeout(() => {
-        addItemMutation.mutate({
-          itemType: "coins",
-          itemId: null,
-          quantity: totalCoins,
-        });
-      }, 100);
+      removeItemMutation.mutate(existingCoinItem.id, {
+        onSuccess: () => {
+          addItemMutation.mutate({
+            itemType: "coins",
+            itemId: null,
+            quantity: totalCoins,
+          });
+        }
+      });
     } else {
       addItemMutation.mutate({
         itemType: "coins",

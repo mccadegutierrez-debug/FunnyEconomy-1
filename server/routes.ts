@@ -927,6 +927,11 @@ export function registerRoutes(app: Express): Server {
   // Trading System Routes
   app.post("/api/trades/offer", requireAuth, async (req, res) => {
     try {
+      const tradingEnabled = await storage.isFeatureEnabled("trading");
+      if (!tradingEnabled) {
+        return res.status(403).json({ error: "Trading is currently disabled" });
+      }
+
       const { targetUsername } = req.body;
       const fromUser = await storage.getUserByUsername(req.user!.username);
       const toUser = await storage.getUserByUsername(targetUsername);
@@ -987,6 +992,11 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/trades/offers/:id/accept", requireAuth, async (req, res) => {
     try {
+      const tradingEnabled = await storage.isFeatureEnabled("trading");
+      if (!tradingEnabled) {
+        return res.status(403).json({ error: "Trading is currently disabled" });
+      }
+
       const offer = await storage.acceptTradeOffer(req.params.id);
       const trade = await storage.createTrade(offer.fromUserId, offer.toUserId);
       
