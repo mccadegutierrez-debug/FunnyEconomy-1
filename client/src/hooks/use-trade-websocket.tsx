@@ -7,6 +7,7 @@ interface TradeMessage {
   offerId?: string;
   fromUsername?: string;
   targetUsername?: string;
+  toUsername?: string;
   action?: string;
   userId?: string;
   item?: any;
@@ -50,7 +51,8 @@ export function useTradeWebSocket() {
           } else if (
             message.type === "trade_offer" ||
             message.type === "trade_update" ||
-            message.type === "trade_accepted"
+            message.type === "trade_accepted" ||
+            message.type === "trade_started"
           ) {
             setMessages((prev) => [...prev.slice(-99), message]);
           }

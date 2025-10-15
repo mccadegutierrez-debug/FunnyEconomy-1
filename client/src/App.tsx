@@ -20,6 +20,7 @@ import NotFound from "@/pages/not-found";
 import BanPage from "@/pages/ban-page";
 import { useTradeWebSocket } from "@/hooks/use-trade-websocket";
 import { TradeNotification } from "@/components/trade/trade-notification";
+import { TradingWindow } from "@/components/trade/trading-window";
 import { useState, useEffect } from "react";
 
 
@@ -30,16 +31,43 @@ function Router() {
     offerId: string;
     fromUsername: string;
   } | null>(null);
+  const [activeTrade, setActiveTrade] = useState<{
+    tradeId: string;
+    otherUsername: string;
+  } | null>(null);
 
   useEffect(() => {
-    // Listen for trade offers
+    // Listen for trade offers and trade started messages
     const latestMessage = messages[messages.length - 1];
     if (latestMessage?.type === "trade_offer" && user) {
       // Check if this trade offer is for the current user
-      if (latestMessage.targetUsername === user.username) {
+      if (
+        latestMessage.targetUsername === user.username &&
+        latestMessage.offerId &&
+        latestMessage.fromUsername
+      ) {
         setTradeOffer({
           offerId: latestMessage.offerId,
           fromUsername: latestMessage.fromUsername,
+        });
+      }
+    } else if (latestMessage?.type === "trade_started" && user) {
+      // Open trade window for both users when trade is started
+      if (
+        (latestMessage.fromUsername === user.username ||
+          latestMessage.toUsername === user.username) &&
+        latestMessage.tradeId &&
+        latestMessage.fromUsername &&
+        latestMessage.toUsername
+      ) {
+        const otherUsername =
+          latestMessage.fromUsername === user.username
+            ? latestMessage.toUsername
+            : latestMessage.fromUsername;
+        
+        setActiveTrade({
+          tradeId: latestMessage.tradeId,
+          otherUsername: otherUsername,
         });
       }
     }
@@ -87,9 +115,20 @@ function Router() {
           fromUsername={tradeOffer.fromUsername}
           onAccept={(tradeId) => {
             setTradeOffer(null);
-            // Navigate to trading window or handle acceptance
+            setActiveTrade({
+              tradeId,
+              otherUsername: tradeOffer.fromUsername,
+            });
           }}
           onDismiss={() => setTradeOffer(null)}
+        />
+      )}
+      {activeTrade && (
+        <TradingWindow
+          tradeId={activeTrade.tradeId}
+          isOpen={true}
+          onClose={() => setActiveTrade(null)}
+          otherUsername={activeTrade.otherUsername}
         />
       )}
     </>

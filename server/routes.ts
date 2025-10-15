@@ -990,6 +990,26 @@ export function registerRoutes(app: Express): Server {
     try {
       const offer = await storage.acceptTradeOffer(req.params.id);
       const trade = await storage.createTrade(offer.fromUserId, offer.toUserId);
+      
+      const fromUser = await storage.getUser(offer.fromUserId);
+      const toUser = await storage.getUser(offer.toUserId);
+      
+      if (fromUser && toUser) {
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(
+              JSON.stringify({
+                type: "trade_started",
+                tradeId: trade.id,
+                fromUsername: fromUser.username,
+                toUsername: toUser.username,
+                timestamp: Date.now(),
+              }),
+            );
+          }
+        });
+      }
+      
       res.json({ offer, trade });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
