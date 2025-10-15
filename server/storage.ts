@@ -18,6 +18,7 @@ import {
   tradeOffers,
   trades,
   tradeItems,
+  friendRequests,
   type User,
   type InsertUser,
   type Item,
@@ -46,6 +47,7 @@ import {
   type TradeOffer,
   type Trade,
   type TradeItem,
+  type FriendRequest,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, lt, gte, sql } from "drizzle-orm";
@@ -1811,7 +1813,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(petHunts)
       .set({ isCompleted: true, rewards })
-      .where(eq(huntId, hunt.id));
+      .where(eq(petHunts.id, huntId));
 
     if (Math.random() < 0.33) {
       const bonusPoints = Math.floor(Math.random() * 5) + 5;
@@ -2493,6 +2495,161 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(tradeItems)
       .where(eq(tradeItems.tradeId, tradeId));
+  }
+
+  async sendFriendRequest(fromUserId: string, toUserId: string) {
+    const existingRequest = await db
+      .select()
+      .from(friendRequests)
+      .where(
+        and(
+          eq(friendRequests.fromUserId, fromUserId),
+          eq(friendRequests.toUserId, toUserId),
+          eq(friendRequests.status, "pending")
+        )
+      );
+
+    if (existingRequest.length > 0) {
+      throw new Error("Friend request already sent");
+    }
+
+    const reverseRequest = await db
+      .select()
+      .from(friendRequests)
+      .where(
+        and(
+          eq(friendRequests.fromUserId, toUserId),
+          eq(friendRequests.toUserId, fromUserId),
+          eq(friendRequests.status, "pending")
+        )
+      );
+
+    if (reverseRequest.length > 0) {
+      throw new Error("This user has already sent you a friend request");
+    }
+
+    const fromUser = await this.getUser(fromUserId);
+    const toUser = await this.getUser(toUserId);
+    
+    if (!fromUser || !toUser) {
+      throw new Error("User not found");
+    }
+
+    const fromFriends = (fromUser.friends as string[]) || [];
+    const toFriends = (toUser.friends as string[]) || [];
+    
+    if (fromFriends.includes(toUserId) || toFriends.includes(fromUserId)) {
+      throw new Error("Already friends with this user");
+    }
+
+    const [request] = await db.insert(friendRequests).values({
+      fromUserId,
+      toUserId,
+      status: "pending",
+    }).returning();
+
+    return request;
+  }
+
+  async getFriendRequests(userId: string) {
+    return await db
+      .select()
+      .from(friendRequests)
+      .where(
+        and(
+          eq(friendRequests.toUserId, userId),
+          eq(friendRequests.status, "pending")
+        )
+      )
+      .orderBy(desc(friendRequests.createdAt));
+  }
+
+  async acceptFriendRequest(requestId: string) {
+    const [request] = await db
+      .select()
+      .from(friendRequests)
+      .where(eq(friendRequests.id, requestId));
+
+    if (!request) {
+      throw new Error("Friend request not found");
+    }
+
+    const fromUser = await this.getUser(request.fromUserId);
+    const toUser = await this.getUser(request.toUserId);
+
+    if (!fromUser || !toUser) {
+      throw new Error("User not found");
+    }
+
+    const fromFriends = (fromUser.friends as string[]) || [];
+    const toFriends = (toUser.friends as string[]) || [];
+
+    if (!fromFriends.includes(request.toUserId)) {
+      fromFriends.push(request.toUserId);
+    }
+    if (!toFriends.includes(request.fromUserId)) {
+      toFriends.push(request.fromUserId);
+    }
+
+    await this.updateUser(fromUser.id, { friends: fromFriends });
+    await this.updateUser(toUser.id, { friends: toFriends });
+
+    await db
+      .update(friendRequests)
+      .set({ status: "accepted" })
+      .where(eq(friendRequests.id, requestId));
+
+    return { fromUser, toUser };
+  }
+
+  async rejectFriendRequest(requestId: string) {
+    await db
+      .update(friendRequests)
+      .set({ status: "rejected" })
+      .where(eq(friendRequests.id, requestId));
+  }
+
+  async removeFriend(userId: string, friendId: string) {
+    const user = await this.getUser(userId);
+    const friend = await this.getUser(friendId);
+
+    if (!user || !friend) {
+      throw new Error("User not found");
+    }
+
+    const userFriends = (user.friends as string[]) || [];
+    const friendFriends = (friend.friends as string[]) || [];
+
+    const updatedUserFriends = userFriends.filter(id => id !== friendId);
+    const updatedFriendFriends = friendFriends.filter(id => id !== userId);
+
+    await this.updateUser(userId, { friends: updatedUserFriends });
+    await this.updateUser(friendId, { friends: updatedFriendFriends });
+  }
+
+  async getFriends(userId: string) {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const friendIds = (user.friends as string[]) || [];
+    const friends = [];
+
+    for (const friendId of friendIds) {
+      const friend = await this.getUser(friendId);
+      if (friend) {
+        friends.push({
+          id: friend.id,
+          username: friend.username,
+          avatarUrl: friend.avatarUrl,
+          level: friend.level,
+          onlineStatus: friend.onlineStatus,
+        });
+      }
+    }
+
+    return friends;
   }
 }
 

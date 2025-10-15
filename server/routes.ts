@@ -1110,6 +1110,100 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Friend request routes
+  app.post("/api/friends/request", requireAuth, async (req, res) => {
+    try {
+      const { targetUsername } = req.body;
+      const user = await storage.getUserByUsername(req.user!.username);
+      const targetUser = await storage.getUserByUsername(targetUsername);
+
+      if (!user || !targetUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (user.id === targetUser.id) {
+        return res.status(400).json({ error: "Cannot send friend request to yourself" });
+      }
+
+      const request = await storage.sendFriendRequest(user.id, targetUser.id);
+      res.json(request);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/friends/requests", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const requests = await storage.getFriendRequests(user.id);
+      
+      const requestsWithUsernames = await Promise.all(
+        requests.map(async (request: any) => {
+          const fromUser = await storage.getUser(request.fromUserId);
+          return {
+            ...request,
+            fromUsername: fromUser?.username || 'Unknown',
+            fromAvatarUrl: fromUser?.avatarUrl || '',
+          };
+        })
+      );
+
+      res.json(requestsWithUsernames);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/friends/requests/:id/accept", requireAuth, async (req, res) => {
+    try {
+      await storage.acceptFriendRequest(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/friends/requests/:id/reject", requireAuth, async (req, res) => {
+    try {
+      await storage.rejectFriendRequest(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/friends", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const friends = await storage.getFriends(user.id);
+      res.json(friends);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.delete("/api/friends/:friendId", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user!.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      await storage.removeFriend(user.id, req.params.friendId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
   // Admin routes
   app.get(
     "/api/admin/users",

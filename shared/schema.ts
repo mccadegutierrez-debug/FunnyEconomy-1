@@ -413,6 +413,23 @@ export const tradeItems = pgTable("trade_items", {
     .notNull(),
 });
 
+// Friend Request System
+export const friendRequests = pgTable("friend_requests", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  fromUserId: varchar("from_user_id").notNull(),
+  toUserId: varchar("to_user_id").notNull(),
+  status: varchar("status", {
+    enum: ["pending", "accepted", "rejected"],
+  })
+    .default("pending")
+    .notNull(),
+  createdAt: timestamp("created_at")
+    .default(sql`now()`)
+    .notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
@@ -541,6 +558,17 @@ export const tradeItemsRelations = relations(tradeItems, ({ one }) => ({
   }),
 }));
 
+export const friendRequestsRelations = relations(friendRequests, ({ one }) => ({
+  fromUser: one(users, {
+    fields: [friendRequests.fromUserId],
+    references: [users.id],
+  }),
+  toUser: one(users, {
+    fields: [friendRequests.toUserId],
+    references: [users.id],
+  }),
+}));
+
 // Create insert and select schemas from tables
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -630,6 +658,11 @@ export const insertTradeItemSchema = createInsertSchema(tradeItems).omit({
   addedAt: true,
 });
 export const selectTradeItemSchema = createSelectSchema(tradeItems);
+export const insertFriendRequestSchema = createInsertSchema(friendRequests).omit({
+  id: true,
+  createdAt: true,
+});
+export const selectFriendRequestSchema = createSelectSchema(friendRequests);
 
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -690,3 +723,5 @@ export type InsertTrade = z.infer<typeof insertTradeSchema>;
 export type Trade = typeof trades.$inferSelect;
 export type InsertTradeItem = z.infer<typeof insertTradeItemSchema>;
 export type TradeItem = typeof tradeItems.$inferSelect;
+export type InsertFriendRequest = z.infer<typeof insertFriendRequestSchema>;
+export type FriendRequest = typeof friendRequests.$inferSelect;
