@@ -266,9 +266,6 @@ export default function AuthPage() {
                 <p className="font-semibold text-foreground">
                   The platform will be undergoing a major shutdown until <span className="text-primary">October 17, 2025</span>.
                 </p>
-                <p>
-                  Please save your progress and plan accordingly. All services will be unavailable during this maintenance period.
-                </p>
                 <p className="text-sm text-muted-foreground">
                   We apologize for any inconvenience and appreciate your understanding.
                 </p>
