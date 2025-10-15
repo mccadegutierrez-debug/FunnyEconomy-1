@@ -990,12 +990,12 @@ export class GameService {
       throw new Error("Risk must be low, medium, or high");
     }
 
-    // Define multiplier distributions based on risk level
+    // Define multiplier distributions based on risk level (NERFED)
     // 9 slots for plinko landing positions
     const multipliers = {
-      low: [1.5, 1.3, 1.1, 1.0, 0.9, 1.0, 1.1, 1.3, 1.5],
-      medium: [3.0, 2.0, 1.5, 1.0, 0.5, 1.0, 1.5, 2.0, 3.0],
-      high: [10.0, 5.0, 2.0, 1.0, 0.5, 1.0, 2.0, 5.0, 10.0],
+      low: [1.1, 1.0, 0.9, 0.8, 0.7, 0.8, 0.9, 1.0, 1.1],
+      medium: [1.5, 1.2, 1.0, 0.8, 0.5, 0.8, 1.0, 1.2, 1.5],
+      high: [3.0, 2.0, 1.2, 0.8, 0.3, 0.8, 1.2, 2.0, 3.0],
     };
 
     // Simulate ball drop (weighted towards center)

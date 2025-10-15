@@ -105,9 +105,9 @@ export default function Plinko() {
   const quickBets = [10, 50, 100, 500, 1000];
 
   const multipliers = {
-    low: [1.5, 1.3, 1.1, 1.0, 0.9, 1.0, 1.1, 1.3, 1.5],
-    medium: [3.0, 2.0, 1.5, 1.0, 0.5, 1.0, 1.5, 2.0, 3.0],
-    high: [10.0, 5.0, 2.0, 1.0, 0.5, 1.0, 2.0, 5.0, 10.0],
+    low: [1.1, 1.0, 0.9, 0.8, 0.7, 0.8, 0.9, 1.0, 1.1],
+    medium: [1.5, 1.2, 1.0, 0.8, 0.5, 0.8, 1.0, 1.2, 1.5],
+    high: [3.0, 2.0, 1.2, 0.8, 0.3, 0.8, 1.2, 2.0, 3.0],
   };
 
   const getSlotColor = (mult: number) => {
@@ -183,7 +183,7 @@ export default function Plinko() {
                   <div className="text-center">
                     <div className="text-xl">🟢</div>
                     <div>LOW</div>
-                    <div className="text-xs">0.9x - 1.5x</div>
+                    <div className="text-xs">0.7x - 1.1x</div>
                   </div>
                 </Button>
                 <Button
@@ -196,7 +196,7 @@ export default function Plinko() {
                   <div className="text-center">
                     <div className="text-xl">🟡</div>
                     <div>MEDIUM</div>
-                    <div className="text-xs">0.5x - 3x</div>
+                    <div className="text-xs">0.5x - 1.5x</div>
                   </div>
                 </Button>
                 <Button
@@ -209,7 +209,7 @@ export default function Plinko() {
                   <div className="text-center">
                     <div className="text-xl">🔴</div>
                     <div>HIGH</div>
-                    <div className="text-xs">0.5x - 10x</div>
+                    <div className="text-xs">0.3x - 3x</div>
                   </div>
                 </Button>
               </div>
@@ -318,9 +318,9 @@ export default function Plinko() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>• Choose your risk level (Low/Medium/High)</p>
-              <p>• Low risk: Safer, smaller multipliers (0.9x-1.5x)</p>
-              <p>• Medium risk: Balanced (0.5x-3x)</p>
-              <p>• High risk: Big wins or losses (0.5x-10x)</p>
+              <p>• Low risk: Safer, smaller range (0.7x-1.1x)</p>
+              <p>• Medium risk: Balanced (0.5x-1.5x)</p>
+              <p>• High risk: Higher variance (0.3x-3x)</p>
               <p>• Ball bounces through pegs to land in a slot</p>
               <p>• Bet between 10 and 75,000 coins</p>
             </CardContent>
