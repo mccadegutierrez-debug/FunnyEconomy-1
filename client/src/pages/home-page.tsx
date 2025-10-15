@@ -1424,13 +1424,13 @@ export default function HomePage() {
             <DialogDescription className="text-base pt-4">
               <div className="space-y-3">
                 <p className="font-semibold text-foreground">
-                  The platform will be undergoing a major shutdown until <span className="text-primary">October 17, 2025</span>.
+                  The platform will be undergoing a major shutdown until <span className="text-primary">October 16th or October 17th</span>.
                 </p>
                 <p>
-                  Please save your progress and plan accordingly. All services will be unavailable during this maintenance period.
+                  This shutdown is due to duping coins, pets and items and otehr exploits that have compromised the integrity of the game.
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  We apologize for any inconvenience and appreciate your understanding.
+                  Punishments will be issued to those found guilty.
                 </p>
               </div>
             </DialogDescription>
