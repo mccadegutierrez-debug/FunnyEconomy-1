@@ -2105,6 +2105,10 @@ export function registerRoutes(app: Express): Server {
               hygiene: decayedPet.hygiene,
               fun: decayedPet.fun,
               energy: decayedPet.energy,
+              lastFed: decayedPet.lastFed,
+              lastCleaned: decayedPet.lastCleaned,
+              lastPlayed: decayedPet.lastPlayed,
+              lastSlept: decayedPet.lastSlept,
             });
           }
           

@@ -1416,9 +1416,10 @@ export class DatabaseStorage implements IStorage {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");
 
+    const now = new Date();
     const updates: Partial<Pet> = {
-      hygiene: Math.min(100, pet.hygiene + 30),
-      lastCleaned: new Date(),
+      hygiene: Math.min(100, pet.hygiene + 25),
+      lastCleaned: now,
     };
 
     if (Math.random() < 0.33) {
@@ -1435,9 +1436,10 @@ export class DatabaseStorage implements IStorage {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");
 
+    const now = new Date();
     const updates: Partial<Pet> = {
-      fun: Math.min(100, pet.fun + 20),
-      lastPlayed: new Date(),
+      fun: Math.min(100, pet.fun + 25),
+      lastPlayed: now,
     };
 
     if (Math.random() < 0.33) {
@@ -1454,9 +1456,10 @@ export class DatabaseStorage implements IStorage {
     const pet = await this.getPet(petId);
     if (!pet) throw new Error("Pet not found");
 
+    const now = new Date();
     const updates: Partial<Pet> = {
-      energy: Math.min(100, pet.energy + 40),
-      lastSlept: new Date(),
+      energy: Math.min(100, pet.energy + 25),
+      lastSlept: now,
     };
 
     if (Math.random() < 0.33) {
@@ -1808,7 +1811,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(petHunts)
       .set({ isCompleted: true, rewards })
-      .where(eq(petHunts.id, huntId));
+      .where(eq(huntId, hunt.id));
 
     if (Math.random() < 0.33) {
       const bonusPoints = Math.floor(Math.random() * 5) + 5;
@@ -2154,7 +2157,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     const existingItems = await this.getTradeItems(tradeId);
-    
+
     if (itemType === "coins") {
       if (quantity > user.coins) {
         throw new Error("Insufficient coins");
@@ -2195,7 +2198,7 @@ export class DatabaseStorage implements IStorage {
     } else if (itemId) {
       const userInventory = user.inventory as any[];
       const inventoryItem = userInventory.find((inv: any) => inv.itemId === itemId);
-      
+
       if (!inventoryItem || inventoryItem.quantity < quantity) {
         throw new Error("You do not have enough of this item");
       }
@@ -2409,7 +2412,7 @@ export class DatabaseStorage implements IStorage {
           const itemIndex = userInventory.findIndex(
             (inv: any) => inv.itemId === item.itemId
           );
-          
+
           userInventory[itemIndex].quantity -= item.quantity;
           if (userInventory[itemIndex].quantity <= 0) {
             userInventory.splice(itemIndex, 1);
@@ -2427,7 +2430,7 @@ export class DatabaseStorage implements IStorage {
 
           await this.updateUser(user1.id, { inventory: userInventory });
           await this.updateUser(user2.id, { inventory: user2Inventory });
-          
+
           user1 = await this.getUser(trade.userId1) || user1;
           user2 = await this.getUser(trade.userId2) || user2;
         }
@@ -2441,7 +2444,7 @@ export class DatabaseStorage implements IStorage {
           const itemIndex = userInventory.findIndex(
             (inv: any) => inv.itemId === item.itemId
           );
-          
+
           userInventory[itemIndex].quantity -= item.quantity;
           if (userInventory[itemIndex].quantity <= 0) {
             userInventory.splice(itemIndex, 1);
@@ -2459,7 +2462,7 @@ export class DatabaseStorage implements IStorage {
 
           await this.updateUser(user2.id, { inventory: userInventory });
           await this.updateUser(user1.id, { inventory: user1Inventory });
-          
+
           user1 = await this.getUser(trade.userId1) || user1;
           user2 = await this.getUser(trade.userId2) || user2;
         }
