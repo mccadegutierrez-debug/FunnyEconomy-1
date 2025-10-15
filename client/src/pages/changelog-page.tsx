@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import {
@@ -181,9 +182,14 @@ export default function ChangelogPage() {
                         <span>{getTotalChanges(entry)} changes</span>
                       </div>
                       {entry.author && (
-                        <Badge variant="outline" className="font-normal">
-                          👤 {entry.author}
-                        </Badge>
+                        <Link href={`/profile/${entry.author}`}>
+                          <Badge 
+                            variant="outline" 
+                            className="font-normal cursor-pointer hover:bg-primary/10 transition-colors"
+                          >
+                            👤 {entry.author}
+                          </Badge>
+                        </Link>
                       )}
                     </div>
                   </div>
