@@ -1063,7 +1063,7 @@ export class DatabaseStorage implements IStorage {
         name: "Lucky Charm",
         description: "Permanent +20% win rate boost",
         price: 5000,
-        type: "equipment" as const,
+        type: "powerup" as const,
         rarity: "epic" as const,
         effects: {
           passive: { winRateBoost: 0.2, coinsPerHour: 0 },
@@ -1076,7 +1076,7 @@ export class DatabaseStorage implements IStorage {
         name: "Four Leaf Clover",
         description: "Permanent +20% win rate boost",
         price: 3000,
-        type: "equipment" as const,
+        type: "powerup" as const,
         rarity: "rare" as const,
         effects: {
           passive: { winRateBoost: 0.2, coinsPerHour: 0 },
@@ -1745,13 +1745,13 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(petHunts)
       .where(eq(petHunts.petId, petId))
-      .orderBy(desc(petHunts.createdAt))
+      .orderBy(desc(petHunts.startedAt))
       .limit(1);
 
     if (recentHunts.length > 0) {
       const lastHunt = recentHunts[0];
       const now = Date.now();
-      const lastHuntTime = new Date(lastHunt.createdAt).getTime();
+      const lastHuntTime = new Date(lastHunt.startedAt).getTime();
       const cooldown = 60 * 60 * 1000; // 1 hour
 
       if (now - lastHuntTime < cooldown) {
@@ -1782,7 +1782,7 @@ export class DatabaseStorage implements IStorage {
     const [hunt] = await db
       .select()
       .from(petHunts)
-      .where(eq(huntId, hunt.id));
+      .where(eq(petHunts.id, huntId));
     if (!hunt) throw new Error("Hunt not found");
 
     if (new Date() < hunt.completesAt) {
@@ -1808,7 +1808,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(petHunts)
       .set({ isCompleted: true, rewards })
-      .where(eq(hunt.id, huntId));
+      .where(eq(petHunts.id, huntId));
 
     if (Math.random() < 0.33) {
       const bonusPoints = Math.floor(Math.random() * 5) + 5;
@@ -2135,6 +2135,87 @@ export class DatabaseStorage implements IStorage {
     itemId: string | null,
     quantity: number
   ): Promise<TradeItem> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const trade = await this.getTrade(tradeId);
+    if (!trade) {
+      throw new Error("Trade not found");
+    }
+
+    if (trade.userId1 !== userId && trade.userId2 !== userId) {
+      throw new Error("User is not part of this trade");
+    }
+
+    if (quantity <= 0) {
+      throw new Error("Quantity must be greater than 0");
+    }
+
+    const existingItems = await this.getTradeItems(tradeId);
+    
+    if (itemType === "coins") {
+      if (quantity > user.coins) {
+        throw new Error("Insufficient coins");
+      }
+
+      const totalCoinsInTrade = existingItems
+        .filter(item => item.userId === userId && item.itemType === "coins")
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+      if (totalCoinsInTrade + quantity > user.coins) {
+        throw new Error("Cannot add more coins than you have");
+      }
+
+      const duplicateCoinItem = existingItems.find(
+        item => item.userId === userId && item.itemType === "coins"
+      );
+      if (duplicateCoinItem) {
+        throw new Error("Coins already added to trade. Remove the existing coins entry first.");
+      }
+    } else if (itemType === "pet" && itemId) {
+      const pet = await this.getPet(itemId);
+      if (!pet) {
+        throw new Error("Pet not found");
+      }
+      if (pet.userId !== userId) {
+        throw new Error("You do not own this pet");
+      }
+      if (pet.isDead) {
+        throw new Error("Cannot trade a dead pet");
+      }
+
+      const alreadyInTrade = existingItems.find(
+        item => item.userId === userId && item.itemType === "pet" && item.itemId === itemId
+      );
+      if (alreadyInTrade) {
+        throw new Error("This pet is already in the trade");
+      }
+    } else if (itemId) {
+      const userInventory = user.inventory as any[];
+      const inventoryItem = userInventory.find((inv: any) => inv.itemId === itemId);
+      
+      if (!inventoryItem || inventoryItem.quantity < quantity) {
+        throw new Error("You do not have enough of this item");
+      }
+
+      const itemsInTradeCount = existingItems
+        .filter(item => item.userId === userId && item.itemId === itemId)
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+      if (itemsInTradeCount + quantity > inventoryItem.quantity) {
+        throw new Error("Cannot add more items than you own");
+      }
+
+      const duplicateItem = existingItems.find(
+        item => item.userId === userId && item.itemId === itemId
+      );
+      if (duplicateItem) {
+        throw new Error("This item is already in the trade. Remove it first to change quantity.");
+      }
+    }
+
     const [tradeItem] = await db
       .insert(tradeItems)
       .values({
@@ -2220,13 +2301,17 @@ export class DatabaseStorage implements IStorage {
       return { success: false, message: "Trade not found" };
     }
 
+    if (trade.status !== "active") {
+      return { success: false, message: "Trade is not active" };
+    }
+
     if (!trade.user1Ready || !trade.user2Ready) {
       return { success: false, message: "Both users must accept the trade" };
     }
 
     const items = await this.getTradeItems(tradeId);
-    const user1 = await this.getUser(trade.userId1);
-    const user2 = await this.getUser(trade.userId2);
+    let user1 = await this.getUser(trade.userId1);
+    let user2 = await this.getUser(trade.userId2);
 
     if (!user1 || !user2) {
       return { success: false, message: "User not found" };
@@ -2236,13 +2321,17 @@ export class DatabaseStorage implements IStorage {
     const user2Items = items.filter(item => item.userId === trade.userId2);
 
     try {
+      let user1CoinsChange = 0;
+      let user2CoinsChange = 0;
+
       for (const item of user1Items) {
         if (item.itemType === "coins") {
-          if (user1.coins < item.quantity) {
+          const totalUser1Coins = user1.coins + user1CoinsChange;
+          if (totalUser1Coins < item.quantity) {
             return { success: false, message: `${user1.username} has insufficient coins` };
           }
-          await this.updateUser(user1.id, { coins: user1.coins - item.quantity });
-          await this.updateUser(user2.id, { coins: user2.coins + item.quantity });
+          user1CoinsChange -= item.quantity;
+          user2CoinsChange += item.quantity;
 
           await this.createTransaction({
             user: user1.username,
@@ -2254,18 +2343,73 @@ export class DatabaseStorage implements IStorage {
         } else if (item.itemType === "pet" && item.itemId) {
           const pet = await this.getPet(item.itemId);
           if (!pet || pet.userId !== user1.id) {
-            return { success: false, message: `Invalid pet in trade` };
+            return { success: false, message: `${user1.username} doesn't own pet ${item.itemId}` };
           }
-          await this.updatePet(item.itemId, { userId: user2.id });
+          if (pet.isDead) {
+            return { success: false, message: `Cannot trade dead pet` };
+          }
         } else if (item.itemId) {
           const userInventory = user1.inventory as any[];
           const itemIndex = userInventory.findIndex(
             (inv: any) => inv.itemId === item.itemId && inv.quantity >= item.quantity
           );
           if (itemIndex === -1) {
-            return { success: false, message: `${user1.username} doesn't have the required items` };
+            return { success: false, message: `${user1.username} doesn't have enough of item ${item.itemId}` };
           }
+        }
+      }
 
+      for (const item of user2Items) {
+        if (item.itemType === "coins") {
+          const totalUser2Coins = user2.coins + user2CoinsChange;
+          if (totalUser2Coins < item.quantity) {
+            return { success: false, message: `${user2.username} has insufficient coins` };
+          }
+          user2CoinsChange -= item.quantity;
+          user1CoinsChange += item.quantity;
+
+          await this.createTransaction({
+            user: user2.username,
+            type: "transfer",
+            amount: -item.quantity,
+            targetUser: user1.username,
+            description: `Trade: Sent ${item.quantity} coins to ${user1.username}`,
+          });
+        } else if (item.itemType === "pet" && item.itemId) {
+          const pet = await this.getPet(item.itemId);
+          if (!pet || pet.userId !== user2.id) {
+            return { success: false, message: `${user2.username} doesn't own pet ${item.itemId}` };
+          }
+          if (pet.isDead) {
+            return { success: false, message: `Cannot trade dead pet` };
+          }
+        } else if (item.itemId) {
+          const userInventory = user2.inventory as any[];
+          const itemIndex = userInventory.findIndex(
+            (inv: any) => inv.itemId === item.itemId && inv.quantity >= item.quantity
+          );
+          if (itemIndex === -1) {
+            return { success: false, message: `${user2.username} doesn't have enough of item ${item.itemId}` };
+          }
+        }
+      }
+
+      if (user1.coins + user1CoinsChange < 0) {
+        return { success: false, message: `${user1.username} would have negative coins after trade` };
+      }
+      if (user2.coins + user2CoinsChange < 0) {
+        return { success: false, message: `${user2.username} would have negative coins after trade` };
+      }
+
+      for (const item of user1Items) {
+        if (item.itemType === "pet" && item.itemId) {
+          await this.updatePet(item.itemId, { userId: user2.id });
+        } else if (item.itemId) {
+          const userInventory = user1.inventory as any[];
+          const itemIndex = userInventory.findIndex(
+            (inv: any) => inv.itemId === item.itemId
+          );
+          
           userInventory[itemIndex].quantity -= item.quantity;
           if (userInventory[itemIndex].quantity <= 0) {
             userInventory.splice(itemIndex, 1);
@@ -2283,39 +2427,21 @@ export class DatabaseStorage implements IStorage {
 
           await this.updateUser(user1.id, { inventory: userInventory });
           await this.updateUser(user2.id, { inventory: user2Inventory });
+          
+          user1 = await this.getUser(trade.userId1) || user1;
+          user2 = await this.getUser(trade.userId2) || user2;
         }
       }
 
       for (const item of user2Items) {
-        if (item.itemType === "coins") {
-          if (user2.coins < item.quantity) {
-            return { success: false, message: `${user2.username} has insufficient coins` };
-          }
-          await this.updateUser(user2.id, { coins: user2.coins - item.quantity });
-          await this.updateUser(user1.id, { coins: user1.coins + item.quantity });
-
-          await this.createTransaction({
-            user: user2.username,
-            type: "transfer",
-            amount: -item.quantity,
-            targetUser: user1.username,
-            description: `Trade: Sent ${item.quantity} coins to ${user1.username}`,
-          });
-        } else if (item.itemType === "pet" && item.itemId) {
-          const pet = await this.getPet(item.itemId);
-          if (!pet || pet.userId !== user2.id) {
-            return { success: false, message: `Invalid pet in trade` };
-          }
+        if (item.itemType === "pet" && item.itemId) {
           await this.updatePet(item.itemId, { userId: user1.id });
         } else if (item.itemId) {
           const userInventory = user2.inventory as any[];
           const itemIndex = userInventory.findIndex(
-            (inv: any) => inv.itemId === item.itemId && inv.quantity >= item.quantity
+            (inv: any) => inv.itemId === item.itemId
           );
-          if (itemIndex === -1) {
-            return { success: false, message: `${user2.username} doesn't have the required items` };
-          }
-
+          
           userInventory[itemIndex].quantity -= item.quantity;
           if (userInventory[itemIndex].quantity <= 0) {
             userInventory.splice(itemIndex, 1);
@@ -2333,7 +2459,15 @@ export class DatabaseStorage implements IStorage {
 
           await this.updateUser(user2.id, { inventory: userInventory });
           await this.updateUser(user1.id, { inventory: user1Inventory });
+          
+          user1 = await this.getUser(trade.userId1) || user1;
+          user2 = await this.getUser(trade.userId2) || user2;
         }
+      }
+
+      if (user1CoinsChange !== 0 || user2CoinsChange !== 0) {
+        await this.updateUser(user1.id, { coins: user1.coins + user1CoinsChange });
+        await this.updateUser(user2.id, { coins: user2.coins + user2CoinsChange });
       }
 
       await db
