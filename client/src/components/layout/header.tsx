@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -22,6 +22,33 @@ export default function Header() {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Create floating Halloween decorations
+    const decorations = [
+      { type: 'ghost', top: '10%', left: '5%', delay: '0s' },
+      { type: 'pumpkin', top: '15%', right: '8%', delay: '2s' },
+      { type: 'ghost', top: '70%', left: '3%', delay: '4s' },
+      { type: 'pumpkin', top: '80%', right: '5%', delay: '1s' },
+      { type: 'ghost', top: '40%', right: '2%', delay: '3s' },
+    ];
+
+    decorations.forEach((decor) => {
+      const elem = document.createElement('div');
+      elem.className = `floating-halloween-decor floating-${decor.type}`;
+      elem.style.top = decor.top;
+      if (decor.left) elem.style.left = decor.left;
+      if (decor.right) elem.style.right = decor.right;
+      elem.style.animationDelay = decor.delay;
+      document.body.appendChild(elem);
+    });
+
+    // Clean up the decorations when the component unmounts
+    return () => {
+      document.querySelectorAll('.floating-halloween-decor').forEach(el => el.remove());
+    };
+  }, []);
+
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["/api/user/notifications"],

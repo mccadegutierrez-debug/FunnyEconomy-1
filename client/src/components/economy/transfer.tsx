@@ -222,7 +222,7 @@ export default function Transfer() {
                 !transferData.username ||
                 parseInt(transferData.amount) < 10
               }
-              className="w-full font-comic bg-accent text-accent-foreground hover:bg-accent/80"
+              className="w-full font-comic bg-accent text-accent-foreground hover:bg-accent/80 halloween-pumpkin"
               data-testid="button-send-transfer"
             >
               {transferMutation.isPending ? "Sending..." : "SEND COINS"}
@@ -279,7 +279,7 @@ export default function Transfer() {
                 !robData.username ||
                 parseInt(robData.amount) <= 0
               }
-              className="w-full font-comic bg-destructive text-destructive-foreground hover:bg-destructive/80"
+              className="w-full font-comic bg-destructive text-destructive-foreground hover:bg-destructive/80 halloween-pumpkin"
               data-testid="button-rob-user"
             >
               {robMutation.isPending ? "Robbing..." : "ROB USER! 💀"}

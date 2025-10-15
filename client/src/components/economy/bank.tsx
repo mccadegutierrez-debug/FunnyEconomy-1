@@ -169,7 +169,7 @@ export default function Bank() {
                 parseInt(amount) <= 0 ||
                 parseInt(amount) > (user.coins || 0)
               }
-              className="font-comic bg-primary text-primary-foreground hover:bg-primary/80"
+              className="font-comic bg-primary text-primary-foreground hover:bg-primary/80 halloween-pumpkin"
               data-testid="button-deposit"
             >
               <ArrowDownToLine className="w-4 h-4 mr-1" />
@@ -184,7 +184,7 @@ export default function Bank() {
                 parseInt(amount) <= 0 ||
                 parseInt(amount) > (user.bank || 0)
               }
-              className="font-comic bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              className="font-comic bg-secondary text-secondary-foreground hover:bg-secondary/80 halloween-pumpkin"
               data-testid="button-withdraw"
             >
               <ArrowUpFromLine className="w-4 h-4 mr-1" />

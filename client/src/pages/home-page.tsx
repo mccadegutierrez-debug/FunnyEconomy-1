@@ -506,7 +506,7 @@ export default function HomePage() {
               {/* Work Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-secondary to-primary hover:scale-105 transition-transform glow-secondary cursor-pointer">
+                  <Card className="bg-gradient-to-r from-secondary to-primary hover:scale-105 transition-transform glow-secondary cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <Briefcase className="mx-auto mb-2 text-2xl" />
                       <h3 className="font-comic font-bold text-secondary-foreground">
@@ -588,7 +588,7 @@ export default function HomePage() {
                 </DialogContent>
               </Dialog>
 
-              <Card className="bg-gradient-to-r from-accent to-secondary hover:scale-105 transition-transform glow-accent">
+              <Card className="bg-gradient-to-r from-accent to-secondary hover:scale-105 transition-transform glow-accent halloween-pumpkin">
                 <CardContent className="p-4 text-center">
                   <span className="text-2xl mb-2 block">🥺</span>
                   <h3 className="font-comic font-bold text-accent-foreground">
@@ -609,7 +609,7 @@ export default function HomePage() {
               {/* Search Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-primary to-secondary hover:scale-105 transition-transform cursor-pointer">
+                  <Card className="bg-gradient-to-r from-primary to-secondary hover:scale-105 transition-transform cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <Search className="mx-auto mb-2 text-2xl" />
                       <h3 className="font-comic font-bold text-primary-foreground">
@@ -697,7 +697,7 @@ export default function HomePage() {
               {/* Crime Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-red-500 to-red-700 hover:scale-105 transition-transform glow-red cursor-pointer">
+                  <Card className="bg-gradient-to-r from-red-500 to-red-700 hover:scale-105 transition-transform glow-red cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <Skull className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">Crime</h3>
@@ -778,7 +778,7 @@ export default function HomePage() {
               {/* Hunt Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-green-600 to-green-800 hover:scale-105 transition-transform glow-green cursor-pointer">
+                  <Card className="bg-gradient-to-r from-green-600 to-green-800 hover:scale-105 transition-transform glow-green cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <Target className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">Hunt</h3>
@@ -854,7 +854,7 @@ export default function HomePage() {
               {/* Dig Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:scale-105 transition-transform glow-yellow cursor-pointer">
+                  <Card className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:scale-105 transition-transform glow-yellow cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <Pickaxe className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">Dig</h3>
@@ -932,7 +932,7 @@ export default function HomePage() {
               {/* Post Meme Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-purple-600 to-pink-600 hover:scale-105 transition-transform glow-purple cursor-pointer">
+                  <Card className="bg-gradient-to-r from-purple-600 to-pink-600 hover:scale-105 transition-transform glow-purple cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <Smartphone className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">
@@ -1018,7 +1018,7 @@ export default function HomePage() {
               {/* Stream Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-105 transition-transform glow-blue cursor-pointer">
+                  <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-105 transition-transform glow-blue cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <TrendingUp className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">
@@ -1094,7 +1094,7 @@ export default function HomePage() {
               {/* Fishing Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-blue-600 to-blue-700 hover:scale-105 transition-transform glow-primary cursor-pointer">
+                  <Card className="bg-gradient-to-r from-blue-600 to-blue-700 hover:scale-105 transition-transform glow-primary cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <Fish className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">
@@ -1171,7 +1171,7 @@ export default function HomePage() {
                 </DialogContent>
               </Dialog>
 
-              <Card className="bg-gradient-to-r from-orange-500 to-red-500 hover:scale-105 transition-transform glow-orange">
+              <Card className="bg-gradient-to-r from-orange-500 to-red-500 hover:scale-105 transition-transform glow-orange halloween-pumpkin">
                 <CardContent className="p-4 text-center">
                   <Ticket className="mx-auto mb-2 text-2xl text-white" />
                   <h3 className="font-comic font-bold text-white">Scratch</h3>
@@ -1191,7 +1191,7 @@ export default function HomePage() {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Card className="bg-gradient-to-r from-blue-500 to-blue-600 hover:scale-105 transition-transform glow-primary cursor-pointer">
+                  <Card className="bg-gradient-to-r from-blue-500 to-blue-600 hover:scale-105 transition-transform glow-primary cursor-pointer halloween-pumpkin">
                     <CardContent className="p-4 text-center">
                       <TrendingUp className="mx-auto mb-2 text-2xl text-white" />
                       <h3 className="font-comic font-bold text-white">

@@ -18,6 +18,30 @@ export default function NotFound() {
     setCurrentImage(randomImage);
   };
 
+  useState(() => {
+    // Add spooky decorations to 404 page
+    const decorations = [
+      { type: 'ghost', top: '5%', left: '10%', delay: '0s' },
+      { type: 'pumpkin', top: '10%', right: '12%', delay: '1.5s' },
+      { type: 'ghost', top: '85%', left: '8%', delay: '3s' },
+      { type: 'pumpkin', top: '90%', right: '10%', delay: '2.5s' },
+    ];
+
+    decorations.forEach((decor) => {
+      const elem = document.createElement('div');
+      elem.className = `floating-halloween-decor floating-${decor.type}`;
+      elem.style.top = decor.top;
+      if (decor.left) elem.style.left = decor.left;
+      if (decor.right) elem.style.right = decor.right;
+      elem.style.animationDelay = decor.delay;
+      document.body.appendChild(elem);
+    });
+
+    return () => {
+      document.querySelectorAll('.floating-halloween-decor').forEach(el => el.remove());
+    };
+  });
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0f14] relative overflow-hidden">
       {/* Subtle gradient overlay */}

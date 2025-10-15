@@ -195,7 +195,7 @@ export default function Slots() {
                 !user ||
                 user.coins < bet
               }
-              className="w-full font-comic text-lg bg-secondary hover:bg-secondary/80 glow-secondary"
+              className="w-full font-comic text-lg bg-secondary hover:bg-secondary/80 glow-secondary halloween-pumpkin"
               data-testid="button-spin-slots"
             >
               {isSpinning

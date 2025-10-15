@@ -42,7 +42,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    
+
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       // Create ripple effect
       const button = e.currentTarget;
@@ -51,24 +51,25 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       const size = Math.max(rect.width, rect.height);
       const x = e.clientX - rect.left - size / 2;
       const y = e.clientY - rect.top - size / 2;
-      
+
       ripple.style.width = ripple.style.height = `${size}px`;
       ripple.style.left = `${x}px`;
       ripple.style.top = `${y}px`;
       ripple.classList.add("ripple-effect");
-      
+
       button.appendChild(ripple);
-      
+
       setTimeout(() => ripple.remove(), 600);
-      
+
       if (props.onClick) {
         props.onClick(e);
       }
     };
-    
+
+    const halloweenClass = variant === "default" || variant === "secondary" ? "halloween-pumpkin" : "";
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }), "relative overflow-hidden active:scale-95 transition-all duration-200")}
+        className={cn(buttonVariants({ variant, size, className }), halloweenClass, "relative overflow-hidden active:scale-95 transition-all duration-200")}
         ref={ref}
         {...props}
         onClick={asChild ? props.onClick : handleClick}
