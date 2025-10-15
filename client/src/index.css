@@ -9,19 +9,19 @@
   --card-foreground: hsl(0, 0%, 95%);
   --popover: hsl(215, 25%, 12%);
   --popover-foreground: hsl(0, 0%, 95%);
-  --primary: hsl(25, 95%, 55%);
+  --primary: hsl(25, 95%, 55%); /* hsl(217, 91%, 60%); */
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(25, 95%, 65%);
+  --secondary: hsl(25, 95%, 65%); /* hsl(217, 91%, 70%); */
   --secondary-foreground: hsl(0, 0%, 4%);
   --muted: hsl(215, 20%, 15%);
   --muted-foreground: hsl(215, 15%, 65%);
-  --accent: hsl(25, 95%, 55%);
+  --accent: hsl(25, 95%, 55%); /* hsl(217, 91%, 60%); */
   --accent-foreground: hsl(0, 0%, 4%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 95%);
   --border: hsl(215, 20%, 20%);
   --input: hsl(215, 20%, 18%);
-  --ring: hsl(25, 95%, 55%);
+  --ring: hsl(25, 95%, 55%); /* hsl(217, 91%, 60%); */
   --radius: 0.75rem;
   --font-sans: "Inter", system-ui, sans-serif;
   --font-impact: "Impact", "Arial Black", sans-serif;
@@ -35,19 +35,19 @@
   --card-foreground: hsl(0, 0%, 95%);
   --popover: hsl(215, 25%, 12%);
   --popover-foreground: hsl(0, 0%, 95%);
-  --primary: hsl(25, 95%, 55%);
+  --primary: hsl(25, 95%, 55%); /* hsl(217, 91%, 60%); */
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(25, 95%, 65%);
+  --secondary: hsl(25, 95%, 65%); /* hsl(217, 91%, 70%); */
   --secondary-foreground: hsl(0, 0%, 4%);
   --muted: hsl(215, 20%, 15%);
   --muted-foreground: hsl(215, 15%, 65%);
-  --accent: hsl(25, 95%, 55%);
+  --accent: hsl(25, 95%, 55%);   /* hsl(217, 91%, 60%); */
   --accent-foreground: hsl(0, 0%, 4%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 95%);
   --border: hsl(215, 20%, 20%);
   --input: hsl(215, 20%, 18%);
-  --ring: hsl(25, 95%, 55%);
+  --ring: hsl(25, 95%, 55%); /* hsl(217, 91%, 60%); */
 }
 
 @layer base {
@@ -96,9 +96,9 @@
   .dm-title {
     background: linear-gradient(
       90deg,
-      hsl(25, 95%, 65%),
-      hsl(25, 95%, 55%),
-      hsl(35, 90%, 60%)
+      hsl(25, 95%, 65%), /* hsl(217, 91%, 70%), */
+      hsl(25, 95%, 55%), /* hsl(217, 91%, 60%), */
+      hsl(35, 90%, 60%) /* hsl(317, 90%, 60%) */
     );
     -webkit-background-clip: text;
     background-clip: text;

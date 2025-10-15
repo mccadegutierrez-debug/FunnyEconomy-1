@@ -99,7 +99,7 @@ export default function Bank() {
   if (!user) return null;
 
   const bankUsagePercent =
-    ((user.bank || 0) / (user.bankCapacity || 10000)) * 100;
+    ((user.bank || 0) / (user.bankCapacity || 100000)) * 100;
 
   return (
     <Card className="border-primary/20" data-testid="bank-card">
@@ -126,7 +126,7 @@ export default function Bank() {
             data-testid="bank-capacity"
           >
             <div className="text-secondary font-bold text-lg">
-              💰 {(user.bankCapacity || 10000).toLocaleString()}
+              💰 {(user.bankCapacity || 100000).toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground">Capacity</div>
           </div>
@@ -218,11 +218,11 @@ export default function Bank() {
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => setAmount("10000")}
+              onClick={() => setAmount("100000")}
               className="text-xs"
-              data-testid="button-quick-10000"
+              data-testid="button-quick-100000"
             >
-              10K
+              100K
             </Button>
             <Button
               type="button"
