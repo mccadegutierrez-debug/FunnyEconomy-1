@@ -2,7 +2,7 @@
 
 ## Overview
 
-Funny Economy is a full-stack web application that emulates the core functionality of the Dank Memer Discord bot, adapted for a browser-based experience. This is a meme-themed economy game where users can earn coins, play games, manage inventories, and interact in a virtual economy system. The application features a dark-themed, meme-aesthetic UI with comprehensive gaming and social features.
+Funny Economy is a full-stack web application that emulates the core functionality of the Dank Memer Discord bot, adapted for a browser-based experience. This is a meme-themed economy game where users can earn coins, play games, manage inventories, and interact in a virtual economy system. The application features a Halloween-themed UI with orange color scheme and spooky ghost hover effects on interactive elements.
 
 ## User Preferences
 
@@ -16,7 +16,10 @@ Preferred communication style: Simple, everyday language.
 - **Routing**: Wouter for client-side routing with protected routes
 - **State Management**: TanStack Query (React Query) for server state management and caching
 - **UI Components**: Custom component library built on Radix UI primitives with shadcn/ui styling
-- **Styling**: Tailwind CSS with custom CSS variables for theming, featuring a dark meme aesthetic
+- **Styling**: Tailwind CSS with custom CSS variables for theming, featuring a Halloween-themed design:
+  - Orange primary color scheme (hsl(25, 95%, 55%))
+  - Spooky ghost hover effects with floating and fading animations
+  - Dark background with Halloween-appropriate accent colors
 - **Authentication**: Context-based auth provider with JWT token management
 
 ### Backend Architecture
@@ -53,6 +56,14 @@ Preferred communication style: Simple, everyday language.
 - **Pet System**: Pet actions (hunt, search, dig, fish) with 1-hour cooldowns between actions
 - **Item Effects**: Luck Potion provides +17.5% win rate boost for 1 hour
 - **Transaction Logging**: Comprehensive transaction history with type categorization
+- **Trading System**: Secure player-to-player trading with comprehensive validation:
+  - Real-time WebSocket notifications for trade updates
+  - Item ownership verification before adding to trades
+  - Quantity validation to prevent over-trading
+  - Duplicate item/pet/coins prevention
+  - Dead pet trading prevention
+  - Atomic trade execution with pre-validation
+  - Coin balance tracking to prevent negative balances
 
 ### API Architecture
 
