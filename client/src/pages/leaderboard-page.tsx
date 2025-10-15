@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import MaintenanceScreen from "@/components/maintenance-screen";
@@ -220,16 +221,18 @@ export default function LeaderboardPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div
-                                className={`font-bold ${player.username === user?.username ? "text-primary" : "text-foreground"}`}
-                              >
-                                {player.username}
-                                {player.username === user?.username && (
-                                  <Badge variant="outline" className="ml-2">
-                                    YOU
-                                  </Badge>
-                                )}
-                              </div>
+                              <Link href={`/profile/${player.username}`}>
+                                <div
+                                  className={`font-bold cursor-pointer hover:underline ${player.username === user?.username ? "text-primary" : "text-foreground"}`}
+                                >
+                                  {player.username}
+                                  {player.username === user?.username && (
+                                    <Badge variant="outline" className="ml-2">
+                                      YOU
+                                    </Badge>
+                                  )}
+                                </div>
+                              </Link>
                               <div className="text-sm text-muted-foreground">
                                 Level {player.level}
                               </div>
@@ -271,16 +274,18 @@ export default function LeaderboardPage() {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div
-                              className={`font-bold ${player.username === user?.username ? "text-primary" : "text-foreground"}`}
-                            >
-                              {player.username}
-                              {player.username === user?.username && (
-                                <Badge variant="outline" className="ml-2">
-                                  YOU
-                                </Badge>
-                              )}
-                            </div>
+                            <Link href={`/profile/${player.username}`}>
+                              <div
+                                className={`font-bold cursor-pointer hover:underline ${player.username === user?.username ? "text-primary" : "text-foreground"}`}
+                              >
+                                {player.username}
+                                {player.username === user?.username && (
+                                  <Badge variant="outline" className="ml-2">
+                                    YOU
+                                  </Badge>
+                                )}
+                              </div>
+                            </Link>
                             <div className="text-sm text-muted-foreground">
                               Level {player.level}
                             </div>

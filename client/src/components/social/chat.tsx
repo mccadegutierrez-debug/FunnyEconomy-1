@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useWebSocket } from "@/hooks/use-websocket";
+import { Link } from "wouter";
 import {
   Card,
   CardContent,
@@ -160,26 +161,28 @@ export default function Chat() {
                 }`}
               >
                 <div className="flex items-center space-x-2 mb-1">
-                  <span
-                    className={`font-bold text-sm ${
-                      msg.username === user?.username
-                        ? "text-primary"
-                        : [
-                            "text-secondary",
-                            "text-accent",
-                            "text-green-500",
-                            "text-blue-500",
-                            "text-purple-500",
-                          ][(msg.username?.charCodeAt(0) || 0) % 5]
-                    }`}
-                  >
-                    {msg.username}
-                    {msg.username === user?.username && (
-                      <Badge variant="outline" className="ml-1 text-xs">
-                        YOU
-                      </Badge>
-                    )}
-                  </span>
+                  <Link href={`/profile/${msg.username}`}>
+                    <span
+                      className={`font-bold text-sm cursor-pointer hover:underline ${
+                        msg.username === user?.username
+                          ? "text-primary"
+                          : [
+                              "text-secondary",
+                              "text-accent",
+                              "text-green-500",
+                              "text-blue-500",
+                              "text-purple-500",
+                            ][(msg.username?.charCodeAt(0) || 0) % 5]
+                      }`}
+                    >
+                      {msg.username}
+                      {msg.username === user?.username && (
+                        <Badge variant="outline" className="ml-1 text-xs">
+                          YOU
+                        </Badge>
+                      )}
+                    </span>
+                  </Link>
                   <span className="text-xs text-muted-foreground">
                     {formatTime(msg.timestamp)}
                   </span>
