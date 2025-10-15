@@ -81,14 +81,10 @@ export default function HomePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showShutdownNotice, setShowShutdownNotice] = useState(false);
 
-  // Check if shutdown notice has been shown this session
+  // Show shutdown notice every time user logs in
   useEffect(() => {
     if (user) {
-      const hasSeenNotice = sessionStorage.getItem("shutdown_notice_shown");
-      if (!hasSeenNotice) {
-        setShowShutdownNotice(true);
-        sessionStorage.setItem("shutdown_notice_shown", "true");
-      }
+      setShowShutdownNotice(true);
     }
   }, [user]);
 
@@ -1421,8 +1417,8 @@ export default function HomePage() {
       <Dialog open={showShutdownNotice} onOpenChange={setShowShutdownNotice}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-2xl text-destructive">
-              <span className="text-3xl">❗</span>
+            <DialogTitle className="flex items-center gap-3 text-2xl text-destructive">
+              <img src="/pepes/sad.png" alt="Sad Pepe" className="w-12 h-12" />
               MAJOR SHUTDOWN NOTICE
             </DialogTitle>
             <DialogDescription className="text-base pt-4">
