@@ -16,6 +16,7 @@ import AdminPage from "@/pages/admin-page";
 import ProfilePage from "@/pages/profile-page";
 import PublicProfilePage from "@/pages/public-profile-page";
 import FreemiumPage from "@/pages/freemium-page";
+import ChangelogPage from "@/pages/changelog-page";
 import NotFound from "@/pages/not-found";
 import BanPage from "@/pages/ban-page";
 import { useTradeWebSocket } from "@/hooks/use-trade-websocket";
@@ -103,6 +104,7 @@ function Router() {
         <ProtectedRoute path="/inventory" component={InventoryPage} />
         <ProtectedRoute path="/pets" component={PetsPage} />
         <ProtectedRoute path="/leaderboard" component={LeaderboardPage} />
+        <Route path="/changelog" component={ChangelogPage} />
         <Route path="/profile/:username" component={PublicProfilePage} />
         <ProtectedRoute path="/profile" component={ProfilePage} />
         <ProtectedRoute path="/admin" component={AdminPage} />

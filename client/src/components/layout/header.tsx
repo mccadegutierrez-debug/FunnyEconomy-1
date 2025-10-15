@@ -96,6 +96,7 @@ export default function Header() {
       active: location === "/inventory",
     },
     { href: "/pets", label: "Pets", active: location === "/pets" },
+    { href: "/changelog", label: "Changelog", active: location === "/changelog" },
   ];
 
   return (
