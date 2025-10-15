@@ -18,7 +18,7 @@ export interface PetTypeData extends Omit<InsertPetType, "id"> {
 }
 
 export const STATIC_PET_TYPES: PetTypeData[] = [
-  {
+/*  {
     petId: "karen_lol",
     name: "Karen",
     description: "O.M.G JUST SYBAU",
@@ -43,6 +43,34 @@ export const STATIC_PET_TYPES: PetTypeData[] = [
       "phoenix",
     ],
   },
+  */
+
+{
+    petId: "karen_halloween",
+    name: "Haunted Karen",
+    description: "Now I'm Just Concerned About Tis Karen...",
+    emoji: "👽",
+    iconPath: "halloweenkaren.png",
+    rarity: "epic",
+    hungerDecay: 8,
+    hygieneDecay: 5,
+    energyDecay: 8,
+    funDecay: 1,
+    adoptionCost: 175000,
+    isCustom: true,
+    friendlyTo: [],
+    hostileTo: [
+      "dog",
+      "cat",
+      "snake",
+      "dragon",
+      "unicorn",
+      "cupid",
+      "jack-frost",
+      "phoenix",
+    ],
+  },
+
   
   {
     petId: "alien",
