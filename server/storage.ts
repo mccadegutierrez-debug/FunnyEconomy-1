@@ -2328,6 +2328,43 @@ export class DatabaseStorage implements IStorage {
       return { success: false, message: "User not found" };
     }
 
+    // Anti-dupe validation
+    const { AntiDupeService } = await import("./services/antiDupeService");
+    
+    const user1Items = items.filter(item => item.userId === trade.userId1);
+    const user2Items = items.filter(item => item.userId === trade.userId2);
+
+    const user1Validation = await AntiDupeService.validateTrade(user1, user1Items);
+    const user2Validation = await AntiDupeService.validateTrade(user2, user2Items);
+
+    if (user1Validation.isDuplicate) {
+      if (user1Validation.suspiciousActivity) {
+        await AntiDupeService.flagSuspiciousUser(
+          user1.id,
+          user1.username,
+          `Trade validation failed: ${user1Validation.reason}`
+        );
+      }
+      await this.cancelTrade(tradeId);
+      return { success: false, message: user1Validation.reason || "Trade validation failed" };
+    }
+
+    if (user2Validation.isDuplicate) {
+      if (user2Validation.suspiciousActivity) {
+        await AntiDupeService.flagSuspiciousUser(
+          user2.id,
+          user2.username,
+          `Trade validation failed: ${user2Validation.reason}`
+        );
+      }
+      await this.cancelTrade(tradeId);
+      return { success: false, message: user2Validation.reason || "Trade validation failed" };
+    }
+
+    // Take snapshots before trade
+    await AntiDupeService.snapshotInventory(user1.id, user1, `trade-${tradeId}`);
+    await AntiDupeService.snapshotInventory(user2.id, user2, `trade-${tradeId}`);
+
     const user1Items = items.filter(item => item.userId === trade.userId1);
     const user2Items = items.filter(item => item.userId === trade.userId2);
 
@@ -2479,6 +2516,21 @@ export class DatabaseStorage implements IStorage {
       if (user1CoinsChange !== 0 || user2CoinsChange !== 0) {
         await this.updateUser(user1.id, { coins: user1.coins + user1CoinsChange });
         await this.updateUser(user2.id, { coins: user2.coins + user2CoinsChange });
+      }
+
+      // Normalize inventories to prevent duplicates
+      const { AntiDupeService } = await import("./services/antiDupeService");
+      const user1Final = await this.getUser(trade.userId1);
+      const user2Final = await this.getUser(trade.userId2);
+
+      if (user1Final) {
+        const normalizedUser1Inv = AntiDupeService.normalizeInventory(user1Final.inventory as any[]);
+        await this.updateUser(user1Final.id, { inventory: normalizedUser1Inv });
+      }
+
+      if (user2Final) {
+        const normalizedUser2Inv = AntiDupeService.normalizeInventory(user2Final.inventory as any[]);
+        await this.updateUser(user2Final.id, { inventory: normalizedUser2Inv });
       }
 
       await db
