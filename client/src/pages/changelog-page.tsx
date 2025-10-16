@@ -27,6 +27,34 @@ interface ChangelogEntry {
 const mockChangelogs: ChangelogEntry[] = [
   {
     id: "1",
+    version: "2025.10.16",
+    date: "October 16, 2025",
+    changes: [
+      {
+        category: "Major Update",
+        items: [
+          "Introduced friends"
+        ],
+      },
+      {
+        category: "Improvements",
+        items: [
+          "Improved trading",
+          "Better trading responsivness",
+        ],
+      },
+      {
+        category: "Bug Fixes",
+        items: [
+          "Fixed ALL duplication glitchs",
+        ],
+      },
+    ],
+    author: "savage",
+  },
+  
+  {
+    id: "2",
     version: "2025.10.15",
     date: "October 15, 2025",
     changes: [
@@ -47,7 +75,6 @@ const mockChangelogs: ChangelogEntry[] = [
       {
         category: "Bug Fixes",
         items: [
-          "Fixed inventory duplication glitch",
           "Resolved chat message deletion issues",
           "Corrected XP calculation errors",
         ],
@@ -56,7 +83,7 @@ const mockChangelogs: ChangelogEntry[] = [
     author: "savage",
   },
   {
-    id: "2",
+    id: "3",
     version: "2025.09.12",
     date: "December 20, 2024",
     changes: [
@@ -80,7 +107,7 @@ const mockChangelogs: ChangelogEntry[] = [
     author: "savage",
   },
   {
-    id: "3",
+    id: "4",
     version: "2025.9.11",
     date: "Septempber 11, 2025",
     changes: [
