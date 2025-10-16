@@ -44,7 +44,7 @@ export class FreemiumService {
     const rewards = [];
     const usedRewardTypes = new Set<string>();
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) { // Generate 4 rewards instead of 3
       let reward = await this.generateSingleReward(lootTable, usedRewardTypes);
       rewards.push(reward);
     }
@@ -88,16 +88,19 @@ export class FreemiumService {
         coinData.min +
         Math.floor(Math.random() * (coinData.max - coinData.min + 1));
 
+      // BUFF coin rewards by 2x
+      const buffedAmount = amount * 2;
+
       result = {
         type: "coins",
-        amount,
+        amount: buffedAmount,
         rarity: "coins",
         icon: "💰",
-        name: `${amount} Coins`,
-        description: `Receive ${amount} coins`,
+        name: `${buffedAmount} Coins`,
+        description: `Receive ${buffedAmount} coins`,
       };
     } else {
-      // Item reward
+      // Item reward with BUFFED quantities
       const rarityItems = items.filter(
         (item) => item.rarity === selectedReward,
       );
@@ -204,21 +207,22 @@ export class FreemiumService {
     const items = await storage.getAllItems();
     const nonLootboxItems = items.filter((item) => item.type !== "lootbox");
 
-    const numItems = 2 + Math.floor(Math.random() * 4); // 2-5 items
+    const numItems = 4 + Math.floor(Math.random() * 5); // 4-8 items (BUFFED)
     const lootboxContents = [];
 
     // Ensure inventory is an array
     const inventory = Array.isArray(user.inventory) ? user.inventory : [];
 
     for (let i = 0; i < numItems; i++) {
-      // Weighted selection favoring common items
+      // BUFFED weighted selection - much better chances for rare items
       const random = Math.random();
       let selectedRarity = "common";
 
-      if (random < 0.05) selectedRarity = "legendary";
-      else if (random < 0.15) selectedRarity = "epic";
-      else if (random < 0.3) selectedRarity = "rare";
-      else if (random < 0.5) selectedRarity = "uncommon";
+      if (random < 0.12) selectedRarity = "legendary"; // 12% (was 5%)
+      else if (random < 0.30) selectedRarity = "epic"; // 18% (was 10%)
+      else if (random < 0.55) selectedRarity = "rare"; // 25% (was 15%)
+      else if (random < 0.75) selectedRarity = "uncommon"; // 20% (was 20%)
+      // 25% common (was 50%)
 
       const rarityItems = nonLootboxItems.filter(
         (item) => item.rarity === selectedRarity,
@@ -228,24 +232,30 @@ export class FreemiumService {
       const selectedItem =
         rarityItems[Math.floor(Math.random() * rarityItems.length)];
 
+      // BUFFED quantities based on rarity
+      const quantity = selectedRarity === "legendary" ? 3 : 
+                      selectedRarity === "epic" ? 4 : 
+                      selectedRarity === "rare" ? 5 : 
+                      selectedRarity === "uncommon" ? 6 : 8;
+
       // Add to user inventory
       const existingItem = inventory.find(
         (item: any) => item.itemId === selectedItem.id,
       );
       if (existingItem) {
-        existingItem.quantity += 1;
+        existingItem.quantity += quantity;
       } else {
         inventory.push({
           itemId: selectedItem.id,
-          quantity: 1,
+          quantity,
           equipped: false,
         });
       }
 
-      lootboxContents.push(selectedItem);
+      lootboxContents.push({ ...selectedItem, quantity });
     }
 
-    return lootboxContents;
+    return lootboxContentsnts;
   }
 
   // Get time until next claim

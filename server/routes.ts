@@ -675,36 +675,107 @@ export function registerRoutes(app: Express): Server {
       }
 
       if (itemDetails.type === "lootbox") {
-        // Open lootbox
-        const rewards = [
-          { name: "Common Coin Pile", coins: 100, rarity: "common" },
-          { name: "Rare Gem", coins: 500, rarity: "rare" },
-          { name: "Epic Trophy", coins: 1000, rarity: "epic" },
-          { name: "Legendary Treasure", coins: 2500, rarity: "legendary" },
-        ];
+        // Open lootbox with BUFFED rewards
+        const allItems = await storage.getAllItems();
+        const nonLootboxItems = allItems.filter((item) => item.type !== "lootbox");
+        
+        // Determine lootbox tier and rewards
+        let numItems = 3; // Minimum items
+        let coinBonus = 0;
+        let rarityWeights: Record<string, number> = {
+          common: 40,
+          uncommon: 30,
+          rare: 20,
+          epic: 8,
+          legendary: 2,
+        };
 
-        const random = Math.random();
-        let reward;
-        if (random < 0.5) reward = rewards[0];
-        else if (random < 0.8) reward = rewards[1];
-        else if (random < 0.95) reward = rewards[2];
-        else reward = rewards[3];
+        // Adjust based on lootbox rarity
+        if (itemDetails.rarity === "legendary") {
+          numItems = 7;
+          coinBonus = 5000;
+          rarityWeights = { common: 10, uncommon: 20, rare: 30, epic: 30, legendary: 10 };
+        } else if (itemDetails.rarity === "epic") {
+          numItems = 5;
+          coinBonus = 2000;
+          rarityWeights = { common: 20, uncommon: 25, rare: 30, epic: 20, legendary: 5 };
+        } else if (itemDetails.rarity === "rare") {
+          numItems = 4;
+          coinBonus = 800;
+          rarityWeights = { common: 30, uncommon: 30, rare: 25, epic: 12, legendary: 3 };
+        } else if (itemDetails.rarity === "uncommon") {
+          numItems = 3;
+          coinBonus = 400;
+          rarityWeights = { common: 35, uncommon: 35, rare: 20, epic: 8, legendary: 2 };
+        } else {
+          numItems = 3;
+          coinBonus = 200;
+          rarityWeights = { common: 40, uncommon: 30, rare: 20, epic: 8, legendary: 2 };
+        }
+
+        const lootedItems: any[] = [];
+        const inventory = Array.isArray(user.inventory) ? [...user.inventory] : [];
+
+        // Generate items based on weighted rarity
+        for (let i = 0; i < numItems; i++) {
+          const totalWeight = Object.values(rarityWeights).reduce((sum, w) => sum + w, 0);
+          let random = Math.random() * totalWeight;
+          let selectedRarity = "common";
+
+          for (const [rarity, weight] of Object.entries(rarityWeights)) {
+            random -= weight;
+            if (random <= 0) {
+              selectedRarity = rarity;
+              break;
+            }
+          }
+
+          const rarityItems = nonLootboxItems.filter((item) => item.rarity === selectedRarity);
+          if (rarityItems.length === 0) continue;
+
+          const selectedItem = rarityItems[Math.floor(Math.random() * rarityItems.length)];
+          const quantity = selectedRarity === "legendary" ? 2 : selectedRarity === "epic" ? 3 : selectedRarity === "rare" ? 4 : 5;
+
+          // Add to inventory
+          const existingItem = inventory.find((item: any) => item.itemId === selectedItem.id);
+          if (existingItem) {
+            existingItem.quantity += quantity;
+          } else {
+            inventory.push({ itemId: selectedItem.id, quantity, equipped: false });
+          }
+
+          lootedItems.push({ ...selectedItem, quantity });
+        }
+
+        // Remove the lootbox and add items + coins
+        const updatedInventory = inventory
+          .map((item: any) =>
+            item.itemId === itemId ? { ...item, quantity: item.quantity - 1 } : item
+          )
+          .filter((item: any) => item.quantity > 0);
 
         await storage.updateUser(user.id, {
-          coins: user.coins + reward.coins,
-          inventory: user.inventory
-            .map((item: any) =>
-              item.itemId === itemId
-                ? { ...item, quantity: item.quantity - 1 }
-                : item,
-            )
-            .filter((item: any) => item.quantity > 0),
+          coins: user.coins + coinBonus,
+          inventory: updatedInventory,
+        });
+
+        await storage.createTransaction({
+          user: user.username,
+          type: "earn",
+          amount: coinBonus,
+          description: `Opened ${itemDetails.name} - Received ${numItems} items + ${coinBonus} coins`,
+          targetUser: null,
+          timestamp: new Date(),
         });
 
         return res.json({
           success: true,
-          message: `You opened the ${itemDetails.name} and got ${reward.name}! +${reward.coins} coins!`,
-          reward: reward,
+          message: `🎊 You opened the ${itemDetails.name}! Got ${numItems} items + ${coinBonus} coins!`,
+          reward: {
+            items: lootedItems,
+            coins: coinBonus,
+            totalItems: numItems,
+          },
         });
       } else if (itemDetails.type === "consumable") {
         // Use consumable
