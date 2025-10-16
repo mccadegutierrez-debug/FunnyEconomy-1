@@ -27,7 +27,7 @@ interface ChangelogEntry {
 const mockChangelogs: ChangelogEntry[] = [
   {
     id: "1",
-    version: "2025.10.16",
+    version: "THE GREAT SHUTDOWN",
     date: "October 16, 2025",
     changes: [
       {
@@ -46,11 +46,21 @@ const mockChangelogs: ChangelogEntry[] = [
       {
         category: "Bug Fixes",
         items: [
-          "Fixed ALL duplication glitchs",
+          "Fixed ALL duplication glitchs, using antiDupingSevice.ts",
         ],
       },
+
+
+      {
+        category: "Report",
+        items: [
+          "There was a major error in all the economy services which was solved by the authors of this report. The problem was that when a function would happen and a player would refresh and immediately do the function again the function would be duplicated millions of times make a 0% fail rate which allows users to do anything with a guaranteed success rate meaing you can rob, gamble, hunt, beg etc. and always win. These problems have been fixed by a highly advanced anti duplication, that can trace, detect, and punish any duplicates and players all of which will be deleted and banned.",
+        ],
+      },
+
+      
     ],
-    author: "savage",
+    author: "savage, Ahexy, yr35, Aid",
   },
   
   {
