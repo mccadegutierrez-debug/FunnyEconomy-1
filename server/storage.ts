@@ -2365,9 +2365,6 @@ export class DatabaseStorage implements IStorage {
     await AntiDupeService.snapshotInventory(user1.id, user1, `trade-${tradeId}`);
     await AntiDupeService.snapshotInventory(user2.id, user2, `trade-${tradeId}`);
 
-    const user1Items = items.filter(item => item.userId === trade.userId1);
-    const user2Items = items.filter(item => item.userId === trade.userId2);
-
     try {
       let user1CoinsChange = 0;
       let user2CoinsChange = 0;
