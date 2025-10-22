@@ -499,7 +499,7 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ error: "Item not found" });
       }
 
-      if (item.stock < quantity) {
+      if (item.stock !== null && item.stock < quantity) {
         return res.status(400).json({ error: "Insufficient stock" });
       }
 
@@ -510,37 +510,18 @@ export function registerRoutes(app: Express): Server {
 
       const totalCost = item.currentPrice! * quantity;
 
-      // Anti-dupe validation
-      const { AntiDupeService } = await import("./services/antiDupeService");
-
-      const validation = await AntiDupeService.validatePurchase(
-        user,
-        itemId,
-        quantity,
-        totalCost
-      );
-
-      if (validation.isDuplicate) {
-        if (validation.suspiciousActivity) {
-          await AntiDupeService.flagSuspiciousUser(
-            user.id,
-            user.username,
-            `Purchase validation failed: ${validation.reason}`
-          );
-        }
-        return res.status(400).json({ error: validation.reason || "Purchase validation failed" });
+      if (user.coins < totalCost) {
+        return res.status(400).json({ error: `Insufficient coins. Need ${totalCost}, have ${user.coins}` });
       }
 
-      // Take snapshot before modification
-      await AntiDupeService.snapshotInventory(user.id, user, `purchase-${itemId}-${Date.now()}`);
-
       // Update user inventory and coins
-      const inventory = (user.inventory as any[]) || [];
-      const existingItem = inventory.find(
+      const inventory = Array.isArray(user.inventory) ? [...user.inventory] : [];
+      const existingItemIndex = inventory.findIndex(
         (invItem: any) => invItem.itemId === itemId,
       );
-      if (existingItem) {
-        existingItem.quantity += quantity;
+      
+      if (existingItemIndex >= 0) {
+        inventory[existingItemIndex].quantity += quantity;
       } else {
         inventory.push({
           itemId,
@@ -549,13 +530,17 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      // Normalize inventory to prevent duplicates
-      const normalizedInventory = AntiDupeService.normalizeInventory(inventory);
-
       await storage.updateUser(user.id, {
         coins: user.coins - totalCost,
-        inventory: normalizedInventory,
+        inventory: inventory,
       });
+
+      // Update stock if not infinite
+      if (item.stock !== null) {
+        await storage.updateItem(itemId, {
+          stock: item.stock - quantity,
+        });
+      }
 
       await storage.createTransaction({
         user: req.user!.username,
