@@ -26,6 +26,7 @@ export default function Chat() {
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { messages, connected, authenticated, sendMessage } = useWebSocket();
 
@@ -34,7 +35,14 @@ export default function Chat() {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Only auto-scroll if user is already near the bottom (within 100px)
+    const container = messagesContainerRef.current;
+    if (container) {
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      if (isNearBottom) {
+        scrollToBottom();
+      }
+    }
   }, [messages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -117,6 +125,7 @@ export default function Chat() {
       <CardContent className="space-y-4">
         {/* Messages Area */}
         <div
+          ref={messagesContainerRef}
           className={`bg-muted rounded-lg p-4 overflow-y-auto space-y-3 ${
             isExpanded ? "h-96" : "h-48"
           }`}
