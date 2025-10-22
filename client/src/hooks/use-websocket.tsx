@@ -6,6 +6,7 @@ interface ChatMessage {
   username?: string;
   message?: string;
   timestamp?: number;
+  id?: string;
 }
 
 export function useWebSocket() {
@@ -14,6 +15,28 @@ export function useWebSocket() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+
+  // Fetch chat history from the server
+  const fetchChatHistory = async () => {
+    try {
+      const response = await fetch('/api/chat/history?limit=50');
+      if (response.ok) {
+        const history = await response.json();
+        // Convert database messages to chat message format
+        const chatMessages = history.map((msg: any) => ({
+          type: 'chat',
+          id: msg.id,
+          username: msg.username,
+          message: msg.message,
+          timestamp: new Date(msg.timestamp).getTime(),
+        }));
+        console.log('[WebSocket Client] Loaded chat history:', chatMessages.length, 'messages');
+        setMessages(chatMessages);
+      }
+    } catch (error) {
+      console.error('[WebSocket Client] Failed to load chat history:', error);
+    }
+  };
 
   useEffect(() => {
     // Only connect if user is authenticated
@@ -33,8 +56,8 @@ export function useWebSocket() {
       ws.current.onopen = () => {
         console.log('[WebSocket Client] Connection opened');
         setConnected(true);
-        // Clear messages on new connection
-        setMessages([]);
+        // Load chat history before clearing messages
+        fetchChatHistory();
         // Send auth message to authenticate with session cookies
         ws.current?.send(JSON.stringify({ type: "auth" }));
         console.log('[WebSocket Client] Sent auth message');
@@ -57,8 +80,21 @@ export function useWebSocket() {
               ws.current.close();
             }
           } else if (message.type === "chat") {
-            // Only add chat messages to the messages array
+            // Only add chat messages to the messages array, avoid duplicates
             setMessages((prev) => {
+              // Check if message already exists (by id or timestamp+username)
+              const exists = prev.some(
+                (m) => 
+                  (message.id && m.id === message.id) ||
+                  (m.username === message.username && 
+                   m.timestamp === message.timestamp &&
+                   m.message === message.message)
+              );
+              
+              if (exists) {
+                return prev;
+              }
+              
               const newMessages = [...prev.slice(-99), message];
               console.log('[WebSocket Client] Chat messages array updated:', newMessages.length);
               return newMessages;

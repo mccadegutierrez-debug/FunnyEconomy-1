@@ -2914,6 +2914,17 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Chat history endpoint
+  app.get("/api/chat/history", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const messages = await storage.getChatHistory(limit);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
   // Global notification sending
   app.post("/api/admin/notifications/global", requireAdmin, async (req, res) => {
     try {

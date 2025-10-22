@@ -92,6 +92,7 @@ export interface IStorage {
   ): Promise<ChatMessage>;
   deleteChatMessage(id: string): Promise<void>;
   getRecentChatMessages(limit?: number): Promise<ChatMessage[]>;
+  getChatHistory(limit?: number): Promise<ChatMessage[]>;
 
   // Leaderboard
   getLeaderboard(
@@ -424,27 +425,28 @@ export class DatabaseStorage implements IStorage {
   async createChatMessage(
     message: Omit<ChatMessage, "id" | "timestamp">,
   ): Promise<ChatMessage> {
-    const [chatMessage] = await db
+    const [result] = await db
       .insert(chatMessages)
       .values({
         username: message.username,
         message: message.message,
       })
       .returning();
-    return chatMessage;
+    return result;
   }
 
-  async deleteChatMessage(id: string): Promise<void> {
-    await db.delete(chatMessages).where(eq(chatMessages.id, id));
-  }
-
-  async getRecentChatMessages(limit = 50): Promise<ChatMessage[]> {
+  async getChatHistory(limit = 50): Promise<ChatMessage[]> {
     const messages = await db
       .select()
       .from(chatMessages)
       .orderBy(desc(chatMessages.timestamp))
       .limit(limit);
-    return messages.reverse(); // Return in chronological order
+    // Reverse to get chronological order (oldest first)
+    return messages.reverse();
+  }
+
+  async deleteChatMessage(messageId: string): Promise<void> {
+    await db.delete(chatMessages).where(eq(chatMessages.id, messageId));
   }
 
   async initializeData(): Promise<void> {
@@ -2330,7 +2332,7 @@ export class DatabaseStorage implements IStorage {
 
     // Anti-dupe validation
     const { AntiDupeService } = await import("./services/antiDupeService");
-    
+
     const user1Items = items.filter(item => item.userId === trade.userId1);
     const user2Items = items.filter(item => item.userId === trade.userId2);
 
@@ -2585,14 +2587,14 @@ export class DatabaseStorage implements IStorage {
 
     const fromUser = await this.getUser(fromUserId);
     const toUser = await this.getUser(toUserId);
-    
+
     if (!fromUser || !toUser) {
       throw new Error("User not found");
     }
 
     const fromFriends = (fromUser.friends as string[]) || [];
     const toFriends = (toUser.friends as string[]) || [];
-    
+
     if (fromFriends.includes(toUserId) || toFriends.includes(fromUserId)) {
       throw new Error("Already friends with this user");
     }
