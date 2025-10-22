@@ -489,10 +489,14 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/shop/buy/:itemId", requireAuth, async (req, res) => {
+  app.post("/api/shop/buy", requireAuth, async (req, res) => {
     try {
-      const itemId = req.params.itemId;
-      const quantity = parseInt(req.body.quantity) || 1;
+      const { itemId, quantity: requestedQuantity } = req.body;
+      const quantity = parseInt(requestedQuantity) || 1;
+
+      if (!itemId) {
+        return res.status(400).json({ error: "Item ID is required" });
+      }
 
       const item = await storage.getItem(itemId);
       if (!item) {
