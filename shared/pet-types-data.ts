@@ -48,7 +48,7 @@ export const STATIC_PET_TYPES: PetTypeData[] = [
 {
     petId: "karen_halloween",
     name: "Haunted Karen",
-    description: "Now I'm Just Concerned About Tis Karen...",
+    description: "Now I'm Just Concerned About This Karen...",
     emoji: "👽",
     iconPath: "halloweenkaren.png",
     rarity: "epic",
