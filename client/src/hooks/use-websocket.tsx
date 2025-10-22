@@ -33,6 +33,8 @@ export function useWebSocket() {
       ws.current.onopen = () => {
         console.log('[WebSocket Client] Connection opened');
         setConnected(true);
+        // Clear messages on new connection
+        setMessages([]);
         // Send auth message to authenticate with session cookies
         ws.current?.send(JSON.stringify({ type: "auth" }));
         console.log('[WebSocket Client] Sent auth message');
@@ -56,7 +58,14 @@ export function useWebSocket() {
             }
           } else if (message.type === "chat") {
             // Only add chat messages to the messages array
-            setMessages((prev) => [...prev.slice(-99), message]); // Keep last 100 messages
+            setMessages((prev) => {
+              const newMessages = [...prev.slice(-99), message];
+              console.log('[WebSocket Client] Chat messages array updated:', newMessages.length);
+              return newMessages;
+            });
+          } else if (message.type === "system") {
+            // Add system messages too
+            setMessages((prev) => [...prev.slice(-99), message]);
           } else if (message.type === "error") {
             console.log('[WebSocket Client] Error message:', message.message);
           }

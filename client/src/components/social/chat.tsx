@@ -55,12 +55,15 @@ export default function Chat() {
   };
 
   const chatMessages = messages.filter((msg) => msg.type === "chat");
+  const systemMessages = messages.filter((msg) => msg.type === "system");
   const onlineUsers = new Set(
     chatMessages
       .slice(-50)
       .map((msg) => msg.username)
       .filter(Boolean),
   );
+
+  console.log('[Chat Component] Total messages:', messages.length, 'Chat messages:', chatMessages.length);
 
   return (
     <Card
@@ -133,7 +136,7 @@ export default function Chat() {
             </div>
           )}
 
-          {chatMessages.map((msg, index) => (
+          {chatMessages.length > 0 && chatMessages.map((msg, index) => (
             <div
               key={`${msg.username}-${msg.timestamp}-${index}`}
               className={`flex items-start space-x-3 ${
@@ -201,19 +204,16 @@ export default function Chat() {
           ))}
 
           {/* System Messages */}
-          {messages
-            .filter((msg) => msg.type === "system")
-            .slice(-3)
-            .map((msg, index) => (
-              <div
-                key={`system-${msg.timestamp}-${index}`}
-                className="text-center py-2"
-              >
-                <Badge variant="secondary" className="text-xs">
-                  ℹ️ {msg.message}
-                </Badge>
-              </div>
-            ))}
+          {systemMessages.slice(-3).map((msg, index) => (
+            <div
+              key={`system-${msg.timestamp}-${index}`}
+              className="text-center py-2"
+            >
+              <Badge variant="secondary" className="text-xs">
+                ℹ️ {msg.message}
+              </Badge>
+            </div>
+          ))}
 
           <div ref={messagesEndRef} />
         </div>
