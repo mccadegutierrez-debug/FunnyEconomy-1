@@ -79,14 +79,6 @@ export default function HomePage() {
   const [showPMDialog, setShowPMDialog] = useState(false);
   const [showShootDialog, setShowShootDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showShutdownNotice, setShowShutdownNotice] = useState(false);
-
-  // Show shutdown notice every time user logs in
-  useEffect(() => {
-    if (user) {
-      setShowShutdownNotice(true);
-    }
-  }, [user]);
 
   const { data: transactions = [] } = useQuery({
     queryKey: ["/api/user/transactions"],
@@ -1412,39 +1404,6 @@ export default function HomePage() {
       </main>
 
       <Footer />
-
-      {/* Shutdown Notice Dialog */}
-      <Dialog open={showShutdownNotice} onOpenChange={setShowShutdownNotice}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-2xl text-destructive">
-              <img src="/Pepes/sad.png" alt="Sad Pepe" className="w-12 h-12" />
-              MAJOR SHUTDOWN NOTICE
-            </DialogTitle>
-            <DialogDescription className="text-base pt-4">
-              <div className="space-y-3">
-                <p className="font-semibold text-foreground">
-                  The platform will be undergoing a major shutdown until <span className="text-primary">October 16th or October 17th</span>.
-                </p>
-                <p>
-                  This shutdown is due to duping coins, pets and items and other exploits that have compromised the integrity of the game.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Punishments will be issued to those found guilty.
-                </p>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              onClick={() => setShowShutdownNotice(false)}
-              className="w-full"
-            >
-              I Understand
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
