@@ -37,7 +37,6 @@ app.use((req, res, next) => {
 });
 
 // --- Pet Decay Logic ---
-// We moved this out of the IIFE so it can be called by the cron route
 async function processPetStatDecay() {
   try {
     const allPets = await storage.getAllPets();
@@ -75,17 +74,11 @@ async function processPetStatDecay() {
   }
 }
 
-// --- Initialization Wrapper ---
-let serverInitialized = false;
-
-// We export this so api/index.ts can call it
-export const setupApp = async () => {
-  if (serverInitialized) return app;
-  serverInitialized = true;
-
+// --- Initialization ---
+(async () => {
   const server = await registerRoutes(app);
 
-  // Vercel Cron Route - This replaces your setInterval
+  // Vercel Cron Route
   app.get('/api/cron', async (req, res) => {
     await processPetStatDecay();
     res.json({ status: "Decay processed" });
@@ -98,30 +91,21 @@ export const setupApp = async () => {
     throw err;
   });
 
-  // Only setup Vite in development
-  if (process.env.NODE_ENV !== "production") {
+  if (app.get("env") === "development") {
     await setupVite(app, server);
+  } else {
+    serveStatic(app);
   }
 
-  return server;
-};
+  // FIXED: This now runs in both dev AND production
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
+    log(`serving on port ${port}`);
+  });
 
-// --- Execution ---
-// This runs ONLY on your local machine. Vercel skips this.
-if (process.env.NODE_ENV !== "production") {
-  (async () => {
-    const server = await setupApp();
-    
-    // Local Cron Simulation (so it still works on your laptop)
+  // Only run local interval in development
+  if (app.get("env") === "development") {
     setInterval(processPetStatDecay, 60 * 60 * 1000);
     log('Pet stat decay system initialized (runs every hour)');
-
-    const port = parseInt(process.env.PORT || "5000", 10);
-    server.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
-      log(`serving on port ${port}`);
-    });
-  })();
-}
-
-// Export the app for Vercel
-export default app;
+  }
+})();
