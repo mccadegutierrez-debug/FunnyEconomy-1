@@ -37,6 +37,7 @@ app.use((req, res, next) => {
 });
 
 // --- Pet Decay Logic ---
+// We moved this out of the IIFE so it can be called by the cron route
 async function processPetStatDecay() {
   try {
     const allPets = await storage.getAllPets();
@@ -77,13 +78,14 @@ async function processPetStatDecay() {
 // --- Initialization Wrapper ---
 let serverInitialized = false;
 
+// We export this so api/index.ts can call it
 export const setupApp = async () => {
   if (serverInitialized) return app;
   serverInitialized = true;
 
   const server = await registerRoutes(app);
 
-  // Vercel Cron Route
+  // Vercel Cron Route - This replaces your setInterval
   app.get('/api/cron', async (req, res) => {
     await processPetStatDecay();
     res.json({ status: "Decay processed" });
@@ -99,23 +101,18 @@ export const setupApp = async () => {
   // Only setup Vite in development
   if (process.env.NODE_ENV !== "production") {
     await setupVite(app, server);
-  } else {
-    // In production (Vercel), we don't serve static files here 
-    // because Vercel handles that via the "outputDirectory" in vercel.json.
-    // However, keeping this doesn't hurt.
   }
 
   return server;
 };
 
 // --- Execution ---
-// If running locally (dev or start), listen on port.
-// If running on Vercel, this block is skipped because we import `setupApp` instead.
+// This runs ONLY on your local machine. Vercel skips this.
 if (process.env.NODE_ENV !== "production") {
   (async () => {
     const server = await setupApp();
     
-    // Local Cron Simulation
+    // Local Cron Simulation (so it still works on your laptop)
     setInterval(processPetStatDecay, 60 * 60 * 1000);
     log('Pet stat decay system initialized (runs every hour)');
 
@@ -126,4 +123,5 @@ if (process.env.NODE_ENV !== "production") {
   })();
 }
 
+// Export the app for Vercel
 export default app;
