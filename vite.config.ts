@@ -3,15 +3,17 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// ✅ VERIFIED FIX: Cross-platform dirname resolution
+// Compatible with Node.js 12+
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig(({ mode }) => {
+  const isReplit = process.env.REPLIT === "true";
+  
   return {
     plugins: [
       react(),
-      // ✅ VERIFIED FIX: Only use Replit plugin in development
-      ...(mode === "development" && process.env.REPLIT
+      // Only load Replit plugins in development on Replit
+      ...(mode === "development" && isReplit
         ? [
             (await import("@replit/vite-plugin-runtime-error-modal")).default(),
           ]
@@ -26,7 +28,7 @@ export default defineConfig(({ mode }) => {
     },
     root: path.resolve(__dirname, "client"),
     build: {
-      outDir: path.resolve(__dirname, "dist/client"), // ✅ VERIFIED FIX: Separate client output
+      outDir: path.resolve(__dirname, "dist/client"),
       emptyOutDir: true,
     },
     server: {
@@ -37,3 +39,10 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
+```
+
+### **File 3: .nvmrc** ⚠️ (Recommended)
+
+Create this file in your project root:
+```
+20
